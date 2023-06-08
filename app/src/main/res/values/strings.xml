@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">applicationTEST</string>
+    <string name="Name">AndreyGay</string>
+    <string name="MCC">MCC:</string>
+    <string name="MNC">MNC:</string>
+    <string name="LAC_TAC">LAC/TAC:</string>
+    <string name="CID">Cell ID:</string>
+    <string name="GPS">GPS</string>
+    <string name="longitude">longitude</string>
+    <string name="latitude">latitude</string>
+    <string name="RSSI">RSSI:</string>
+    <string name="RSRP">RSRP:</string>
+    <string name="RSRQ">RSRQ:</string>
+    <string name="SNR">SNR:</string>
+</resources>

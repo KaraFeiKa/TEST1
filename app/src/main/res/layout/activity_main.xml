@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/Grey"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/Logo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5sp"
+        android:text="@string/Name"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textSize="30sp" />
+
+    <TextView
+        android:id="@+id/MCC"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50sp"
+        android:textSize="30sp"
+        android:textColor="@color/white"
+        android:text="@string/MCC" />
+    <TextView
+        android:id="@+id/Res_MCC_Res"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50sp"
+        android:layout_marginStart="140sp"
+        android:textSize="30sp"
+        android:textColor="@color/white"/>
+
+
+    <TextView
+        android:id="@+id/MNC"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="90sp"
+        android:textSize="30sp"
+        android:textColor="@color/white"
+        android:text="@string/MNC" />
+    <TextView
+        android:id="@+id/Res_MNC_Res"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="90sp"
+        android:layout_marginStart="140sp"
+        android:textSize="30sp"
+        android:textColor="@color/white"/>
+
+    <TextView
+        android:id="@+id/LAC"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="130sp"
+        android:textSize="30sp"
+        android:textColor="@color/white"
+        android:text="@string/LAC_TAC" />
+    <TextView
+        android:id="@+id/Res_LAC"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="130sp"
+        android:layout_marginStart="140sp"
+        android:textSize="30sp"
+        android:textColor="@color/white"/>
+
+    <TextView
+        android:id="@+id/CID"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="170sp"
+        android:textSize="30sp"
+        android:textColor="@color/white"
+        android:text="@string/CID" />
+    <TextView
+        android:id="@+id/Res_CID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="170sp"
+        android:layout_marginStart="140sp"
+        android:textSize="30sp"
+        android:textColor="@color/white"/>
+
+    <TextView
+        android:id="@+id/GPScord"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="210sp"
+        android:text="@string/GPS"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textSize="30sp" />
+
+    <TextView
+        android:id="@+id/longitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="250sp"
+        android:textSize="30sp"
+        android:textColor="@color/white"
+        android:text="@string/longitude" />
+
+    <TextView
+        android:id="@+id/Res_longitude"
+        android:layout_width="230dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="150sp"
+        android:layout_marginTop="250dp"
+        android:layout_marginEnd="30dp"
+        android:textColor="@color/white"
+        android:textSize="30sp" />
+
+    <TextView
+        android:id="@+id/latitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="310sp"
+        android:text="@string/latitude"
+        android:textColor="@color/white"
+        android:textSize="30sp" />
+
+    <TextView
+        android:id="@+id/Res_latitude"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="310sp"
+        android:layout_marginStart="150sp"
+        android:layout_marginEnd="30sp"
+        android:textSize="30sp"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:id="@+id/RSSI"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="370sp"
+        android:textSize="30sp"
+        android:textColor="@color/white"
+        android:text="@string/RSSI" />
+    <TextView
+        android:id="@+id/Res_RSSI"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="370sp"
+        android:layout_marginStart="140sp"
+        android:textSize="30sp"
+        android:textColor="@color/white"/>
+
+    <TextView
+        android:id="@+id/RSRP"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="410sp"
+        android:textSize="30sp"
+        android:textColor="@color/white"
+        android:text="@string/RSRP" />
+    <TextView
+        android:id="@+id/Res_RSRP"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="410sp"
+        android:layout_marginStart="140sp"
+        android:textSize="30sp"
+        android:textColor="@color/white" />
+
+
+    <TextView
+        android:id="@+id/RSRQ"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="450sp"
+        android:textSize="30sp"
+        android:textColor="@color/white"
+        android:text="@string/RSRQ" />
+    <TextView
+        android:id="@+id/Res_RSRQ"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="450sp"
+        android:layout_marginStart="140sp"
+        android:textSize="30sp"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:id="@+id/SNR"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="490sp"
+        android:textSize="30sp"
+        android:textColor="@color/white"
+        android:text="@string/SNR" />
+    <TextView
+        android:id="@+id/Res_SNR"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="490sp"
+        android:layout_marginStart="140sp"
+        android:textSize="30sp"
+        android:textColor="@color/white" />
+</RelativeLayout>
