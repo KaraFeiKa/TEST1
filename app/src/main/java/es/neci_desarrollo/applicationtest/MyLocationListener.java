@@ -3,6 +3,8 @@ package es.neci_desarrollo.applicationtest;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
+import android.telephony.SignalStrength;
+import android.telephony.TelephonyCallback;
 
 import androidx.annotation.NonNull;
 

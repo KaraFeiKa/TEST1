@@ -11,18 +11,23 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.telephony.CellInfo;
+import android.telephony.CellSignalStrengthLte;
+import android.telephony.PhoneStateListener;
+import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
 import android.widget.TextView;
 
-import java.net.ContentHandler;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements LocationListenerInterface {
+    TelephonyManager telephonyManager;
     private LocationManager locationManager;
     private MyLocationListener myLocationListener;
     TextView latitude_res;
     TextView longitude_res;
+    TextView Mcc;
+    TextView Mnc;
+    TextView Ss;
+
 
 
 
@@ -33,12 +38,11 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
         init();
         getLocation();
 
-        if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},100);
+        if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE},100);
         }
-
     }
-
 
 
     @SuppressLint("MissingPermission")
@@ -60,6 +64,11 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
         myLocationListener.setLocationListenerInterface(this);
         latitude_res = findViewById(R.id.Res_latitude);
         longitude_res = findViewById(R.id.Res_longitude);
+        Mnc = findViewById(R.id.MNC);
+        Mcc = findViewById(R.id.MCC);
+        Ss = findViewById(R.id.Res_RSSI);
+        telephonyManager = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
+
     }
 
     @Override
@@ -67,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                 if (location != null) {
                     latitude_res.setText(String.valueOf(location.getLatitude()));
                     longitude_res.setText(String.valueOf(location.getLongitude()));
+                    Ss.setText(""+telephonyManager.getSignalStrength().getCellSignalStrengths());
         }
     }
 }
