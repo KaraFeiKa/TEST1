@@ -15,19 +15,11 @@ import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoWcdma;
-import android.telephony.CellSignalStrengthLte;
-import android.telephony.NeighboringCellInfo;
-import android.telephony.PhoneStateListener;
-import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.TextView;
 
-import java.sql.Array;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 public class MainActivity extends AppCompatActivity implements LocationListenerInterface {
@@ -106,14 +98,18 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                         }
                         if (cellInfo instanceof CellInfoWcdma)
                         {
-                            Log.d("Wcdma. Cell Info", cellInfoList.toString());
+                            //Log.d("Wcdma. Cell Info", cellInfoList.toString());
                         }
                         if (cellInfo instanceof CellInfoGsm)
                         {
-                            Log.d("Gsm. Cell Info", cellInfoList.toString());
+                           // Log.d("Gsm. Cell Info", cellInfoList.toString());
                         }
                     }
-            //List<NeighboringCellInfo>
+            List<CellInfo> neighboringCellInfoList = telephonyManager.getAllCellInfo();
+                    for (CellInfo cellInfo : neighboringCellInfoList)
+                    {
+                        Log.d("Соседи", neighboringCellInfoList.toString());
+                    }
         }
     }
 }
