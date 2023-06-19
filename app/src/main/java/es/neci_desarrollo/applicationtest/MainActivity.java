@@ -16,6 +16,8 @@ import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoWcdma;
 import android.telephony.CellLocation;
+import android.telephony.CellSignalStrength;
+import android.telephony.CellSignalStrengthLte;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.TextView;
@@ -27,8 +29,8 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
     TelephonyManager telephonyManager;
     private LocationManager locationManager;
     private MyLocationListener myLocationListener;
-    TextView latitude_res,longitude_res,Mcc,Mnc,RSSI,RSRP,RSRQ,SNR;
-    int mnc, snr = 0;
+    TextView latitude_res, longitude_res, Mcc, Mnc, RSSI, RSRP, RSRQ, SNR;
+    int rssi, rsrq, rsrp, snr = 0;
 
 
     @Override
@@ -79,45 +81,52 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
         if (location != null) {
             latitude_res.setText(String.valueOf(location.getLatitude()));
             longitude_res.setText(String.valueOf(location.getLongitude()));
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
+            if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE}, 10);
             }
-            List<CellInfo> cellInfoList = telephonyManager.getAllCellInfo();
-            List<CellInfo> cellLocationList = telephonyManager.getAllCellInfo();
-                    for (CellInfo cellInfo : cellInfoList)
-                    {
-                        if (cellInfo instanceof CellInfoLte)
-                        {
-                            RSSI.setText(String.valueOf(((CellInfoLte)cellInfo).getCellSignalStrength().getRssi()));
-                            //CQI.setText(String.valueOf(((CellInfoLte)cellInfo).getCellSignalStrength().getCqi()));
-                            RSRP.setText(String.valueOf(((CellInfoLte)cellInfo).getCellSignalStrength().getRsrp())) ;
-                            SNR.setText(String.valueOf(((CellInfoLte)cellInfo).getCellSignalStrength().getRssnr())) ;
-                            RSRQ.setText(String.valueOf(((CellInfoLte)cellInfo).getCellSignalStrength().getRsrq())) ;
-                            Mnc.setText(String.valueOf(((CellInfoLte)cellInfo).getCellIdentity().getMnc()));
-                            Mcc.setText(String.valueOf(((CellInfoLte)cellInfo).getCellIdentity().getMcc()));
-
-                            Log.d("LTE. Cell Info", "RSSI: "+((CellInfoLte)cellInfo).getCellSignalStrength().getRssi());
-                        }
-                        if (cellInfo instanceof CellInfoWcdma)
-                        {
-                            //Log.d("Wcdma. Cell Info", cellInfoList.toString());
-                        }
-                        if (cellInfo instanceof CellInfoGsm)
-                        {
-                           // Log.d("Gsm. Cell Info", cellInfoList.toString());
-                        }
-                    }
-            List<CellInfo> neighboringCellInfoList = telephonyManager.getAllCellInfo();
-                    for (CellInfo cellInfo : neighboringCellInfoList)
-                    {
-                        Log.d("Соседи", neighboringCellInfoList.toString());
-                    }
+            List<CellSignalStrength> cellInfoList;
+            cellInfoList = telephonyManager.getSignalStrength().getCellSignalStrengths();
+            for (CellSignalStrength cellInfo : cellInfoList) {
+                if (cellInfo instanceof CellSignalStrengthLte) {
+//            List<CellInfo> cellInfoList = telephonyManager.getAllCellInfo();
+//            for (CellInfo cellInfo : cellInfoList) {
+//                if (cellInfo instanceof CellInfoLte) {
+                    rssi = ((CellSignalStrengthLte) cellInfo).getRssi();
+                            rsrp = ((CellSignalStrengthLte) cellInfo).getRsrp();
+                    rsrq = ((CellSignalStrengthLte) cellInfo).getRsrq();
+                    snr = ((CellSignalStrengthLte) cellInfo).getRssnr();
+                }
+//                    rssi = ((CellInfoLte) cellInfo).getCellSignalStrength().getRssi();
+//                    //CQI.setText(String.valueOf(((CellInfoLte)cellInfo).getCellSignalStrength().getCqi()));
+//                    rsrp = ((CellInfoLte) cellInfo).getCellSignalStrength().getRsrp();
+//                    snr = ((CellInfoLte) cellInfo).getCellSignalStrength().getRssnr();
+//                    rsrq = ((CellInfoLte) cellInfo).getCellSignalStrength().getRsrq();
+//                    Mnc.setText(String.valueOf(((CellInfoLte) cellInfo).getCellIdentity().getMnc()));
+//                    Mcc.setText(String.valueOf(((CellInfoLte) cellInfo).getCellIdentity().getMcc()));
+//
+//                    Log.d("LTE. Cell Info", "RSSI: " + ((CellInfoLte) cellInfo).getCellSignalStrength().getRssi());
+//                }
+////                        if (cellInfo instanceof CellInfoWcdma)
+////                        {
+////                            //Log.d("Wcdma. Cell Info", cellInfoList.toString());
+////                        }
+////                        if (cellInfo instanceof CellInfoGsm)
+////                        {
+////                           // Log.d("Gsm. Cell Info", cellInfoList.toString());
+////                        }
+////                    }
+////            List<CellInfo> neighboringCellInfoList = telephonyManager.getAllCellInfo();
+////                    for (CellInfo cellInfo : neighboringCellInfoList)
+////                    {
+////                        Log.d("Соседи", neighboringCellInfoList.toString());
+////                    }
+////            }
+                RSSI.setText(String.valueOf(rssi));
+                RSRP.setText(String.valueOf(rsrp));
+                RSRQ.setText(String.valueOf(rsrq));
+                SNR.setText(String.valueOf(snr));
+            }
         }
     }
 }
