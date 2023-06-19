@@ -15,6 +15,7 @@ import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoWcdma;
+import android.telephony.CellLocation;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.TextView;
@@ -27,6 +28,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
     private LocationManager locationManager;
     private MyLocationListener myLocationListener;
     TextView latitude_res,longitude_res,Mcc,Mnc,RSSI,RSRP,RSRQ,SNR;
+    int mnc, snr = 0;
 
 
     @Override
@@ -61,8 +63,8 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
         myLocationListener.setLocationListenerInterface(this);
         latitude_res = findViewById(R.id.Res_latitude);
         longitude_res = findViewById(R.id.Res_longitude);
-        Mnc = findViewById(R.id.MNC);
-        Mcc = findViewById(R.id.MCC);
+        Mnc = findViewById(R.id.Res_MNC_Res);
+        Mcc = findViewById(R.id.Res_MCC_Res);
         RSSI = findViewById(R.id.Res_RSSI);
         RSRP = findViewById(R.id.Res_RSRP);
         RSRQ = findViewById(R.id.Res_RSRQ);
@@ -87,13 +89,19 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                 // for ActivityCompat#requestPermissions for more details.
             }
             List<CellInfo> cellInfoList = telephonyManager.getAllCellInfo();
-            Mnc.setText("Ok");
-//            Log.d("Cell Info", cellInfoList.toString());
+            List<CellInfo> cellLocationList = telephonyManager.getAllCellInfo();
                     for (CellInfo cellInfo : cellInfoList)
                     {
-
                         if (cellInfo instanceof CellInfoLte)
                         {
+                            RSSI.setText(String.valueOf(((CellInfoLte)cellInfo).getCellSignalStrength().getRssi()));
+                            //CQI.setText(String.valueOf(((CellInfoLte)cellInfo).getCellSignalStrength().getCqi()));
+                            RSRP.setText(String.valueOf(((CellInfoLte)cellInfo).getCellSignalStrength().getRsrp())) ;
+                            SNR.setText(String.valueOf(((CellInfoLte)cellInfo).getCellSignalStrength().getRssnr())) ;
+                            RSRQ.setText(String.valueOf(((CellInfoLte)cellInfo).getCellSignalStrength().getRsrq())) ;
+                            Mnc.setText(String.valueOf(((CellInfoLte)cellInfo).getCellIdentity().getMnc()));
+                            Mcc.setText(String.valueOf(((CellInfoLte)cellInfo).getCellIdentity().getMcc()));
+
                             Log.d("LTE. Cell Info", "RSSI: "+((CellInfoLte)cellInfo).getCellSignalStrength().getRssi());
                         }
                         if (cellInfo instanceof CellInfoWcdma)
