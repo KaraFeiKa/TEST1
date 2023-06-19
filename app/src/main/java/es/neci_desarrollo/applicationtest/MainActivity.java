@@ -12,14 +12,10 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.telephony.CellInfo;
-import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
-import android.telephony.CellInfoWcdma;
-import android.telephony.CellLocation;
 import android.telephony.CellSignalStrength;
 import android.telephony.CellSignalStrengthLte;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.widget.TextView;
 
 import java.util.List;
@@ -31,7 +27,8 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
     private MyLocationListener myLocationListener;
     TextView latitude_res, longitude_res, Mcc, Mnc, RSSI, RSRP, RSRQ, SNR;
     int rssi, rsrq, rsrp, snr = 0;
-
+    String mcc = "";
+    String mnc = "" ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,9 +90,18 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
 //            for (CellInfo cellInfo : cellInfoList) {
 //                if (cellInfo instanceof CellInfoLte) {
                     rssi = ((CellSignalStrengthLte) cellInfo).getRssi();
-                            rsrp = ((CellSignalStrengthLte) cellInfo).getRsrp();
+                    rsrp = ((CellSignalStrengthLte) cellInfo).getRsrp();
                     rsrq = ((CellSignalStrengthLte) cellInfo).getRsrq();
                     snr = ((CellSignalStrengthLte) cellInfo).getRssnr();
+                }
+                List<CellInfo> cellInfoList1;
+                cellInfoList1 = telephonyManager.getAllCellInfo();
+
+                for (CellInfo cellInfo1 : cellInfoList1) {
+                    if (cellInfo1 instanceof CellInfoLte) {
+                        mcc = ((CellInfoLte) cellInfo1).getCellIdentity().getMncString();
+                        mnc = ((CellInfoLte) cellInfo1).getCellIdentity().getMccString();
+                    }
                 }
 //                    rssi = ((CellInfoLte) cellInfo).getCellSignalStrength().getRssi();
 //                    //CQI.setText(String.valueOf(((CellInfoLte)cellInfo).getCellSignalStrength().getCqi()));
@@ -126,6 +132,8 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                 RSRP.setText(String.valueOf(rsrp));
                 RSRQ.setText(String.valueOf(rsrq));
                 SNR.setText(String.valueOf(snr));
+                Mcc.setText("" + mcc);
+                Mnc.setText("" + mnc);
             }
         }
     }
