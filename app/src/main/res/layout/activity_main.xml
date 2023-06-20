@@ -18,20 +18,38 @@
         android:textSize="30sp" />
 
     <TextView
-        android:id="@+id/MCC"
+        android:id="@+id/OPERATOR"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="50sp"
-        android:textSize="30sp"
+        android:textSize="20sp"
+        android:textColor="@color/white"
+        android:text="Operator:" />
+
+    <TextView
+        android:id="@+id/OPERATOR_Res"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50sp"
+        android:layout_marginStart="140sp"
+        android:textSize="20sp"
+        android:textColor="@color/white"/>
+
+    <TextView
+        android:id="@+id/MCC"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="80sp"
+        android:textSize="20sp"
         android:textColor="@color/white"
         android:text="@string/MCC" />
     <TextView
         android:id="@+id/Res_MCC_Res"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50sp"
+        android:layout_marginTop="80sp"
         android:layout_marginStart="140sp"
-        android:textSize="30sp"
+        android:textSize="20sp"
         android:textColor="@color/white"/>
 
 
@@ -39,34 +57,34 @@
         android:id="@+id/MNC"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="90sp"
-        android:textSize="30sp"
+        android:layout_marginTop="110sp"
+        android:textSize="20sp"
         android:textColor="@color/white"
         android:text="@string/MNC" />
     <TextView
         android:id="@+id/Res_MNC_Res"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="90sp"
+        android:layout_marginTop="110sp"
         android:layout_marginStart="140sp"
-        android:textSize="30sp"
+        android:textSize="20sp"
         android:textColor="@color/white"/>
 
     <TextView
         android:id="@+id/LAC"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="130sp"
-        android:textSize="30sp"
+        android:layout_marginTop="140sp"
+        android:textSize="20sp"
         android:textColor="@color/white"
         android:text="@string/LAC_TAC" />
     <TextView
         android:id="@+id/Res_LAC"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="130sp"
+        android:layout_marginTop="140sp"
         android:layout_marginStart="140sp"
-        android:textSize="30sp"
+        android:textSize="20sp"
         android:textColor="@color/white"/>
 
     <TextView
@@ -74,7 +92,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="170sp"
-        android:textSize="30sp"
+        android:textSize="20sp"
         android:textColor="@color/white"
         android:text="@string/CID" />
     <TextView
@@ -83,14 +101,49 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="170sp"
         android:layout_marginStart="140sp"
-        android:textSize="30sp"
+        android:textSize="20sp"
         android:textColor="@color/white"/>
+        <TextView
+            android:id="@+id/BAnd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="230sp"
+            android:text="Band:"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/res_BAnd"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="140sp"
+            android:layout_marginTop="230sp"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/PCI"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="260sp"
+        android:text="Pci:"
+        android:textColor="@color/white"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/res_PCI"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="140sp"
+        android:layout_marginTop="260sp"
+        android:textColor="@color/white"
+        android:textSize="20sp" />
 
     <TextView
         android:id="@+id/GPScord"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="210sp"
+        android:layout_marginTop="290sp"
         android:text="@string/GPS"
         android:textAlignment="center"
         android:textColor="@color/white"
@@ -100,8 +153,8 @@
         android:id="@+id/longitude"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="250sp"
-        android:textSize="30sp"
+        android:layout_marginTop="330sp"
+        android:textSize="25sp"
         android:textColor="@color/white"
         android:text="@string/longitude" />
 
@@ -110,152 +163,214 @@
         android:layout_width="230dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="150sp"
-        android:layout_marginTop="250dp"
+        android:layout_marginTop="330dp"
         android:layout_marginEnd="30dp"
         android:textColor="@color/white"
-        android:textSize="30sp" />
+        android:textSize="25sp" />
 
     <TextView
         android:id="@+id/latitude"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="310sp"
+        android:layout_marginTop="365sp"
         android:text="@string/latitude"
         android:textColor="@color/white"
-        android:textSize="30sp" />
+        android:textSize="25sp" />
 
     <TextView
         android:id="@+id/Res_latitude"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="310sp"
+        android:layout_marginTop="365sp"
         android:layout_marginStart="150sp"
         android:layout_marginEnd="30sp"
-        android:textSize="30sp"
+        android:textSize="25sp"
         android:textColor="@color/white" />
+
+    <TextView
+        android:id="@+id/Parametrs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="400sp"
+        android:text="Parameters"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textSize="30sp" />
 
     <TextView
         android:id="@+id/RSSI"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="370sp"
-        android:textSize="30sp"
+        android:layout_marginTop="440sp"
+        android:textSize="20sp"
         android:textColor="@color/white"
         android:text="@string/RSSI" />
     <TextView
         android:id="@+id/Res_RSSI"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="370sp"
+        android:layout_marginTop="440sp"
         android:layout_marginStart="140sp"
-        android:textSize="30sp"
+        android:textSize="20sp"
         android:textColor="@color/white"/>
-
     <TextView
         android:id="@+id/RSRP"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="410sp"
-        android:textSize="30sp"
+        android:layout_marginTop="470sp"
+        android:textSize="20sp"
         android:textColor="@color/white"
         android:text="@string/RSRP" />
     <TextView
         android:id="@+id/Res_RSRP"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="410sp"
+        android:layout_marginTop="470sp"
         android:layout_marginStart="140sp"
-        android:textSize="30sp"
+        android:textSize="20sp"
         android:textColor="@color/white" />
-
 
     <TextView
         android:id="@+id/RSRQ"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="450sp"
-        android:textSize="30sp"
+        android:layout_marginTop="500sp"
+        android:textSize="20sp"
         android:textColor="@color/white"
         android:text="@string/RSRQ" />
     <TextView
         android:id="@+id/Res_RSRQ"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="450sp"
+        android:layout_marginTop="500sp"
         android:layout_marginStart="140sp"
-        android:textSize="30sp"
+        android:textSize="20sp"
         android:textColor="@color/white" />
 
     <TextView
         android:id="@+id/SNR"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="490sp"
-        android:textSize="30sp"
+        android:layout_marginTop="530sp"
+        android:textSize="20sp"
         android:textColor="@color/white"
         android:text="@string/SNR" />
-
-    <TextView
-        android:id="@+id/EArfcn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="530sp"
-        android:text="Earfcn:"
-        android:textColor="@color/white"
-        android:textSize="30sp" />
-
-    <TextView
-        android:id="@+id/BAnd"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="570sp"
-        android:text="Band:"
-        android:textColor="@color/white"
-        android:textSize="30sp" />
-
-    <TextView
-        android:id="@+id/BAndwidth"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="610sp"
-        android:text="Bandwidth:"
-        android:textColor="@color/white"
-        android:textSize="30sp" />
 
     <TextView
         android:id="@+id/Res_SNR"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="490sp"
+        android:layout_marginTop="530sp"
         android:layout_marginStart="140sp"
-        android:textSize="30sp"
+        android:textSize="20sp"
         android:textColor="@color/white" />
+
+        <TextView
+            android:id="@+id/EArfcn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="560sp"
+            android:text="Earfcn:"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
 
     <TextView
         android:id="@+id/res_Earfcn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="140sp"
-        android:layout_marginTop="530sp"
+        android:layout_marginTop="560sp"
         android:textColor="@color/white"
-        android:textSize="30sp" />
+        android:textSize="20sp" />
+    <TextView
+        android:id="@+id/CQi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="590sp"
+        android:text="Cqi:"
+        android:textColor="@color/white"
+        android:textSize="20sp" />
 
     <TextView
-        android:id="@+id/res_BAnd"
+        android:id="@+id/res_CQi"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="140sp"
-        android:layout_marginTop="570sp"
+        android:layout_marginTop="590sp"
         android:textColor="@color/white"
-        android:textSize="30sp" />
+        android:textSize="20sp" />
 
     <TextView
-        android:id="@+id/res_BAndwidth"
+        android:id="@+id/dBM"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="620sp"
+        android:text="dBm:"
+        android:textColor="@color/white"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/res_dBM"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="200sp"
-        android:layout_marginTop="610sp"
+        android:layout_marginStart="140sp"
+        android:layout_marginTop="620sp"
         android:textColor="@color/white"
-        android:textSize="30sp" />
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/Level"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="650sp"
+        android:text="Level:"
+        android:textColor="@color/white"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/res_Level"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="140sp"
+        android:layout_marginTop="650sp"
+        android:textColor="@color/white"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/AsuLevel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="680sp"
+        android:text="AsuLevel:"
+        android:textColor="@color/white"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/res_AsuLevel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="140sp"
+        android:layout_marginTop="680sp"
+        android:textColor="@color/white"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/CqiTableIndex"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="710sp"
+        android:text="CqiTableIndex:"
+        android:textColor="@color/white"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/res_CqiTableIndex"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="140sp"
+        android:layout_marginTop="710sp"
+        android:textColor="@color/white"
+        android:textSize="20sp" />
+
 
 </RelativeLayout>
