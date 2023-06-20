@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
     }
 
 
+
     private void init() {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         myLocationListener = new MyLocationListener();
