@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 
 public class MainActivity extends AppCompatActivity implements LocationListenerInterface {
-    TelephonyManager telephonyManager;
+    private TelephonyManager telephonyManager;
     private LocationManager locationManager;
     private MyLocationListener myLocationListener;
     TextView latitude_res, longitude_res, Mcc, Mnc, RSSI, RSRP, RSRQ, SNR, EArfcn,CI,TAC,Band,OPerator,PCi,CQi,DBm,LEvel,ASuLevel,CQiTAb;
@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
 
     private void init() {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         myLocationListener = new MyLocationListener();
         myLocationListener.setLocationListenerInterface(this);
         latitude_res = findViewById(R.id.Res_latitude);
@@ -88,11 +89,6 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
         LEvel = findViewById(R.id.res_Level);
         ASuLevel = findViewById(R.id.res_AsuLevel);
         CQiTAb = findViewById(R.id.res_CqiTableIndex);
-
-
-
-        telephonyManager = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
-
     }
 
     @Override
@@ -110,9 +106,9 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
             for (CellInfo cellInfo : cellInfoList){
                 if (cellInfo instanceof CellInfoLte)
                 {
+                    Log.d("LTE ALL",((CellInfoLte)cellInfo).toString());
                     if (((CellInfoLte)cellInfo).isRegistered() != false)
                     {
-                        Log.d("CELL LTE TEST", ((CellInfoLte)cellInfo).toString());
                         mcc = ((CellInfoLte)cellInfo).getCellIdentity().getMccString();
                         mnc = ((CellInfoLte)cellInfo).getCellIdentity().getMncString();
                         EArfcn.setText(String.valueOf(((CellInfoLte)cellInfo).getCellIdentity().getEarfcn()));
@@ -156,12 +152,13 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                     }
                 }
             }
-//            List<CellSignalStrength> cellInfoList;
-//            cellInfoList = telephonyManager.getSignalStrength().getCellSignalStrengths();
-//            for (CellSignalStrength cellInfo : cellInfoList) {
-//                if (cellInfo instanceof CellSignalStrengthLte) {
-//
-//                        Log.d("CELL Signal Strength LTE", ((CellSignalStrengthLte) cellInfo).toString());
+            List<CellSignalStrength> cellInfoList;
+            cellInfoList = telephonyManager.getSignalStrength().getCellSignalStrengths();
+            for (CellSignalStrength cellInfo1 : cellInfoList) {
+                if (cellInfo1 instanceof CellSignalStrengthLte) {
+                    Log.d("CELL Signal Strength LTE", ((CellSignalStrengthLte) cellInfo1).toString());
+                }
+            }
 //                        rssi = ((CellSignalStrengthLte) cellInfo).getRssi();
 //                        rsrp = ((CellSignalStrengthLte) cellInfo).getRsrp();
 //                        rsrq = ((CellSignalStrengthLte) cellInfo).getRsrq();
