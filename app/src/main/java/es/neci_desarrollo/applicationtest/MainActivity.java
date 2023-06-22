@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
     private TelephonyManager telephonyManager;
     private LocationManager locationManager;
     private MyLocationListener myLocationListener;
-    TextView latitude_res, longitude_res, Mcc, Mnc, RSSI, RSRP, RSRQ, SNR, EArfcn,CI,TAC,Band,OPerator,PCi,CQi,DBm,LEvel,ASuLevel,CQiTAb;
+    TextView latitude_res, longitude_res, Mcc, Mnc, RSSI, RSRP, RSRQ, SNR, EArfcn,CI,TAC,Band,OPerator,PCi,CQi,DBm,LEvel,ASuLevel,CQiTAb,ENB;
     int rssi, rsrq, rsrp, snr,Cqi,dBm,Level,AsuLevel,CqiTAb = 0;
     String mcc = "";
     String mnc = "";
@@ -89,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
         LEvel = findViewById(R.id.res_Level);
         ASuLevel = findViewById(R.id.res_AsuLevel);
         CQiTAb = findViewById(R.id.res_CqiTableIndex);
+        ENB = findViewById(R.id.Res_eNB);
     }
 
     @Override
@@ -117,15 +118,15 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                             Band.setText(Arrays.stream(band).mapToObj(String::valueOf)
                                     .collect(Collectors.joining(", ")));
                         }
-                            CI.setText(String.valueOf(((CellInfoLte)cellInfo).getCellIdentity().getCi()));
+                            int CELLID = ((CellInfoLte)cellInfo).getCellIdentity().getCi();
+                            CI.setText(String.valueOf(CELLID));
                             TAC.setText(String.valueOf(((CellInfoLte)cellInfo).getCellIdentity().getTac())) ;
                             PCi.setText (String.valueOf(((CellInfoLte)cellInfo).getCellIdentity().getPci()));
-                            Operator= ((CellInfoLte)cellInfo).getCellIdentity().getMobileNetworkOperator();
+                            Operator= (String) ((CellInfoLte)cellInfo).getCellIdentity().getOperatorAlphaLong();
                             OPerator.setText(Operator);
                             rssi = ((CellInfoLte)cellInfo).getCellSignalStrength().getRssi();
                             rsrp = ((CellInfoLte)cellInfo).getCellSignalStrength().getRsrp();
                             rsrq = ((CellInfoLte)cellInfo).getCellSignalStrength().getRsrq();
-                            snr = ((CellInfoLte)cellInfo).getCellSignalStrength().getRssnr();
                             Cqi = ((CellInfoLte)cellInfo).getCellSignalStrength().getCqi();
                             AsuLevel = ((CellInfoLte)cellInfo).getCellSignalStrength().getAsuLevel();
                             dBm = ((CellInfoLte)cellInfo).getCellSignalStrength().getDbm();
@@ -133,17 +134,33 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                                 CqiTAb = ((CellInfoLte)cellInfo).getCellSignalStrength().getCqiTableIndex();
                             }
+
+                            String cellidHex = DecToHex(CELLID);
+                            String eNBHex = cellidHex.substring(0, cellidHex.length()-2);
+                            int eNB = HexToDec(eNBHex);
+
+                        ENB.setText(""+ eNB);
                         Mcc.setText(mcc);
                         Mnc.setText(mnc);
                         RSSI.setText(String.valueOf(rssi));
                         RSRP.setText(String.valueOf(rsrp));
                         RSRQ.setText(String.valueOf(rsrq));
                         SNR.setText(String.valueOf(snr));
-                        CQi.setText(String.valueOf(Cqi));
+                        if (Cqi != 2147483647)
+                        {
+                            CQi.setText(String.valueOf(Cqi));
+                        }else{
+                            CQi.setText("-");
+                        }
                         DBm.setText(String.valueOf(dBm));
                         LEvel.setText(String.valueOf(Level));
                         ASuLevel.setText(String.valueOf(AsuLevel));
-                        CQiTAb.setText(String.valueOf(CqiTAb));
+                        if (Cqi != 2147483647)
+                        {
+                            CQiTAb.setText(String.valueOf(CqiTAb));
+                        }else{
+                            CQiTAb.setText("-");
+                        }
                         }
                     else
                     {
@@ -157,59 +174,17 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
             for (CellSignalStrength cellInfo1 : cellInfoList) {
                 if (cellInfo1 instanceof CellSignalStrengthLte) {
                     Log.d("CELL Signal Strength LTE", ((CellSignalStrengthLte) cellInfo1).toString());
+                    snr = ((CellSignalStrengthLte) cellInfo1).getRssnr();
                 }
+                SNR.setText(String.valueOf(snr));
             }
-//                        rssi = ((CellSignalStrengthLte) cellInfo).getRssi();
-//                        rsrp = ((CellSignalStrengthLte) cellInfo).getRsrp();
-//                        rsrq = ((CellSignalStrengthLte) cellInfo).getRsrq();
-//                        snr = ((CellSignalStrengthLte) cellInfo).getRssnr();
-//                        Cqi = ((CellSignalStrengthLte) cellInfo).getCqi();
-//                        AsuLevel = ((CellSignalStrengthLte) cellInfo).getAsuLevel();
-//                        dBm = ((CellSignalStrengthLte) cellInfo).getDbm();
-//                        Level = ((CellSignalStrengthLte) cellInfo).getLevel();
-//                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//                            CqiTAb = ((CellSignalStrengthLte) cellInfo).getCqiTableIndex();
-//                    }
-//                    RSSI.setText(String.valueOf(rssi));
-//                    RSRP.setText(String.valueOf(rsrp));
-//                    RSRQ.setText(String.valueOf(rsrq));
-//                    SNR.setText(String.valueOf(snr));
-//                    CQi.setText(String.valueOf(Cqi));
-//                    DBm.setText(String.valueOf(dBm));
-//                    LEvel.setText(String.valueOf(Level));
-//                    ASuLevel.setText(String.valueOf(AsuLevel));
-//                    CQiTAb.setText(String.valueOf(CqiTAb));
-//                }
-//            }
-//            List<CellInfo> cellInfoList1 = telephonyManager.getAllCellInfo();
-//            for (CellInfo cellInfo1 : cellInfoList1)
-//            {
-//                if (cellInfo1 instanceof CellInfoLte)
-//                {
-//                    Log.d("CELL INFO LTE", ((CellInfoLte)cellInfo1).getCellIdentity().toString());
-//                    mcc = ((CellInfoLte)cellInfo1).getCellIdentity().getMccString();
-//                    mnc = ((CellInfoLte)cellInfo1).getCellIdentity().getMncString();
-//                    }
-//                    if (isMainCell(mcc,mnc))
-//                    {
-//                        Mcc.setText(mcc);
-//                        Mnc.setText(mnc);
-//                        EArfcn.setText(String.valueOf(((CellInfoLte)cellInfo1).getCellIdentity().getEarfcn()));
-//                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-//                            int[] band = ((CellInfoLte) cellInfo1).getCellIdentity().getBands();
-//                            Band.setText(Arrays.stream(band).mapToObj(String::valueOf)
-//                                    .collect(Collectors.joining(", ")));
-//                        }
-//                        CI.setText(String.valueOf(((CellInfoLte)cellInfo1).getCellIdentity().getCi()));
-//                        TAC.setText(String.valueOf(((CellInfoLte)cellInfo1).getCellIdentity().getTac())) ;
-//                        PCi.setText (String.valueOf(((CellInfoLte)cellInfo1).getCellIdentity().getPci()));
-//                        Operator= ((CellInfoLte)cellInfo1).getCellIdentity().getMobileNetworkOperator();
-//                        OPerator.setText(Operator);
-//                    }
-//                    else
-//                    {
-//                        //  цикл от каждого Pci
-//                    }
-//            }
         }
+
+    private String DecToHex(int dec) {
+        return String.format("%x",dec);
     }
+    
+    public int HexToDec(String hex){
+        return  Integer.parseInt(hex, 16);
+    }
+}
