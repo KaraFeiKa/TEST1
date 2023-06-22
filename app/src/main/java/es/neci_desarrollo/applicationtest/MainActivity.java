@@ -31,8 +31,8 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
     private TelephonyManager telephonyManager;
     private LocationManager locationManager;
     private MyLocationListener myLocationListener;
-    TextView latitude_res, longitude_res, Mcc, Mnc, RSSI, RSRP, RSRQ, SNR, EArfcn,CI,TAC,Band,OPerator,PCi,CQi,DBm,LEvel,ASuLevel,CQiTAb,ENB;
-    int rssi, rsrq, rsrp, snr,Cqi,dBm,Level,AsuLevel,CqiTAb = 0;
+    TextView latitude_res, longitude_res, Mcc, Mnc, RSSI, RSRP, RSRQ, SNR, EArfcn,CI,TAC,Band,OPerator,PCi,CQi,DBm,LEvel,ASuLevel,CQiTAb,ENB,TA;
+    int rssi, rsrq, rsrp, snr,Cqi,dBm,Level,AsuLevel,CqiTAb,ta = 0;
     String mcc = "";
     String mnc = "";
     String Operator;
@@ -90,11 +90,19 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
         ASuLevel = findViewById(R.id.res_AsuLevel);
         CQiTAb = findViewById(R.id.res_CqiTableIndex);
         ENB = findViewById(R.id.Res_eNB);
+        TA = findViewById(R.id.res_TA);
+    }
+
+    private String DecToHex(int dec) {
+        return String.format("%x",dec);
+    }
+
+    public int HexToDec(String hex){
+        return  Integer.parseInt(hex, 16);
     }
 
     @Override
     public void onLocationChanged(Location location) {
-        if (location != null) {
             latitude_res.setText(String.valueOf(location.getLatitude()));
             longitude_res.setText(String.valueOf(location.getLongitude()));
             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -128,6 +136,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                             rsrp = ((CellInfoLte)cellInfo).getCellSignalStrength().getRsrp();
                             rsrq = ((CellInfoLte)cellInfo).getCellSignalStrength().getRsrq();
                             Cqi = ((CellInfoLte)cellInfo).getCellSignalStrength().getCqi();
+                            ta = ((CellInfoLte)cellInfo).getCellSignalStrength().getTimingAdvance();
                             AsuLevel = ((CellInfoLte)cellInfo).getCellSignalStrength().getAsuLevel();
                             dBm = ((CellInfoLte)cellInfo).getCellSignalStrength().getDbm();
                             Level = ((CellInfoLte)cellInfo).getCellSignalStrength().getLevel();
@@ -141,6 +150,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
 
                         ENB.setText(""+ eNB);
                         Mcc.setText(mcc);
+                        TA.setText(String.valueOf(ta));
                         Mnc.setText(mnc);
                         RSSI.setText(String.valueOf(rssi));
                         RSRP.setText(String.valueOf(rsrp));
@@ -162,16 +172,11 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                             CQiTAb.setText("-");
                         }
                         }
-                    else
-                    {
-                        //Соседи
-                    }
                     }
                 }
-            }
-            List<CellSignalStrength> cellInfoList;
-            cellInfoList = telephonyManager.getSignalStrength().getCellSignalStrengths();
-            for (CellSignalStrength cellInfo1 : cellInfoList) {
+            List<CellSignalStrength> cellInfoList1;
+            cellInfoList1 = telephonyManager.getSignalStrength().getCellSignalStrengths();
+            for (CellSignalStrength cellInfo1 : cellInfoList1) {
                 if (cellInfo1 instanceof CellSignalStrengthLte) {
                     Log.d("CELL Signal Strength LTE", ((CellSignalStrengthLte) cellInfo1).toString());
                     snr = ((CellSignalStrengthLte) cellInfo1).getRssnr();
@@ -179,12 +184,4 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                 SNR.setText(String.valueOf(snr));
             }
         }
-
-    private String DecToHex(int dec) {
-        return String.format("%x",dec);
-    }
-    
-    public int HexToDec(String hex){
-        return  Integer.parseInt(hex, 16);
-    }
 }

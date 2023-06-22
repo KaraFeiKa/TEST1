@@ -152,7 +152,29 @@
         android:id="@+id/res_PCI"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="140sp"
+        android:layout_marginStart="70sp"
+        android:layout_marginEnd="240sp"
+        android:layout_marginTop="260sp"
+        android:textColor="@color/white"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/TA"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="180sp"
+        android:layout_marginEnd="20sp"
+        android:layout_marginTop="260sp"
+        android:text="TA:"
+        android:textColor="@color/white"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/res_TA"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="240sp"
+        android:layout_marginEnd="20sp"
         android:layout_marginTop="260sp"
         android:textColor="@color/white"
         android:textSize="20sp" />
