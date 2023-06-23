@@ -12,31 +12,44 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.telephony.CellIdentity;
+import android.os.Environment;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoLte;
-import android.telephony.CellLocation;
 import android.telephony.CellSignalStrength;
 import android.telephony.CellSignalStrengthLte;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
+
+import com.opencsv.CSVWriter;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 
 public class MainActivity extends AppCompatActivity implements LocationListenerInterface {
+    String csv =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)+"/MyCsvFile.csv";
     private TelephonyManager telephonyManager;
     private LocationManager locationManager;
     private MyLocationListener myLocationListener;
-    TextView latitude_res, longitude_res, Mcc, Mnc, RSSI, RSRP, RSRQ, SNR, EArfcn,CI,TAC,Band,OPerator,PCi,CQi,DBm,LEvel,ASuLevel,CQiTAb,ENB,TA;
+    TextView latitude_res, longitude_res, Mcc, Mnc, RSSI, RSRP, RSRQ, SNR, EArfcn,CI,TAC,Band,OPerator,PCi,CQi,DBm,LEvel,ASuLevel,CQiTAb,ENB,TA, text;
+    Button LogStart;
     int rssi, rsrq, rsrp, snr,Cqi,dBm,Level,AsuLevel,CqiTAb,ta = 0;
     String mcc = "";
     String mnc = "";
     String Operator;
-
+    CSVWriter writer = null;
+    private boolean isNeedWrite = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,9 +59,40 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
         getLocation();
 
         if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE}, 100);
+                && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE,Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
         }
+
+        View.OnClickListener Log = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!isNeedWrite) {
+                    text.setText("Идет запись");
+                    try {
+                        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+                        LocalDateTime now = LocalDateTime.now();
+//                        writer = new CSVWriter(new FileWriter(csv+now.toString()+".csv"));
+                        writer = new CSVWriter(new FileWriter(csv));
+                        List<String[]> data = new ArrayList<String[]>();
+                        data.add(new String[]{"lat", "lng", "rssi"});
+                        writer.writeAll(data);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    isNeedWrite=true;
+                }else{
+                    try {
+                        writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    text.setText("Запись сохранена");
+                    isNeedWrite=false;
+                }
+
+            }
+        };
+        LogStart.setOnClickListener(Log);
     }
 
 
@@ -66,6 +110,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
 
 
     private void init() {
+
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         myLocationListener = new MyLocationListener();
@@ -91,6 +136,8 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
         CQiTAb = findViewById(R.id.res_CqiTableIndex);
         ENB = findViewById(R.id.Res_eNB);
         TA = findViewById(R.id.res_TA);
+        text = findViewById(R.id.res_But);
+        LogStart = findViewById(R.id.button);
     }
 
     private String DecToHex(int dec) {
@@ -109,7 +156,6 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                     && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE}, 10);
             }
-
             List<CellInfo> cellInfoList;
             cellInfoList = telephonyManager.getAllCellInfo();
             for (CellInfo cellInfo : cellInfoList){
@@ -147,7 +193,12 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                             String cellidHex = DecToHex(CELLID);
                             String eNBHex = cellidHex.substring(0, cellidHex.length()-2);
                             int eNB = HexToDec(eNBHex);
-
+                        if(isNeedWrite){
+//                            List<String[]> data = new ArrayList<String[]>();
+//                            data.add(new String[]{String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()), String.valueOf(rssi)});
+                            String [] str = new String[]{String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()), String.valueOf(rssi)};
+                            writer.writeNext(str,false);
+                        }
                         ENB.setText(""+ eNB);
                         Mcc.setText(mcc);
                         TA.setText(String.valueOf(ta));
