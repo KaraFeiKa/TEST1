@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 
 
 public class MainActivity extends AppCompatActivity implements LocationListenerInterface {
-    String csv =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)+"/MyCsvFile.csv";
+    String csv =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)+"/";
     private TelephonyManager telephonyManager;
     private LocationManager locationManager;
     private MyLocationListener myLocationListener;
@@ -69,10 +69,10 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                 if(!isNeedWrite) {
                     text.setText("Идет запись");
                     try {
-                        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+                        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
                         LocalDateTime now = LocalDateTime.now();
 //                        writer = new CSVWriter(new FileWriter(csv+now.toString()+".csv"));
-                        writer = new CSVWriter(new FileWriter(csv));
+                        writer = new CSVWriter(new FileWriter(csv+dtf.format(now)+".csv"));
                         List<String[]> data = new ArrayList<String[]>();
                         data.add(new String[]{"lat", "lng", "rssi"});
                         writer.writeAll(data);
