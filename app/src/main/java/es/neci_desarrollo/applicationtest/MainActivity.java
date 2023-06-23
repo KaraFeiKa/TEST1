@@ -156,13 +156,17 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                     && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE}, 10);
             }
+//             switch (telephonyManager.getDataNetworkType())
+//             {
+//                 case TelephonyManager.NETWORK_TYPE_GSM:
+//             }
             List<CellInfo> cellInfoList;
             cellInfoList = telephonyManager.getAllCellInfo();
             for (CellInfo cellInfo : cellInfoList){
                 if (cellInfo instanceof CellInfoLte)
                 {
                     Log.d("LTE ALL",((CellInfoLte)cellInfo).toString());
-                    if (((CellInfoLte)cellInfo).isRegistered() != false)
+                    if (((CellInfoLte)cellInfo).isRegistered())
                     {
                         mcc = ((CellInfoLte)cellInfo).getCellIdentity().getMccString();
                         mnc = ((CellInfoLte)cellInfo).getCellIdentity().getMncString();
