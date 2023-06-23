@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
 //                        writer = new CSVWriter(new FileWriter(csv+now.toString()+".csv"));
                         writer = new CSVWriter(new FileWriter(csv+dtf.format(now)+".csv"));
                         List<String[]> data = new ArrayList<String[]>();
-                        data.add(new String[]{"lat", "lng", "rssi"});
+                        data.add(new String[]{"lat", "lng","Operator","mnc","mcc","CID","eNB","Band","Earfcn","PCI","RSSI","RSRP","RSRQ","SNR"});
                         writer.writeAll(data);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -200,7 +200,8 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                         if(isNeedWrite){
 //                            List<String[]> data = new ArrayList<String[]>();
 //                            data.add(new String[]{String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()), String.valueOf(rssi)});
-                            String [] str = new String[]{String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()), String.valueOf(rssi)};
+                            String [] str = new String[]{String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()),String.valueOf(Operator),String.valueOf(mnc),String.valueOf(mcc),String.valueOf(CELLID),String.valueOf(eNB),String.valueOf(Band),
+                                    String.valueOf(((CellInfoLte)cellInfo).getCellIdentity().getEarfcn()),String.valueOf(((CellInfoLte)cellInfo).getCellIdentity().getPci()), String.valueOf(rssi), String.valueOf(rsrp), String.valueOf(rsrq), String.valueOf(snr)};
                             writer.writeNext(str,false);
                         }
                         ENB.setText(""+ eNB);
