@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
 //                        writer = new CSVWriter(new FileWriter(csv+now.toString()+".csv"));
                         writer = new CSVWriter(new FileWriter(csv+dtf.format(now)+".csv"));
                         List<String[]> data = new ArrayList<String[]>();
-                        data.add(new String[]{"lat", "lng","Operator","mnc","mcc","CID","eNB","Band","Earfcn","PCI","RSSI","RSRP","RSRQ","SNR"});
+                        data.add(new String[]{"lat", "lng","Operator","mnc","mcc","CID","eNB","Band","Earfcn/Uarfcn/Arfcn","PCI/PSC/BSIC","RSSI","RSRP","RSRQ","SNR"});
                         writer.writeAll(data);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -161,19 +161,6 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                     && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE}, 10);
             }
-//             switch (telephonyManager.getDataNetworkType())
-//             {
-//                 case TelephonyManager.NETWORK_TYPE_GSM:
-//
-//                 break;
-//                 case TelephonyManager.NETWORK_TYPE_UMTS:
-//
-//                 break;
-//                 case TelephonyManager.NETWORK_TYPE_LTE:
-//
-//                 break;
-//                 default:
-//             }
             List<CellInfo> cellInfoList;
             cellInfoList = telephonyManager.getAllCellInfo();
             for (CellInfo cellInfo : cellInfoList){
@@ -220,9 +207,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
 
 
                                 if (isNeedWrite) {
-                                    //                            List<String[]> data = new ArrayList<String[]>();
-                                    //                            data.add(new String[]{String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()), String.valueOf(rssi)});
-                                    String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator), String.valueOf(mnc), String.valueOf(mcc), String.valueOf(CELLID), String.valueOf(eNB),
+                                      String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator), String.valueOf(mnc), String.valueOf(mcc), String.valueOf(CELLID), String.valueOf(eNB),
                                             String.valueOf(band), String.valueOf(((CellInfoLte) cellInfo).getCellIdentity().getEarfcn()), String.valueOf(((CellInfoLte) cellInfo).getCellIdentity().getPci()), String.valueOf(rssi), String.valueOf(rsrp), String.valueOf(rsrq), String.valueOf(snr)};
                                     writer.writeNext(str, false);
                                 }
@@ -313,9 +298,12 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                                 ASuLevel.setText(String.valueOf(AsuLevel));
 
                                 if (isNeedWrite) {
-                                    //                            List<String[]> data = new ArrayList<String[]>();
-                                    //                            data.add(new String[]{String.valueOf(location.getLatitude()),String.valueOf(location.getLongitude()), String.valueOf(rssi)});
-                                    String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude())};
+                                String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator),
+                                        String.valueOf(mnc), String.valueOf(mcc), String.valueOf(CELLID), "_",
+                                        "_", String.valueOf(cellInfoWcdma.getCellIdentity().getUarfcn()),
+                                        String.valueOf(cellInfoWcdma.getCellIdentity().getPsc()),
+                                        "_", String.valueOf(cellInfoWcdma.getCellSignalStrength().getDbm()),
+                                        "_", String.valueOf(rsrq)};
                                     writer.writeNext(str, false);
                                 }
                             }
@@ -361,17 +349,28 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                                 ASuLevel.setText(String.valueOf( cellInfoGsm.getCellSignalStrength().getAsuLevel()));
                                 LEvel.setText(String.valueOf(cellInfoGsm.getCellSignalStrength().getLevel()));
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                    RSSI.setText(String.valueOf(cellInfoGsm.getCellSignalStrength().getRssi()));
+                                    rssi = cellInfoGsm.getCellSignalStrength().getRssi();
                                 }
+                                RSSI.setText(String.valueOf(rssi));
                                 BRR = findViewById(R.id.RSRQ);
                                 BRR.setText("BRR");
                                 RSRQ.setText(String.valueOf(cellInfoGsm.getCellSignalStrength().getBitErrorRate()));
+
+                                if (isNeedWrite) {
+                                    String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator),
+                                            String.valueOf(mnc), String.valueOf(mcc), String.valueOf(CELLID), "_",
+                                            "_",(String.valueOf(cellInfoGsm.getCellIdentity().getArfcn())),
+                                            String.valueOf(cellInfoGsm.getCellIdentity().getBsic()),
+                                            String.valueOf(rssi), String.valueOf(cellInfoGsm.getCellSignalStrength().getDbm()),
+                                            "_", String.valueOf(rsrq)};
+                                    writer.writeNext(str, false);
+                                }
                             }
                         }
                             break;
                     default:
                         NetWork.setText("Необработано. "+telephonyManager.getDataNetworkType());
                 }
-                }
+            }
         }
 }
