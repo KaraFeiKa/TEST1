@@ -1,5 +1,6 @@
 package es.neci_desarrollo.applicationtest;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -14,8 +15,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.telephony.CellInfo;
+import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
+import android.telephony.CellInfoTdscdma;
 import android.telephony.CellInfoWcdma;
 import android.telephony.CellSignalStrength;
 import android.telephony.CellSignalStrengthGsm;
@@ -48,10 +51,10 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
     private TelephonyManager telephonyManager;
     private LocationManager locationManager;
     private MyLocationListener myLocationListener;
-    TextView latitude_res, longitude_res, Mcc, Mnc, RSSI, RSRP, RSRQ, SNR, EArfcn,CI,TAC,Band,OPerator,PCi,PCI,CQi,DBm,
-            LEvel,ASuLevel,CQiTAb,ENB,TA,text,NetWork,PSC,UARfcn,RNC,TAA,EcNo,RSCP,BRR;
+    TextView latitude_res, longitude_res, Mnc_Mcc, RSSI_RSRP,RSRQ_SNR_ECNO,text,earfcn_uarfcn_aerfcn,
+            lac_tac,cid,band_pci_psc,TA,OPerator,cqi_dBm, asulevel, level,enb_rnc_bsic;
     Button LogStart;
-    int rssi, rsrq, rsrp, snr,Cqi,dBm,Level,AsuLevel,CqiTAb,ta = 0;
+    int rssi, rsrq, rsrp, snr,Cqi,dBm,Level,AsuLevel,ta = 0;
     String mcc = "";
     String mnc = "";
     String Operator;
@@ -78,10 +81,9 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                     try {
                         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
                         LocalDateTime now = LocalDateTime.now();
-//                        writer = new CSVWriter(new FileWriter(csv+now.toString()+".csv"));
                         writer = new CSVWriter(new FileWriter(csv+dtf.format(now)+".csv"));
                         List<String[]> data = new ArrayList<String[]>();
-                        data.add(new String[]{"lat", "lng","Operator","mnc","mcc","CID","eNB","Band","Earfcn/Uarfcn/Arfcn","PCI/PSC/BSIC","RSSI","RSRP","RSRQ","SNR"});
+                        data.add(new String[]{"lat", "lng","Operator","Network","mnc","mcc","CID","eNB","Band","Earfcn/Uarfcn/Arfcn","PCI/PSC/BSIC","RSSI","RSRP","RSRQ","SNR"});
                         writer.writeAll(data);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -107,9 +109,9 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
     private void getLocation() {
         try {
             locationManager = (LocationManager) getApplicationContext().getSystemService(LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 2, myLocationListener);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 4, myLocationListener);
 
-        } catch (Exception e) {
+        } catch (Exception ignored) {
 
         }
     }
@@ -119,30 +121,23 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         myLocationListener = new MyLocationListener();
         myLocationListener.setLocationListenerInterface(this);
-        latitude_res = findViewById(R.id.Res_latitude);
-        longitude_res = findViewById(R.id.Res_longitude);
-        Mnc = findViewById(R.id.Res_MNC_Res);
-        Mcc = findViewById(R.id.Res_MCC_Res);
-        RSSI = findViewById(R.id.Res_RSSI);
-        RSRP = findViewById(R.id.Res_RSRP);
-        RSRQ = findViewById(R.id.Res_RSRQ);
-        SNR = findViewById(R.id.Res_SNR);
-        EArfcn = findViewById(R.id.res_Earfcn);
-        TAC = findViewById(R.id.Res_LAC);
-        CI = findViewById(R.id.Res_CID);
-        Band = findViewById(R.id.res_BAnd);
-        OPerator = findViewById(R.id.OPERATOR_Res);
-        PCi = findViewById(R.id.res_PCI);
-        CQi = findViewById(R.id.res_CQi);
-        DBm = findViewById(R.id.res_dBM);
-        LEvel = findViewById(R.id.res_Level);
-        ASuLevel = findViewById(R.id.res_AsuLevel);
-        CQiTAb = findViewById(R.id.res_CqiTableIndex);
-        ENB = findViewById(R.id.Res_eNB);
-        TA = findViewById(R.id.res_TA);
-        text = findViewById(R.id.res_But);
+        latitude_res = findViewById(R.id.Latitude);
+        longitude_res = findViewById(R.id.Longitude);
+        Mnc_Mcc = findViewById(R.id.MCC_MNC);
+        RSSI_RSRP = findViewById(R.id.RSRP_RSSI);
+        RSRQ_SNR_ECNO = findViewById(R.id.RSRQ_SNR_EcNo);
+        earfcn_uarfcn_aerfcn = findViewById(R.id.Earfcn_Uarfcn_Aerfcn);
+        lac_tac = findViewById(R.id.LAC_TAC);
+        cid = findViewById(R.id.CID);
+        band_pci_psc = findViewById(R.id.Band_Pci_Psc);
+        TA = findViewById(R.id.TA);
+        OPerator = findViewById(R.id.Operator);
+        cqi_dBm = findViewById(R.id.Cqi_dBm);
+        level = findViewById(R.id.Level);
+        asulevel = findViewById(R.id.AsuLevel);
+        enb_rnc_bsic = findViewById(R.id.eNB_Rnc_Bsic);
+        text = findViewById(R.id.text);
         LogStart = findViewById(R.id.button);
-        NetWork = findViewById(R.id.TypeNetork_Res);
     }
 
     private String DecToHex(int dec) {
@@ -153,10 +148,12 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
         return  Integer.parseInt(hex, 16);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.R)
+    @SuppressLint("SetTextI18n")
     @Override
     public void onLocationChanged(Location location) {
-            latitude_res.setText(String.valueOf(location.getLatitude()));
-            longitude_res.setText(String.valueOf(location.getLongitude()));
+            latitude_res.setText("latitude   " + location.getLatitude());
+            longitude_res.setText("latitude   " + location.getLongitude());
             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                     && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE}, 10);
@@ -164,87 +161,75 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
             List<CellInfo> cellInfoList;
             cellInfoList = telephonyManager.getAllCellInfo();
             for (CellInfo cellInfo : cellInfoList){
-                switch(telephonyManager.getDataNetworkType()) {
+                switch (telephonyManager.getDataNetworkType()) {
                     case TelephonyManager.NETWORK_TYPE_LTE:
-                        NetWork.setText("4G");
                         if (cellInfo instanceof CellInfoLte) {
-                            Log.d("LTE ALL", ((CellInfoLte) cellInfo).toString());
                             CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
                             if (cellInfoLte.isRegistered()) {
                                 mcc = cellInfoLte.getCellIdentity().getMccString();
                                 mnc = cellInfoLte.getCellIdentity().getMncString();
-                                EArfcn.setText(String.valueOf(cellInfoLte.getCellIdentity().getEarfcn()));
+                                Mnc_Mcc.setText("MCC: " + mcc + "  MNC: " + mnc);
+                                Operator = (String) cellInfoLte.getCellIdentity().getOperatorAlphaLong();
+                                OPerator.setText("Operator  " + Operator + "  4G");
+                                lac_tac.setText("TAC:   " + cellInfoLte.getCellIdentity().getTac());
+                                int CELLID = cellInfoLte.getCellIdentity().getCi();
+                                cid.setText("Cell ID:  " + CELLID);
+                                earfcn_uarfcn_aerfcn.setText("Earfcn:   " + (cellInfoLte.getCellIdentity().getEarfcn()));
+                                String cellidHex = DecToHex(CELLID);
+                                String eNBHex = cellidHex.substring(0, cellidHex.length() - 2);
+                                int eNB = HexToDec(eNBHex);
+                                enb_rnc_bsic.setText("eNB:   " + eNB);
+                                int PCI = cellInfoLte.getCellIdentity().getPci();
                                 int band = 0;
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                    int[] bands = ((CellInfoLte) cellInfo).getCellIdentity().getBands();
-                                    Band.setText(Arrays.stream(bands).mapToObj(String::valueOf)
-                                            .collect(Collectors.joining(", ")));
+                                    int[] bands = cellInfoLte.getCellIdentity().getBands();
+                                    band_pci_psc.setText("Band  " + Arrays.stream(bands).mapToObj(String::valueOf)
+                                            .collect(Collectors.joining(", ")) + "   Pci:  " + PCI);
                                     if (bands.length > 0) {
                                         band = bands[0];
                                     }
                                 }
-                                int CELLID = cellInfoLte.getCellIdentity().getCi();
-                                CI.setText(String.valueOf(CELLID));
-                                TAC.setText(String.valueOf(((CellInfoLte) cellInfo).getCellIdentity().getTac()));
-                                PCi.setText(String.valueOf(((CellInfoLte) cellInfo).getCellIdentity().getPci()));
-                                Operator = (String) ((CellInfoLte) cellInfo).getCellIdentity().getOperatorAlphaLong();
-                                OPerator.setText(Operator);
-                                rssi = ((CellInfoLte) cellInfo).getCellSignalStrength().getRssi();
-                                rsrp = ((CellInfoLte) cellInfo).getCellSignalStrength().getRsrp();
-                                rsrq = ((CellInfoLte) cellInfo).getCellSignalStrength().getRsrq();
-                                Cqi = ((CellInfoLte) cellInfo).getCellSignalStrength().getCqi();
-                                ta = ((CellInfoLte) cellInfo).getCellSignalStrength().getTimingAdvance();
-                                AsuLevel = ((CellInfoLte) cellInfo).getCellSignalStrength().getAsuLevel();
-                                dBm = ((CellInfoLte) cellInfo).getCellSignalStrength().getDbm();
-                                Level = ((CellInfoLte) cellInfo).getCellSignalStrength().getLevel();
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                    CqiTAb = ((CellInfoLte) cellInfo).getCellSignalStrength().getCqiTableIndex();
-                                }
-
-                                String cellidHex = DecToHex(CELLID);
-                                String eNBHex = cellidHex.substring(0, cellidHex.length() - 2);
-                                int eNB = HexToDec(eNBHex);
-
 
                                 if (isNeedWrite) {
-                                      String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator), String.valueOf(mnc), String.valueOf(mcc), String.valueOf(CELLID), String.valueOf(eNB),
-                                            String.valueOf(band), String.valueOf(((CellInfoLte) cellInfo).getCellIdentity().getEarfcn()), String.valueOf(((CellInfoLte) cellInfo).getCellIdentity().getPci()), String.valueOf(rssi), String.valueOf(rsrp), String.valueOf(rsrq), String.valueOf(snr)};
-                                    writer.writeNext(str, false);
-                                }
-                                ENB.setText("" + eNB);
-                                Mcc.setText(mcc);
-                                if (ta != Integer.MAX_VALUE) {
-                                    TA.setText(String.valueOf(ta));
-                                } else {
-                                    TA.setText(String.valueOf("-"));
-                                }
-                                Mnc.setText(mnc);
-                                RSSI.setText(String.valueOf(rssi));
-                                RSRP.setText(String.valueOf(rsrp));
-                                RSRQ.setText(String.valueOf(rsrq));
-                                SNR.setText(String.valueOf(snr));
-                                if (Cqi != Integer.MAX_VALUE) {
-                                    CQi.setText(String.valueOf(Cqi));
-                                } else {
-                                    CQi.setText("-");
-                                }
-                                DBm.setText(String.valueOf(dBm));
-                                LEvel.setText(String.valueOf(Level));
-                                ASuLevel.setText(String.valueOf(AsuLevel));
-                                if (Cqi != Integer.MAX_VALUE) {
-                                    CQiTAb.setText(String.valueOf(CqiTAb));
-                                } else {
-                                    CQiTAb.setText("-");
+                                    String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator),"4G",
+                                            String.valueOf(mnc), String.valueOf(mcc), String.valueOf(CELLID), String.valueOf(eNB),
+                                            String.valueOf(cellInfoLte.getCellIdentity().getTac()),String.valueOf(band), String.valueOf(cellInfoLte.getCellIdentity().getEarfcn()),
+                                            String.valueOf(PCI), String.valueOf(rssi), String.valueOf(rsrp),
+                                            String.valueOf(rsrq), String.valueOf(snr), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(Cqi), String.valueOf(ta)};
+                                            writer.writeNext(str, false);
                                 }
                             }
-                    List<CellSignalStrength> cellInfoList1;
-            cellInfoList1 = telephonyManager.getSignalStrength().getCellSignalStrengths();
-            for (CellSignalStrength cellInfo1 : cellInfoList1) {
-                if (cellInfo1 instanceof CellSignalStrengthLte) {
-                    snr = ((CellSignalStrengthLte) cellInfo1).getRssnr();
-                }
-                SNR.setText(String.valueOf(snr));
-            }
+                            List<CellSignalStrength> cellInfoList1;
+                            cellInfoList1 = telephonyManager.getSignalStrength().getCellSignalStrengths();
+                            for (CellSignalStrength cellInfo1 : cellInfoList1) {
+                                if (cellInfo1 instanceof CellSignalStrengthLte) {
+                                    snr = ((CellSignalStrengthLte) cellInfo1).getRssnr();
+                                    rssi = ((CellSignalStrengthLte) cellInfo1).getRssi();
+                                    rsrp = ((CellSignalStrengthLte) cellInfo1).getRsrp();
+
+                                    rsrq = ((CellSignalStrengthLte) cellInfo1).getRsrq();
+                                    Cqi = ((CellSignalStrengthLte) cellInfo1).getCqi();
+                                    dBm = ((CellSignalStrengthLte) cellInfo1).getDbm();
+                                    if (Cqi != Integer.MAX_VALUE) {
+                                        cqi_dBm.setText("dBm: " + dBm + "  Cqi: " + Cqi);
+                                    } else {
+                                        cqi_dBm.setText("dBm: " + dBm + "  Cqi:  _");
+                                    }
+                                    AsuLevel = ((CellSignalStrengthLte) cellInfo1).getAsuLevel();
+                                    Level = ((CellSignalStrengthLte) cellInfo1).getLevel();
+                                    ta =((CellSignalStrengthLte) cellInfo1).getTimingAdvance();
+                                    if (ta != Integer.MAX_VALUE) {
+                                        TA.setText("TA   " + (ta));
+                                    } else {
+                                        TA.setText("TA   _");
+                                    }
+
+                                }
+                                RSRQ_SNR_ECNO.setText("RSRQ: " + rsrq + "  SNR: " + snr);
+                                RSSI_RSRP.setText("RSSI: " + rssi + "  dBm" + "   RSRP: " + rsrp + "  dBm");
+                                level.setText("Level:  " + Level);
+                                asulevel.setText("Asulevel:  " + AsuLevel);
+                            }
                         }
                         break;
                     case TelephonyManager.NETWORK_TYPE_UMTS:
@@ -254,122 +239,103 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                     case TelephonyManager.NETWORK_TYPE_EVDO_0:
                     case TelephonyManager.NETWORK_TYPE_EVDO_A:
                     case TelephonyManager.NETWORK_TYPE_EVDO_B:
-                        NetWork.setText("3G");
-                        if (cellInfo instanceof CellInfoWcdma) {
-                            Log.d("UMTS ALL", ((CellInfoWcdma) cellInfo).toString());
+                              if (cellInfo instanceof CellInfoWcdma) {
                             CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
                             if (cellInfoWcdma.isRegistered()) {
                                 mcc = cellInfoWcdma.getCellIdentity().getMccString();
                                 mnc = cellInfoWcdma.getCellIdentity().getMncString();
-                                Operator = (String)  cellInfoWcdma.getCellIdentity().getOperatorAlphaLong();
-                                OPerator.setText(Operator);
-                                Mcc.setText(mcc);
-                                Mnc.setText(mnc);
+                                Mnc_Mcc.setText("MCC: " + mcc + "  MNC: " + mnc);
+                                Operator = (String) cellInfoWcdma.getCellIdentity().getOperatorAlphaLong();
+                                OPerator.setText("Operator  " + Operator + " 3G");
+                                lac_tac.setText("LAC:   " + cellInfoWcdma.getCellIdentity().getLac());
                                 int CELLID = cellInfoWcdma.getCellIdentity().getCid();
-                                CI.setText(String.valueOf(CELLID));
-                                TAC.setText(String.valueOf(cellInfoWcdma.getCellIdentity().getLac()));
-                                PSC = findViewById(R.id.eNB);
-                                PSC.setText("Psc");
-                                ENB.setText(String.valueOf(cellInfoWcdma.getCellIdentity().getPsc()));
-                                UARfcn = findViewById(R.id.EArfcn);
-                                UARfcn.setText("Uarfcn");
-                                EArfcn.setText(String.valueOf(cellInfoWcdma.getCellIdentity().getUarfcn()));
-                                RNC = findViewById(R.id.BAnd);
-                                RNC.setText("Rnc");
-                                PCI = findViewById(R.id.PCI);
-                                PCI.setText(" ");
-                                PCi.setText(" ");
-                                TAA = findViewById(R.id.TA);
-                                TAA.setText(" ");
-                                TA.setText(" ");
-                                AsuLevel = cellInfoWcdma.getCellSignalStrength().getAsuLevel();
-                                rsrq = cellInfoWcdma.getCellSignalStrength().getDbm();
-                                RSCP = findViewById(R.id.RSRP);
-                                RSCP.setText("RSCP");
-                                RSRP.setText(String.valueOf(rsrq));
-                                Level = cellInfoWcdma.getCellSignalStrength().getLevel();
-                                LEvel.setText(String.valueOf(Level));
-                                EcNo = findViewById(R.id.RSRQ);
-                                EcNo.setText("EcNo");
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                    rsrq = cellInfoWcdma.getCellSignalStrength().getEcNo();
-                                }
-                                RSRQ.setText(String.valueOf(rsrq));
-                                ASuLevel.setText(String.valueOf(AsuLevel));
+                                cid.setText("Cell ID:  " + CELLID);
+                                earfcn_uarfcn_aerfcn.setText("Uarfcn:   " + (cellInfoWcdma.getCellIdentity().getUarfcn()));
+                                int RNCID = CELLID / 65536;
+                                enb_rnc_bsic.setText("Rnc:   " + RNCID);
+                                int PSC = cellInfoWcdma.getCellIdentity().getPsc();
+                                band_pci_psc.setText("Psc:   " + PSC);
 
                                 if (isNeedWrite) {
-                                String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator),
-                                        String.valueOf(mnc), String.valueOf(mcc), String.valueOf(CELLID), "_",
-                                        "_", String.valueOf(cellInfoWcdma.getCellIdentity().getUarfcn()),
-                                        String.valueOf(cellInfoWcdma.getCellIdentity().getPsc()),
-                                        "_", String.valueOf(cellInfoWcdma.getCellSignalStrength().getDbm()),
-                                        "_", String.valueOf(rsrq)};
+                                    String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator), "3G",
+                                            String.valueOf(mnc), String.valueOf(mcc), String.valueOf(CELLID), String.valueOf(RNCID),
+                                            String.valueOf(cellInfoWcdma.getCellIdentity().getLac()), String.valueOf(PSC), String.valueOf(cellInfoWcdma.getCellIdentity().getUarfcn()),
+                                            "_", String.valueOf(rssi), String.valueOf(rsrp),
+                                            String.valueOf(rsrq), String.valueOf(snr), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(Cqi), String.valueOf(ta)};
                                     writer.writeNext(str, false);
                                 }
                             }
+                                  List<CellSignalStrength> cellInfoList2;
+                                  cellInfoList2 = telephonyManager.getSignalStrength().getCellSignalStrengths();
+                                  for (CellSignalStrength cellInfo2 : cellInfoList2) {
+                                      if (cellInfo2 instanceof CellSignalStrengthWcdma) {
+                                          Log.d("UMTS", ((CellSignalStrengthWcdma) cellInfo2).toString());
+                                          RSSI_RSRP.setText("RSSI:  " + "  dBm" + "   RSRP: " +"  dBm");
+                                          AsuLevel =  ((CellSignalStrengthWcdma)cellInfo2).getAsuLevel();
+                                          Level =  ((CellSignalStrengthWcdma)cellInfo2).getLevel();
+                                          level.setText("Level:  " + Level);
+                                          asulevel.setText("Asulevel:  " + AsuLevel);
+                                          dBm = ((CellSignalStrengthWcdma)cellInfo2).getDbm();
+                                          cqi_dBm.setText("dBm: " + dBm + "  Cqi:  _");
+                                          int EcNo = ((CellSignalStrengthWcdma)cellInfo2).getEcNo();;
+                                          RSRQ_SNR_ECNO.setText("EcNo:   " + EcNo);
+                                      }
+                                  }
                         }
-
                         break;
                     case TelephonyManager.NETWORK_TYPE_EDGE:
                     case TelephonyManager.NETWORK_TYPE_GPRS:
                     case TelephonyManager.NETWORK_TYPE_GSM:
-                        NetWork.setText("2G");
                         if (cellInfo instanceof CellInfoGsm) {
-                            Log.d("UMTS ALL", ((CellInfoGsm) cellInfo).toString());
                             CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
                             if (cellInfoGsm.isRegistered()) {
                                 mcc = cellInfoGsm.getCellIdentity().getMccString();
                                 mnc = cellInfoGsm.getCellIdentity().getMncString();
-                                Operator = (String)  cellInfoGsm.getCellIdentity().getOperatorAlphaLong();
-                                OPerator.setText(Operator);
-                                Mcc.setText(mcc);
-                                Mnc.setText(mnc);
+                                Mnc_Mcc.setText("MCC: " + mcc + "  MNC: " + mnc);
+                                Operator = (String) cellInfoGsm.getCellIdentity().getOperatorAlphaLong();
+                                OPerator.setText("Operator  " + Operator + " 2G");
+                                lac_tac.setText("LAC:   " + cellInfoGsm.getCellIdentity().getLac());
                                 int CELLID = cellInfoGsm.getCellIdentity().getCid();
-                                CI.setText(String.valueOf(CELLID));
-                                TAC.setText(String.valueOf(cellInfoGsm.getCellIdentity().getLac()));
-                                UARfcn = findViewById(R.id.EArfcn);
-                                UARfcn.setText("Arfcn");
-                                EArfcn.setText(String.valueOf(cellInfoGsm.getCellIdentity().getArfcn()));
-                                PSC = findViewById(R.id.eNB);
-                                PSC.setText("Bsic");
-                                ENB.setText(String.valueOf(cellInfoGsm.getCellIdentity().getBsic()));
-                                RNC = findViewById(R.id.BAnd);
-                                RNC.setText(" ");
-                                PCI = findViewById(R.id.PCI);
-                                PCI.setText(" ");
-                                PCi.setText(" ");
-                                RSCP = findViewById(R.id.RSRP);
-                                RSCP.setText("RSCP");
-                                if (cellInfoGsm.getCellSignalStrength().getTimingAdvance() != Integer.MAX_VALUE) {
-                                    TA.setText(String.valueOf(cellInfoGsm.getCellSignalStrength().getTimingAdvance()));
-                                } else {
-                                    TA.setText(("-"));
-                                }
-                                RSRP.setText(String.valueOf( cellInfoGsm.getCellSignalStrength().getDbm()));
-                                ASuLevel.setText(String.valueOf( cellInfoGsm.getCellSignalStrength().getAsuLevel()));
-                                LEvel.setText(String.valueOf(cellInfoGsm.getCellSignalStrength().getLevel()));
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                    rssi = cellInfoGsm.getCellSignalStrength().getRssi();
-                                }
-                                RSSI.setText(String.valueOf(rssi));
-                                BRR = findViewById(R.id.RSRQ);
-                                BRR.setText("BRR");
-                                RSRQ.setText(String.valueOf(cellInfoGsm.getCellSignalStrength().getBitErrorRate()));
+                                cid.setText("Cell ID:  " + CELLID);
+                                earfcn_uarfcn_aerfcn.setText("Uarfcn:   " + (cellInfoGsm.getCellIdentity().getArfcn()));
+                                int RNCID = CELLID / 65536;
+                                enb_rnc_bsic.setText("Bcis:  "+cellInfoGsm.getCellIdentity().getBsic()+"   Rnc: " + RNCID);
 
                                 if (isNeedWrite) {
-                                    String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator),
-                                            String.valueOf(mnc), String.valueOf(mcc), String.valueOf(CELLID), "_",
-                                            "_",(String.valueOf(cellInfoGsm.getCellIdentity().getArfcn())),
-                                            String.valueOf(cellInfoGsm.getCellIdentity().getBsic()),
-                                            String.valueOf(rssi), String.valueOf(cellInfoGsm.getCellSignalStrength().getDbm()),
-                                            "_", String.valueOf(rsrq)};
+                                    String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator), "3G",
+                                            String.valueOf(mnc), String.valueOf(mcc), String.valueOf(CELLID), String.valueOf(RNCID),
+                                            String.valueOf(cellInfoGsm.getCellIdentity().getLac()), "_", String.valueOf(cellInfoGsm.getCellIdentity().getArfcn()),
+                                            "_", String.valueOf(rssi), String.valueOf(rsrp),
+                                            String.valueOf(rsrq), String.valueOf(snr), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(Cqi), String.valueOf(ta)};
                                     writer.writeNext(str, false);
                                 }
                             }
+                            List<CellSignalStrength> cellInfoList3;
+                            cellInfoList3 = telephonyManager.getSignalStrength().getCellSignalStrengths();
+                            for (CellSignalStrength cellInfo3 : cellInfoList3) {
+                                if (cellInfo3 instanceof CellSignalStrengthGsm) {
+                                    Log.d("UMTS", ((CellSignalStrengthGsm) cellInfo3).toString());
+                                    cqi_dBm.setText("dBm:   "+((CellSignalStrengthGsm) cellInfo3).getDbm());
+                                    AsuLevel = ((CellSignalStrengthGsm) cellInfo3).getAsuLevel();
+                                    Level = ((CellSignalStrengthGsm) cellInfo3).getLevel();
+                                    rssi = ((CellSignalStrengthGsm) cellInfo3).getRssi();
+                                    RSRQ_SNR_ECNO.setText("Bit Error Rate:  "+((CellSignalStrengthGsm)cellInfo3).getBitErrorRate());
+                                    dBm = ((CellSignalStrengthGsm)cellInfo3).getDbm();
+                                    ta = ((CellSignalStrengthGsm)cellInfo3).getTimingAdvance();
+                                    if (ta != Integer.MAX_VALUE)
+                                        TA.setText("Ta:   "+ta);
+                                    } else {
+                                        TA.setText(("TA:   -"));
+                                    }
+                                }
+                            RSSI_RSRP.setText("RSSI:   "+rssi);
+                            level.setText("Level:  " + Level);
+                            asulevel.setText("Asulevel:  " + AsuLevel);
+                            cqi_dBm.setText("dBm: " + dBm + "  Cqi:  _");
                         }
-                            break;
+                        break;
                     default:
-                        NetWork.setText("Необработано. "+telephonyManager.getDataNetworkType());
+                        OPerator.setText("Необработано");
                 }
             }
         }

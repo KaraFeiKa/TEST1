@@ -1,445 +1,155 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/Grey"
     tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/Logo"
+
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="5sp"
-        android:text="FederovProject"
-        android:textAlignment="center"
-        android:textColor="@color/white"
-        android:textSize="30sp" />
-
-    <TextView
-        android:id="@+id/OPERATOR"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="50sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"
-        android:text="Operator:" />
-
-    <TextView
-        android:id="@+id/OPERATOR_Res"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="50sp"
-        android:layout_marginStart="140sp"
-        android:layout_marginEnd="110sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"/>
-
-    <TextView
-        android:id="@+id/TypeNetork_Res"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="50sp"
-        android:layout_marginStart="330sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"/>
-
-
-    <TextView
-        android:id="@+id/MCC"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="80sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"
-        android:text="@string/MCC" />
-    <TextView
-        android:id="@+id/Res_MCC_Res"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="80sp"
-        android:layout_marginStart="140sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"/>
-
-
-    <TextView
-        android:id="@+id/MNC"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="110sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"
-        android:text="@string/MNC" />
-    <TextView
-        android:id="@+id/Res_MNC_Res"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="110sp"
-        android:layout_marginStart="140sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"/>
-
-    <TextView
-        android:id="@+id/LAC"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="140sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"
-        android:text="@string/LAC_TAC" />
-    <TextView
-        android:id="@+id/Res_LAC"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="140sp"
-        android:layout_marginStart="140sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"/>
-
-    <TextView
-        android:id="@+id/CID"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="170sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"
-        android:text="@string/CID" />
-    <TextView
-        android:id="@+id/Res_CID"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="170sp"
-        android:layout_marginStart="140sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"/>
-
-    <TextView
-        android:id="@+id/eNB"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="200sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"
-        android:text="eNB:" />
-    <TextView
-        android:id="@+id/Res_eNB"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="200sp"
-        android:layout_marginStart="140sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"/>
-
-        <TextView
-            android:id="@+id/BAnd"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="230sp"
-            android:text="Band:"
-            android:textColor="@color/white"
-            android:textSize="20sp" />
-
-        <TextView
-            android:id="@+id/res_BAnd"
+        android:layout_height="match_parent">
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="140sp"
-            android:layout_marginTop="230sp"
-            android:textColor="@color/white"
-            android:textSize="20sp" />
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            >
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="NOC Project"
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                android:textSize="35sp" />
 
-    <TextView
-        android:id="@+id/PCI"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="260sp"
-        android:text="Pci:"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
+            <TextView
+                android:id="@+id/Operator"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="25sp"
+                android:textColor="@color/white"
+                />
 
-    <TextView
-        android:id="@+id/res_PCI"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="70sp"
-        android:layout_marginEnd="240sp"
-        android:layout_marginTop="260sp"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
+            <TextView
+                android:id="@+id/MCC_MNC"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="25sp"
+                android:textColor="@color/white"
+                />
+            <TextView
+                android:id="@+id/LAC_TAC"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="25sp"
+                android:textColor="@color/white" />
+            <TextView
+                android:id="@+id/CID"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="25sp"
+                android:textColor="@color/white"
+                />
+            <TextView
+                android:id="@+id/Earfcn_Uarfcn_Aerfcn"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="25sp"
+                android:textColor="@color/white" />
+            <TextView
+                android:id="@+id/eNB_Rnc_Bsic"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="25sp"
+                android:textColor="@color/white" />
+            <TextView
+                android:id="@+id/Band_Pci_Psc"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="25sp"
+                android:textColor="@color/white" />
+            <TextView
+                android:id="@+id/TA"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="25sp"
+                android:textColor="@color/white" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="GPS"
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                android:textSize="30sp" />
+            <TextView
+                android:id="@+id/Longitude"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="25sp"
+                android:textColor="@color/white" />
+            <TextView
+                android:id="@+id/Latitude"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="25sp"
+                android:textColor="@color/white" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Parameters"
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                android:textSize="30sp" />
+            <TextView
+                android:id="@+id/RSRP_RSSI"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="25sp"
+                android:textColor="@color/white"
+                />
+            <TextView
+                android:id="@+id/RSRQ_SNR_EcNo"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="25sp"
+                android:textColor="@color/white"
+                />
+            <TextView
+                android:id="@+id/Cqi_dBm"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="25sp"
+                android:textColor="@color/white" />
+            <TextView
+                android:id="@+id/Level"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="25sp"
+                android:textColor="@color/white" />
+            <TextView
+                android:id="@+id/AsuLevel"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:textSize="25sp"
+                android:textColor="@color/white"
+                />
+            <Button
+                android:id="@+id/button"
+                android:layout_marginStart="170sp"
+                android:layout_marginEnd="240sp"
+                android:layout_width="100dp"
+                android:layout_height="50dp"
+                android:text="Лог" />
 
-    <TextView
-        android:id="@+id/TA"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="180sp"
-        android:layout_marginEnd="20sp"
-        android:layout_marginTop="260sp"
-        android:text="TA:"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
+            <TextView
+                android:id="@+id/text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+            />
 
-    <TextView
-        android:id="@+id/res_TA"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="240sp"
-        android:layout_marginEnd="20sp"
-        android:layout_marginTop="260sp"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/GPScord"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="290sp"
-        android:text="@string/GPS"
-        android:textAlignment="center"
-        android:textColor="@color/white"
-        android:textSize="30sp" />
-
-    <TextView
-        android:id="@+id/longitude"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="330sp"
-        android:textSize="25sp"
-        android:textColor="@color/white"
-        android:text="@string/longitude" />
-
-    <TextView
-        android:id="@+id/Res_longitude"
-        android:layout_width="230dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="150sp"
-        android:layout_marginTop="330dp"
-        android:layout_marginEnd="30dp"
-        android:textColor="@color/white"
-        android:textSize="25sp" />
-
-    <TextView
-        android:id="@+id/latitude"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="365sp"
-        android:text="@string/latitude"
-        android:textColor="@color/white"
-        android:textSize="25sp" />
-
-    <TextView
-        android:id="@+id/Res_latitude"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="365sp"
-        android:layout_marginStart="150sp"
-        android:layout_marginEnd="30sp"
-        android:textSize="25sp"
-        android:textColor="@color/white" />
-
-    <TextView
-        android:id="@+id/Parametrs"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="400sp"
-        android:text="Parameters"
-        android:textAlignment="center"
-        android:textColor="@color/white"
-        android:textSize="30sp" />
-
-    <TextView
-        android:id="@+id/RSSI"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="440sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"
-        android:text="@string/RSSI" />
-    <TextView
-        android:id="@+id/Res_RSSI"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="440sp"
-        android:layout_marginStart="140sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"/>
-    <TextView
-        android:id="@+id/RSRP"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="470sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"
-        android:text="@string/RSRP" />
-    <TextView
-        android:id="@+id/Res_RSRP"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="470sp"
-        android:layout_marginStart="140sp"
-        android:textSize="20sp"
-        android:textColor="@color/white" />
-
-    <TextView
-        android:id="@+id/RSRQ"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="500sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"
-        android:text="@string/RSRQ" />
-    <TextView
-        android:id="@+id/Res_RSRQ"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="500sp"
-        android:layout_marginStart="140sp"
-        android:textSize="20sp"
-        android:textColor="@color/white" />
-
-    <TextView
-        android:id="@+id/SNR"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="530sp"
-        android:textSize="20sp"
-        android:textColor="@color/white"
-        android:text="@string/SNR" />
-
-    <TextView
-        android:id="@+id/Res_SNR"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="530sp"
-        android:layout_marginStart="140sp"
-        android:textSize="20sp"
-        android:textColor="@color/white" />
-
-        <TextView
-            android:id="@+id/EArfcn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="560sp"
-            android:text="Earfcn:"
-            android:textColor="@color/white"
-            android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/res_Earfcn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="140sp"
-        android:layout_marginTop="560sp"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
-    <TextView
-        android:id="@+id/CQi"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="590sp"
-        android:text="Cqi:"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/res_CQi"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="140sp"
-        android:layout_marginTop="590sp"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/dBM"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="620sp"
-        android:text="dBm:"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/res_dBM"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="140sp"
-        android:layout_marginTop="620sp"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/Level"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="650sp"
-        android:text="Level:"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/res_Level"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="140sp"
-        android:layout_marginTop="650sp"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/AsuLevel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="680sp"
-        android:text="AsuLevel:"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/res_AsuLevel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="140sp"
-        android:layout_marginTop="680sp"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/CqiTableIndex"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="710sp"
-        android:text="CqiTableIndex:"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/res_CqiTableIndex"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="140sp"
-        android:layout_marginTop="710sp"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
-
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="750sp"
-        android:text="Лог"
-        android:textAlignment="center" />
-
-    <TextView
-        android:id="@+id/res_But"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="140sp"
-        android:layout_marginTop="760sp"
-        android:textColor="@color/white"
-        android:textSize="20sp" />
-
-
-
-</RelativeLayout>
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
