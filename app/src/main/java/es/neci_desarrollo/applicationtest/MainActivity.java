@@ -323,6 +323,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                                 int PSC = cellInfoWcdma.getCellIdentity().getPsc();
                                 band_pci_psc.setText("Psc:   " + PSC);
 
+
                                 if (isNeedWrite) {
                                     String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator), "3G",
                                             String.valueOf(mnc), String.valueOf(mcc), String.valueOf(CELLID), String.valueOf(RNCID),
