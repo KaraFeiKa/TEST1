@@ -87,7 +87,11 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                         LocalDateTime now = LocalDateTime.now();
                         writer = new CSVWriter(new FileWriter(csv + dtf.format(now) + ".csv"));
                         List<String[]> data = new ArrayList<String[]>();
-                        data.add(new String[]{"lat", "log", "Operator", "Network", "mcc", "mnc","TAC/LAC", "CID", "eNB", "Band", "Earfcn","Uarfcn","Arfcn", "PCI","PSC","RNC","BSIC", "RSSI", "RSRP", "RSRQ", "SNR","EcNo","BER","Cqi","dBm","Level","Asulevel","Ta"});
+                        data.add(new String[]{"lat", "log", "Operator", "Network", "mcc", "mnc",
+                                "TAC/LAC", "CID", "eNB", "Band", "Earfcn",
+                                "Uarfcn","Arfcn", "PCI","PSC","RNC",
+                                "BSIC", "RSSI", "RSRP", "RSRQ",
+                                "SNR","EcNo","BER","Cqi","dBm","Level","Asulevel","Ta"});
                         writer.writeAll(data);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -290,11 +294,14 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                                 }
 
                                 if (isNeedWrite) {
-                                    String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator), "4G",
-                                            String.valueOf(mcc), String.valueOf(mnc), String.valueOf(cellInfoLte.getCellIdentity().getTac()), String.valueOf(CELLID), String.valueOf(eNB),
-                                            String.valueOf(cellInfoLte.getCellIdentity().getTac()), String.valueOf(band), String.valueOf(cellInfoLte.getCellIdentity().getEarfcn()),"","",
-                                            String.valueOf(PCI),"","","", String.valueOf(rssi), String.valueOf(rsrp),
-                                            String.valueOf(rsrq), String.valueOf(snr),"","",String.valueOf(Cqi),String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(ta)};
+                                    String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()),
+                                            String.valueOf(Operator), "4G", String.valueOf(mcc), String.valueOf(mnc),
+                                            String.valueOf(cellInfoLte.getCellIdentity().getTac()), String.valueOf(CELLID), String.valueOf(eNB),
+                                            String.valueOf(band), String.valueOf(cellInfoLte.getCellIdentity().getEarfcn()),"","",String.valueOf(PCI)
+                                            ,"","","",String.valueOf(rssi), String.valueOf(rsrp),
+                                            String.valueOf(rsrq),
+                                            String.valueOf(snr),"","", String.valueOf(Cqi),String.valueOf(dBm),String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(ta)
+                                            };
                                     writer.writeNext(str, false);
                                 }
                             }
@@ -325,11 +332,15 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                                 band_pci_psc.setText("Psc:   " + PSC);
 
                                 if (isNeedWrite) {
-                                    String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator), "3G",
-                                            String.valueOf(mcc), String.valueOf(mnc), String.valueOf(cellInfoWcdma.getCellIdentity().getLac()),
-                                            String.valueOf(CELLID),"","","",String.valueOf(cellInfoWcdma.getCellIdentity().getUarfcn()),"","",String.valueOf(PSC), String.valueOf(RNCID),
-                                            "", String.valueOf(rssi), String.valueOf(rsrp), String.valueOf(rsrq), String.valueOf(snr),String.valueOf(EcNo),"",
-                                            String.valueOf(Cqi),String.valueOf(dBm),String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(ta)};
+                                    String[] str = new String[]{
+                                            String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator), "3G",
+                                            String.valueOf(mcc), String.valueOf(mnc),
+                                            String.valueOf(cellInfoWcdma.getCellIdentity().getLac()), String.valueOf(CELLID), "","","",
+                                            String.valueOf(cellInfoWcdma.getCellIdentity().getUarfcn()),"","",String.valueOf(PSC), String.valueOf(RNCID),
+                                            "", String.valueOf(rssi), String.valueOf(rsrp), String.valueOf(rsrq),
+                                            String.valueOf(snr),String.valueOf(EcNo),"", String.valueOf(Cqi),
+                                            String.valueOf(dBm),String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(ta)
+                                           };
                                     writer.writeNext(str, false);
                                 }
                             }
@@ -354,11 +365,14 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                                 enb_rnc_bsic.setText("Bcis:  " + cellInfoGsm.getCellIdentity().getBsic() + "   Rnc: " + RNCID);
 
                                 if (isNeedWrite) {
-                                    String[] str = new String[]{String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator), "2G",
-                                            String.valueOf(mcc), String.valueOf(mnc),String.valueOf(cellInfoGsm.getCellIdentity().getLac()), String.valueOf(CELLID), String.valueOf(RNCID)
-                                            ,"","","","", String.valueOf(cellInfoGsm.getCellIdentity().getArfcn()),"",String.valueOf(RNCID), String.valueOf(cellInfoGsm.getCellIdentity().getBsic()),
-                                            "_", String.valueOf(rssi), String.valueOf(rsrp),
-                                            String.valueOf(rsrq), String.valueOf(snr),"", String.valueOf(ber),String.valueOf(Cqi), String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(ta)};
+                                    String[] str = new String[]{
+                                            String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()), String.valueOf(Operator), "2G",
+                                            String.valueOf(mcc), String.valueOf(mnc),
+                                            String.valueOf(cellInfoGsm.getCellIdentity().getLac()), String.valueOf(CELLID), "", "", "",
+                                            "",String.valueOf(cellInfoGsm.getCellIdentity().getArfcn()), "","",String.valueOf(RNCID),
+                                            String.valueOf(RNCID), String.valueOf(cellInfoGsm.getCellIdentity().getBsic()), String.valueOf(rssi), String.valueOf(rsrp),
+                                            String.valueOf(rsrq), String.valueOf(snr),"",String.valueOf(ber),String.valueOf(Cqi), String.valueOf(dBm), String.valueOf(Level),
+                                            String.valueOf(AsuLevel), String.valueOf(ta)};
                                     writer.writeNext(str, false);
                                 }
                             }
