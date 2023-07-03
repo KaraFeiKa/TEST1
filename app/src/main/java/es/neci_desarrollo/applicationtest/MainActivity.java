@@ -384,4 +384,26 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
 
                 }
             }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        try{
+            if(signalStrengthListener != null){telephonyManager.listen(signalStrengthListener, SignalStrengthListener.LISTEN_NONE);}
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    public void onDestroy() {
+        super.onDestroy();
+
+        try{
+            if(signalStrengthListener != null){telephonyManager.listen(signalStrengthListener, SignalStrengthListener.LISTEN_NONE);}
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
         }
