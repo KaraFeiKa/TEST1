@@ -255,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
     @Override
     public void onLocationChanged(Location location) {
             latitude_res.setText("latitude   " + location.getLatitude());
-            longitude_res.setText("latitude   " + location.getLongitude());
+            longitude_res.setText("Longitude   " + location.getLongitude());
             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                     && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE}, 10);
