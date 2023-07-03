@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
     private void getLocation() {
         try {
             locationManager = (LocationManager) getApplicationContext().getSystemService(LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 4, myLocationListener);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 10, myLocationListener);
 
         } catch (Exception ignored) {
 
