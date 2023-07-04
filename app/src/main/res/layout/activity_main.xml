@@ -11,12 +11,15 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        tools:layout_editor_absoluteX="61dp"
+        tools:layout_editor_absoluteY="0dp">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            >
+            android:orientation="vertical">
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -29,54 +32,58 @@
                 android:id="@+id/Operator"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
-                android:textSize="25sp"
                 android:textColor="@color/white"
-                />
+                android:textSize="25sp" />
 
             <TextView
                 android:id="@+id/MCC_MNC"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
-                android:textSize="25sp"
                 android:textColor="@color/white"
-                />
+                android:textSize="25sp" />
+
             <TextView
                 android:id="@+id/LAC_TAC"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
-                android:textSize="25sp"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:textSize="25sp" />
+
             <TextView
                 android:id="@+id/CID"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
-                android:textSize="25sp"
                 android:textColor="@color/white"
-                />
+                android:textSize="25sp" />
+
             <TextView
                 android:id="@+id/Earfcn_Uarfcn_Aerfcn"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
-                android:textSize="25sp"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:textSize="25sp" />
+
             <TextView
                 android:id="@+id/eNB_Rnc_Bsic"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
-                android:textSize="25sp"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:textSize="25sp" />
+
             <TextView
                 android:id="@+id/Band_Pci_Psc"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
-                android:textSize="25sp"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:textSize="25sp" />
+
             <TextView
                 android:id="@+id/TA"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
-                android:textSize="25sp"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:textSize="25sp" />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -84,18 +91,21 @@
                 android:textAlignment="center"
                 android:textColor="@color/white"
                 android:textSize="30sp" />
+
             <TextView
                 android:id="@+id/Longitude"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
-                android:textSize="25sp"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:textSize="25sp" />
+
             <TextView
                 android:id="@+id/Latitude"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
-                android:textSize="25sp"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:textSize="25sp" />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -103,54 +113,62 @@
                 android:textAlignment="center"
                 android:textColor="@color/white"
                 android:textSize="30sp" />
+
             <TextView
                 android:id="@+id/RSRP_RSSI"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
-                android:textSize="25sp"
                 android:textColor="@color/white"
-                />
+                android:textSize="25sp" />
+
             <TextView
                 android:id="@+id/RSRQ_SNR_EcNo"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
-                android:textSize="25sp"
                 android:textColor="@color/white"
-                />
+                android:textSize="25sp" />
+
             <TextView
                 android:id="@+id/Cqi_dBm"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
-                android:textSize="25sp"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:textSize="25sp" />
+
             <TextView
                 android:id="@+id/Level"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
-                android:textSize="25sp"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:textSize="25sp" />
+
             <TextView
                 android:id="@+id/AsuLevel"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
-                android:textSize="25sp"
                 android:textColor="@color/white"
-                />
+                android:textSize="25sp" />
+
             <Button
                 android:id="@+id/button"
-                android:layout_marginStart="170sp"
+                android:layout_width="130sp"
+                android:layout_height="70dp"
+                android:layout_marginStart="150sp"
                 android:layout_marginEnd="240sp"
-                android:layout_width="100dp"
-                android:layout_height="50dp"
-                android:text="Лог" />
+                android:text="Начать запись" />
 
             <TextView
                 android:id="@+id/text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="25sp"
-            />
+                android:textSize="25sp" />
+
+            <TextView
+                android:id="@+id/info1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
         </LinearLayout>
     </ScrollView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
