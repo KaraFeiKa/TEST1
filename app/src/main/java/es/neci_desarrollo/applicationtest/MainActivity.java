@@ -9,7 +9,6 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
@@ -19,15 +18,12 @@ import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoWcdma;
-import android.telephony.CellLocation;
 import android.telephony.CellSignalStrength;
 import android.telephony.CellSignalStrengthGsm;
 import android.telephony.CellSignalStrengthLte;
 import android.telephony.CellSignalStrengthWcdma;
 import android.telephony.PhoneStateListener;
-import android.telephony.PhysicalChannelConfig;
 import android.telephony.SignalStrength;
-import android.telephony.TelephonyCallback;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
@@ -56,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
 
     private MyLocationListener myLocationListener;
     TextView latitude_res, longitude_res, Mnc_Mcc, RSSI_RSRP, RSRQ_SNR_ECNO, text, earfcn_uarfcn_aerfcn,
-            lac_tac, cid, band_pci_psc, TA, OPerator, cqi_dBm, asulevel, level, enb_rnc_bsic,info1;
+            lac_tac, cid, band_pci_psc, TA, OPerator, cqi_dBm, asulevel, level, enb_rnc_bsic;
     Button LogStart;
     float lat,lot = 0;
     int rssi, rsrq, rsrp, snr, Cqi, dBm, Level, AsuLevel, ta,EcNo,ber = 0;
@@ -136,6 +132,79 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
 
         }
     }
+
+    private void Neiborhood (List<CellInfo> cellInfoList)
+    {
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
+        }
+        for (CellInfo cellInfo : cellInfoList)
+        {
+            switch (telephonyManager.getDataNetworkType())
+            {
+                case TelephonyManager.NETWORK_TYPE_LTE:
+                    if (cellInfo instanceof CellInfoLte) {
+                        CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
+                        if (cellInfoLte.isRegistered() == false ) {
+                            cellInfoLte.getCellIdentity().getPci();
+                            cellInfoLte.getCellIdentity().getEarfcn();
+                            int band = 0;
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                int[] bands = cellInfoLte.getCellIdentity().getBands();
+                                band_pci_psc.setText(Arrays.stream(bands).mapToObj(String::valueOf)
+                                        .collect(Collectors.joining(", ")));
+                                if (bands.length > 0) {
+                                    band = bands[0];
+                                }
+                            }
+                            cellInfoLte.getCellSignalStrength().getRssi();
+                            cellInfoLte.getCellSignalStrength().getRsrp();
+                            cellInfoLte.getCellSignalStrength().getRsrq();
+                            cellInfoLte.getCellSignalStrength().getTimingAdvance();
+//                            addR
+                        }
+                    }
+                    break;
+                case TelephonyManager.NETWORK_TYPE_UMTS:
+                case TelephonyManager.NETWORK_TYPE_HSDPA:
+                case TelephonyManager.NETWORK_TYPE_HSPA:
+                case TelephonyManager.NETWORK_TYPE_HSPAP:
+                case TelephonyManager.NETWORK_TYPE_EVDO_0:
+                case TelephonyManager.NETWORK_TYPE_EVDO_A:
+                case TelephonyManager.NETWORK_TYPE_EVDO_B:
+                    if (cellInfo instanceof CellInfoWcdma) {
+                        CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
+                        if (cellInfoWcdma.isRegistered()==false) {
+                            cellInfoWcdma.getCellIdentity().getPsc();
+                            cellInfoWcdma.getCellIdentity().getUarfcn();
+                            cellInfoWcdma.getCellSignalStrength().getDbm();
+                        }
+                        }
+                    break;
+                case TelephonyManager.NETWORK_TYPE_EDGE:
+                case TelephonyManager.NETWORK_TYPE_GPRS:
+                case TelephonyManager.NETWORK_TYPE_GSM:
+                    if (cellInfo instanceof CellInfoGsm) {
+                        CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
+                        if (cellInfoGsm.isRegistered() == false) {
+                            Log.d("LTE ALL", cellInfoGsm.toString());
+                            cellInfoGsm.getCellIdentity().getLac();
+                            cellInfoGsm.getCellIdentity().getCid();
+                            cellInfoGsm.getCellIdentity().getArfcn();
+                            cellInfoGsm.getCellIdentity().getBsic();
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                cellInfoGsm.getCellSignalStrength().getRssi();
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    OPerator.setText("Необработано");
+            }
+        }
+    }
+
     @SuppressLint("SetTextI18n")
     private void startCell(List<CellInfo> cellInfoList){
         if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -148,7 +217,6 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                         if (cellInfo instanceof CellInfoLte) {
                             CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
                             if (cellInfoLte.isRegistered()) {
-                                Log.d("LTE ALL", cellInfoLte.getCellIdentity().toString());
                                 mcc = cellInfoLte.getCellIdentity().getMccString();
                                 mnc = cellInfoLte.getCellIdentity().getMncString();
                                 Mnc_Mcc.setText("MCC: " + mcc + "  MNC: " + mnc);
@@ -248,7 +316,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                                             String.valueOf(lat), String.valueOf(lot), String.valueOf(Operator), "2G",
                                             String.valueOf(mcc), String.valueOf(mnc),
                                             String.valueOf(cellInfoGsm.getCellIdentity().getLac()), String.valueOf(CELLID), "", "", "",
-                                            "",String.valueOf(cellInfoGsm.getCellIdentity().getArfcn()), "","",String.valueOf(RNCID),
+                                            "",String.valueOf(cellInfoGsm.getCellIdentity().getArfcn()), "","",
                                             String.valueOf(RNCID), String.valueOf(cellInfoGsm.getCellIdentity().getBsic()), String.valueOf(rssi), String.valueOf(rsrp),
                                             String.valueOf(rsrq), String.valueOf(snr),"",String.valueOf(ber),String.valueOf(Cqi), String.valueOf(dBm), String.valueOf(Level),
                                             String.valueOf(AsuLevel), String.valueOf(ta)};
@@ -287,13 +355,13 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
         enb_rnc_bsic = findViewById(R.id.eNB_Rnc_Bsic);
         text = findViewById(R.id.text);
         LogStart = findViewById(R.id.button);
-        info1 = findViewById(R.id.info1);
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
         }
         List<CellInfo> cellInfoList = telephonyManager.getAllCellInfo();
         startCell(cellInfoList);
+        Neiborhood(cellInfoList);
     }
 
 
@@ -310,6 +378,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
         @Override
         public void onCellInfoChanged(List<CellInfo> cellInfoList) {
             startCell(cellInfoList);
+            Neiborhood(cellInfoList);
             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                     && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);

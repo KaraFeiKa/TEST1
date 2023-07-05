@@ -163,10 +163,6 @@
                 android:layout_height="wrap_content"
                 android:textSize="25sp" />
 
-            <TextView
-                android:id="@+id/info1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
 
         </LinearLayout>
     </ScrollView>
