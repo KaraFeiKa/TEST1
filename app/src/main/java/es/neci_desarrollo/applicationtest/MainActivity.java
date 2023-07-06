@@ -23,7 +23,9 @@ import android.telephony.CellSignalStrengthGsm;
 import android.telephony.CellSignalStrengthLte;
 import android.telephony.CellSignalStrengthWcdma;
 import android.telephony.PhoneStateListener;
+import android.telephony.PhysicalChannelConfig;
 import android.telephony.SignalStrength;
+import android.telephony.TelephonyCallback;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
@@ -61,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
     String Operator;
     CSVWriter writer = null;
     private boolean isNeedWrite = false;
+    private PhysicalChannelConfig pcc;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -336,6 +339,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+//        pcc = (PhysicalChannelConfig) getSystemService(Context.TEL);
         myLocationListener = new MyLocationListener();
         myLocationListener.setLocationListenerInterface(this);
         latitude_res = findViewById(R.id.Latitude);
