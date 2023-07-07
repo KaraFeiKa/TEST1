@@ -11,7 +11,7 @@
         android:id="@+id/appbar"
 
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="100sp"
         android:background="@color/black">
 
         <TextView
@@ -22,20 +22,6 @@
             android:textColor="@color/white"
             android:textSize="35sp" />
 
-        <com.google.android.material.appbar.CollapsingToolbarLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:contentScrim="?attr/colorPrimary"
-            app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed"
-
-            app:toolbarId="@+id/toolbar">
-
-
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"></androidx.appcompat.widget.Toolbar>
-        </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -51,11 +37,6 @@
             android:background="@color/Grey"
             tools:context=".MainActivity">
 
-
-            <androidx.coordinatorlayout.widget.CoordinatorLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                tools:context=".MainActivity" />
 
             <ScrollView
                 android:layout_width="match_parent"
@@ -203,6 +184,18 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:textSize="25sp" />
+
+                    <TextView
+                        android:id="@+id/TEST"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="25sp"/>
+
+                    <TableLayout
+                        android:id="@+id/tableLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+                    </TableLayout>
 
                 </LinearLayout>
             </ScrollView>

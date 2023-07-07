@@ -1,5 +1,6 @@
 package es.neci_desarrollo.applicationtest;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -30,6 +31,8 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 
 
@@ -49,12 +52,14 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
     String csv = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/";
     private TelephonyManager telephonyManager;
     private LocationManager locationManager;
+    private PhysicalChannelConfig physicalChannelConfig;
     SignalStrengthListener signalStrengthListener;
     CellInfoIDListener cellInfoIDListener;
+//    private PhysicalChannelListener physicalChannelConfigListener;
 
     private MyLocationListener myLocationListener;
     TextView latitude_res, longitude_res, Mnc_Mcc, RSSI_RSRP, RSRQ_SNR_ECNO, text, earfcn_uarfcn_aerfcn,
-            lac_tac, cid, band_pci_psc, TA, OPerator, cqi_dBm, asulevel, level, enb_rnc_bsic;
+            lac_tac, cid, band_pci_psc, TA, OPerator, cqi_dBm, asulevel, level, enb_rnc_bsic,test;
     Button LogStart;
     float lat,lot = 0;
     int rssi, rsrq, rsrp, snr, Cqi, dBm, Level, AsuLevel, ta,EcNo,ber = 0;
@@ -63,8 +68,9 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
     String Operator;
     CSVWriter writer = null;
     private boolean isNeedWrite = false;
-    private PhysicalChannelConfig pcc;
+    private TableLayout tableLayout;
 
+    @RequiresApi(api = Build.VERSION_CODES.R)
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,14 +80,19 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
         init();
         getLocation();
         LogStart.setBackgroundColor(0xFF00FF00);
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+//            physicalChannelConfigListener = new PhysicalChannelListener();
+//        }
+//        ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).listen(physicalChannelConfigListener, SignalStrengthListener.LISTEN_CELL_LOCATION);
+//
         cellInfoIDListener = new CellInfoIDListener();
         ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListener, CellInfoIDListener.LISTEN_CELL_INFO);
         signalStrengthListener = new SignalStrengthListener();
         ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).listen(signalStrengthListener, SignalStrengthListener.LISTEN_SIGNAL_STRENGTHS);
 
-        if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
         }
         View.OnClickListener Log = new View.OnClickListener() {
             @Override
@@ -142,6 +153,23 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                 && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
         }
+        tableLayout.removeAllViews();
+        int currRow = 0;
+        TableRow tableRow = new TableRow(this);
+        tableRow.setLayoutParams(new TableLayout.LayoutParams(
+                TableLayout.LayoutParams.MATCH_PARENT,
+                TableLayout.LayoutParams.WRAP_CONTENT));
+
+        TextView tvPci = new TextView(this);
+        tvPci.setText("PCI");
+        tableRow.addView(tvPci, 0);
+        TextView tvRssi = new TextView(this);
+        tvRssi.setText("RSSI");
+        tableRow.addView(tvRssi, 1);
+
+        tableLayout.addView(tableRow, currRow);
+        currRow++;
+
         for (CellInfo cellInfo : cellInfoList)
         {
             switch (telephonyManager.getDataNetworkType())
@@ -155,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                             int band = 0;
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                 int[] bands = cellInfoLte.getCellIdentity().getBands();
-                                band_pci_psc.setText(Arrays.stream(bands).mapToObj(String::valueOf)
+                               test.setText(Arrays.stream(bands).mapToObj(String::valueOf)
                                         .collect(Collectors.joining(", ")));
                                 if (bands.length > 0) {
                                     band = bands[0];
@@ -165,7 +193,21 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
                             cellInfoLte.getCellSignalStrength().getRsrp();
                             cellInfoLte.getCellSignalStrength().getRsrq();
                             cellInfoLte.getCellSignalStrength().getTimingAdvance();
-//                            addR
+                            tableRow = new TableRow(this);
+                            tableRow.setLayoutParams(new TableLayout.LayoutParams(
+                                    TableLayout.LayoutParams.MATCH_PARENT,
+                                    TableLayout.LayoutParams.WRAP_CONTENT));
+
+                            TextView tvPciVal = new TextView(this);
+                            tvPciVal.setText(String.valueOf(cellInfoLte.getCellIdentity().getPci()));
+                            tableRow.addView(tvPciVal, 0);
+                            TextView tvRssiVal = new TextView(this);
+                            tvRssiVal.setText(String.valueOf(cellInfoLte.getCellSignalStrength().getRssi()));
+                            tableRow.addView(tvRssiVal, 1);
+
+                            tableLayout.addView(tableRow, currRow);
+                            currRow++;
+                            test.setText("");
                         }
                     }
                     break;
@@ -207,6 +249,7 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
             }
         }
     }
+
 
     @SuppressLint("SetTextI18n")
     private void startCell(List<CellInfo> cellInfoList){
@@ -359,6 +402,8 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
         enb_rnc_bsic = findViewById(R.id.eNB_Rnc_Bsic);
         text = findViewById(R.id.text);
         LogStart = findViewById(R.id.button);
+        test = findViewById(R.id.TEST);
+        tableLayout = (TableLayout) findViewById(R.id.tableLayout);
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
@@ -377,6 +422,17 @@ public class MainActivity extends AppCompatActivity implements LocationListenerI
     public int HexToDec(String hex) {
         return Integer.parseInt(hex, 16);
     }
+
+//    @RequiresApi(api = Build.VERSION_CODES.S)
+//    private class PhysicalChannelListener extends  PhoneStateListener implements TelephonyCallback.PhysicalChannelConfigListener
+//    {
+//        @SuppressLint("SetTextI18n")
+//        @Override
+//        public void onPhysicalChannelConfigChanged(List<PhysicalChannelConfig> configs) {
+//
+//        }
+//    }
+
 
     private class CellInfoIDListener extends  PhoneStateListener {
         @Override
