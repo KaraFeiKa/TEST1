@@ -1,4 +1,4 @@
-package es.neci_desarrollo.applicationtest;
+package es.neci_desarrollo.applicationtest.location;
 
 import android.location.Location;
 import android.telephony.SignalStrength;
