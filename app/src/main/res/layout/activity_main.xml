@@ -19,7 +19,7 @@
             android:text="NOC Project"
             android:textAlignment="center"
             android:textColor="@color/white"
-            android:textSize="35sp" />
+            android:textSize="30sp" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/TabLayout"
@@ -44,7 +44,7 @@
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="900sp"
             android:layout_weight="1">
         </androidx.viewpager2.widget.ViewPager2>
         <FrameLayout

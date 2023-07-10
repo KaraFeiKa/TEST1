@@ -135,7 +135,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     LocalDateTime now = LocalDateTime.now();
                     writer = new CSVWriter(new FileWriter(csv + dtf.format(now) + ".csv"));
                     List<String[]> data = new ArrayList<String[]>();
-                    data.add(new String[]{"lat", "log", "Operator", "Network", "mcc", "mnc",
+                    data.add(new String[]{"lat", "log", "Оператор", "Network", "mcc", "mnc",
                             "TAC/LAC", "CID", "eNB", "Band", "Earfcn",
                             "Uarfcn", "Arfcn", "PCI", "PSC", "RNC",
                             "BSIC", "RSSI", "RSRP", "RSRQ",
@@ -198,7 +198,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                             mnc = cellInfoLte.getCellIdentity().getMncString();
                             Mnc_Mcc.setText("MCC: " + mcc + "  MNC: " + mnc);
                             Operator = (String) cellInfoLte.getCellIdentity().getOperatorAlphaLong();
-                            OPerator.setText("Operator  " + Operator + "  4G");
+                            OPerator.setText("Оператор  " + Operator + "  4G");
                             lac_tac.setText("TAC:   " + cellInfoLte.getCellIdentity().getTac());
                             int CELLID = cellInfoLte.getCellIdentity().getCi();
                             cid.setText("Cell ID:  " + CELLID);
@@ -245,7 +245,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                             mnc = cellInfoWcdma.getCellIdentity().getMncString();
                             Mnc_Mcc.setText("MCC: " + mcc + "  MNC: " + mnc);
                             Operator = (String) cellInfoWcdma.getCellIdentity().getOperatorAlphaLong();
-                            OPerator.setText("Operator  " + Operator + " 3G");
+                            OPerator.setText("Оператор  " + Operator + " 3G");
                             lac_tac.setText("LAC:   " + cellInfoWcdma.getCellIdentity().getLac());
                             int CELLID = cellInfoWcdma.getCellIdentity().getCid();
                             cid.setText("Cell ID:  " + CELLID);
@@ -280,7 +280,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                             mnc = cellInfoGsm.getCellIdentity().getMncString();
                             Mnc_Mcc.setText("MCC: " + mcc + "  MNC: " + mnc);
                             Operator = (String) cellInfoGsm.getCellIdentity().getOperatorAlphaLong();
-                            OPerator.setText("Operator  " + Operator + " 2G");
+                            OPerator.setText("Оператор  " + Operator + " 2G");
                             lac_tac.setText("LAC:   " + cellInfoGsm.getCellIdentity().getLac());
                             int CELLID = cellInfoGsm.getCellIdentity().getCid();
                             cid.setText("Cell ID:  " + CELLID);
@@ -414,7 +414,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     public void onLocationChanged(Location location) {
         lat = (float) location.getLatitude();
         lot = (float) location.getLongitude();
-        latitude_res.setText("latitude   " + lat);
-        longitude_res.setText("Longitude   " + lot);
+        latitude_res.setText("Широта   " + lat);
+        longitude_res.setText("Долгота   " + lot);
     }
 }
