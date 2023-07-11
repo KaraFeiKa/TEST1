@@ -12,11 +12,28 @@
         android:orientation="vertical">
 
         <Switch
+            android:layout_marginTop="20sp"
             android:id="@+id/WriteNeighbors"
             android:layout_width="match_parent"
             android:layout_height="32dp"
             android:text="Запись соседних БС"
             android:textColor="@color/white"
+            android:textSize="20sp"
+            tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+        <TextView
+            android:layout_marginTop="30sp"
+            android:id="@+id/textView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Точность измерений"
+            android:textColor="@color/white"
             android:textSize="20sp" />
+        <SeekBar
+
+            android:id="@+id/seekBar"
+            android:layout_width="match_parent"
+            android:layout_height="39dp" />
+
     </LinearLayout>
 </FrameLayout>

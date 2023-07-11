@@ -82,19 +82,28 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_home, container, false);
-        if (ActivityCompat.checkSelfPermission(this.getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            return null;
-        }
-        Log.d("HOME FRAGMENT", "onCreateView 1");
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 
         getLocation();
         cellInfoIDListener = new CellInfoIDListener();
         ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListener, CellInfoIDListener.LISTEN_CELL_INFO);
         signalStrengthListener = new SignalStrengthListener();
         ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(signalStrengthListener, SignalStrengthListener.LISTEN_SIGNAL_STRENGTHS);
+        if (ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions((Activity) this.getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
+        }
+        super.onViewCreated(view, savedInstanceState);
+    }
+
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_home, container, false);
+        if (ActivityCompat.checkSelfPermission(this.getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            return null;
+        }
         myLocationListener = new MyLocationListener();
         myLocationListener.setLocationListenerInterface(this);
         latitude_res = view.findViewById(R.id.Latitude);
@@ -203,11 +212,11 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
 
     @SuppressLint("SetTextI18n")
     private void startCell(List<CellInfo> cellInfoList) {
+        if (ContextCompat.checkSelfPermission(HomeFragment.this.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(HomeFragment.this.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(HomeFragment.this.getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(HomeFragment.this.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions((Activity) HomeFragment.this.getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
+        }
         for (CellInfo cellInfo : cellInfoList) {
-            if (ActivityCompat.checkSelfPermission(this.getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-
-                return;
-            }
             switch (tm.getDataNetworkType()) {
                 case TelephonyManager.NETWORK_TYPE_LTE:
                     if (cellInfo instanceof CellInfoLte) {
@@ -217,7 +226,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                             mnc = cellInfoLte.getCellIdentity().getMncString();
                             Mnc_Mcc.setText("MCC: " + mcc + "  MNC: " + mnc);
                             Operator = (String) cellInfoLte.getCellIdentity().getOperatorAlphaLong();
-                            OPerator.setText("Оператор  " + Operator + "  4G");
+                            OPerator.setText("Оператор:  " + Operator + "  4G");
                             lac_tac.setText("TAC:   " + cellInfoLte.getCellIdentity().getTac());
                             int CELLID = cellInfoLte.getCellIdentity().getCi();
                             cid.setText("Cell ID:  " + CELLID);
@@ -230,7 +239,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                             int band = 0;
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                 int[] bands = cellInfoLte.getCellIdentity().getBands();
-                                band_pci_psc.setText("Band  " + Arrays.stream(bands).mapToObj(String::valueOf)
+                                band_pci_psc.setText("Band:  " + Arrays.stream(bands).mapToObj(String::valueOf)
                                         .collect(Collectors.joining(", ")) + "   Pci:  " + PCI);
                                 if (bands.length > 0) {
                                     band = bands[0];
@@ -264,7 +273,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                             mnc = cellInfoWcdma.getCellIdentity().getMncString();
                             Mnc_Mcc.setText("MCC: " + mcc + "  MNC: " + mnc);
                             Operator = (String) cellInfoWcdma.getCellIdentity().getOperatorAlphaLong();
-                            OPerator.setText("Оператор  " + Operator + " 3G");
+                            OPerator.setText("Оператор:  " + Operator + " 3G");
                             lac_tac.setText("LAC:   " + cellInfoWcdma.getCellIdentity().getLac());
                             int CELLID = cellInfoWcdma.getCellIdentity().getCid();
                             cid.setText("Cell ID:  " + CELLID);
@@ -299,7 +308,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                             mnc = cellInfoGsm.getCellIdentity().getMncString();
                             Mnc_Mcc.setText("MCC: " + mcc + "  MNC: " + mnc);
                             Operator = (String) cellInfoGsm.getCellIdentity().getOperatorAlphaLong();
-                            OPerator.setText("Оператор  " + Operator + " 2G");
+                            OPerator.setText("Оператор:  " + Operator + " 2G");
                             lac_tac.setText("LAC:   " + cellInfoGsm.getCellIdentity().getLac());
                             int CELLID = cellInfoGsm.getCellIdentity().getCid();
                             cid.setText("Cell ID:  " + CELLID);
@@ -434,8 +443,8 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     public void onLocationChanged(Location location) {
         lat = (float) location.getLatitude();
         lot = (float) location.getLongitude();
-        latitude_res.setText("Широта   " + lat);
-        longitude_res.setText("Долгота   " + lot);
+        latitude_res.setText("Широта:   " + lat);
+        longitude_res.setText("Долгота:   " + lot);
     }
 
 }
