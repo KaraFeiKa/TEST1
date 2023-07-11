@@ -54,6 +54,7 @@ import es.neci_desarrollo.applicationtest.MainActivity;
 import es.neci_desarrollo.applicationtest.R;
 import es.neci_desarrollo.applicationtest.location.LocationListenerInterface;
 import es.neci_desarrollo.applicationtest.location.MyLocationListener;
+import es.neci_desarrollo.applicationtest.service.Store;
 
 
 public class HomeFragment extends Fragment implements LocationListenerInterface {
@@ -64,7 +65,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     CellInfoIDListener cellInfoIDListener;
     private MyLocationListener myLocationListener;
     TextView latitude_res, longitude_res, Mnc_Mcc, RSSI_RSRP, RSRQ_SNR_ECNO, text, earfcn_uarfcn_aerfcn,
-            lac_tac, cid, band_pci_psc, TA, OPerator, cqi_dBm, asulevel, level, enb_rnc_bsic, test;
+            lac_tac, cid, band_pci_psc, TA, OPerator, cqi_dBm, asulevel, level, enb_rnc_bsic;
     Button LogStart;
     float lat, lot = 0;
     int rssi, rsrq, rsrp, snr, Cqi, dBm, Level, AsuLevel, ta, EcNo, ber = 0;
@@ -72,26 +73,12 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     String mnc = "";
     String Operator;
     CSVWriter writer = null;
+
     private boolean isNeedWrite = false;
 
 
     public HomeFragment(TelephonyManager tm) {
         this.tm = tm;
-
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        getLocation();
-        cellInfoIDListener = new CellInfoIDListener();
-        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListener, CellInfoIDListener.LISTEN_CELL_INFO);
-        signalStrengthListener = new SignalStrengthListener();
-        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(signalStrengthListener, SignalStrengthListener.LISTEN_SIGNAL_STRENGTHS);
-        super.onViewCreated(view, savedInstanceState);
-        if (ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) this.getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
-        }
     }
 
     @Override
@@ -101,6 +88,13 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         if (ActivityCompat.checkSelfPermission(this.getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             return null;
         }
+        Log.d("HOME FRAGMENT", "onCreateView 1");
+
+        getLocation();
+        cellInfoIDListener = new CellInfoIDListener();
+        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListener, CellInfoIDListener.LISTEN_CELL_INFO);
+        signalStrengthListener = new SignalStrengthListener();
+        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(signalStrengthListener, SignalStrengthListener.LISTEN_SIGNAL_STRENGTHS);
         myLocationListener = new MyLocationListener();
         myLocationListener.setLocationListenerInterface(this);
         latitude_res = view.findViewById(R.id.Latitude);
@@ -125,15 +119,18 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         List<CellInfo> cellInfoList = tm.getAllCellInfo();
         startCell(cellInfoList);
         LogStart.setBackgroundColor(0xFF00FF00);
-        Button.OnClickListener Log = v -> {
-            if (!isNeedWrite) {
+
+        Button.OnClickListener LogB = v -> {
+
+
+            if (!Store.isWriteWorking) {
                 LogStart.setText("Отсановить запись");
                 LogStart.setBackgroundColor(0xFFFF0000);
                 text.setText("Идет запись");
                 try {
                     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
                     LocalDateTime now = LocalDateTime.now();
-                    writer = new CSVWriter(new FileWriter(csv + dtf.format(now) + ".csv"));
+                    writer = new CSVWriter(new FileWriter(csv + dtf.format(now) + "_Main.csv"));
                     List<String[]> data = new ArrayList<String[]>();
                     data.add(new String[]{"lat", "log", "Оператор", "Network", "mcc", "mnc",
                             "TAC/LAC", "CID", "eNB", "Band", "Earfcn",
@@ -144,21 +141,43 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                isNeedWrite = true;
+                //Соседние БС
+                if(Store.isWriteNeighbors){
+                    try {
+                        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+                        LocalDateTime now = LocalDateTime.now();
+                        Store.writerN = new CSVWriter(new FileWriter(csv + dtf.format(now) + "_Neighbors.csv"));
+                        List<String[]> dataN = new ArrayList<String[]>();
+                        dataN.add(new String[]{"lat", "log", "Network",
+                                "TAC/LAC", "CID", "Band", "Earfcn",
+                                "Uarfcn", "Arfcn", "PCI", "PSC",
+                                "BSIC", "RSSI", "RSRP", "RSRQ",  "Ta"});
+                        Store.writerN.writeAll(dataN);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+//                isNeedWrite = true;
+                Store.enableWrite();
             } else {
                 try {
                     writer.close();
+                    if(Store.isWriteNeighbors) {
+                        Store.writerN.close();
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 LogStart.setBackgroundColor(0xFF00FF00);
                 LogStart.setText("Начать запись");
                 text.setText("Запись сохранена");
-                isNeedWrite = false;
+                Store.disableWrite();
             }
 
+
         };
-        LogStart.setOnClickListener(Log);
+        LogStart.setOnClickListener(LogB);
+        Log.d("HOME FRAGMENT", "onCreateView 2");
         return view;
     }
 
@@ -184,11 +203,11 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
 
     @SuppressLint("SetTextI18n")
     private void startCell(List<CellInfo> cellInfoList) {
-        if (ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) this.getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
-        }
         for (CellInfo cellInfo : cellInfoList) {
+            if (ActivityCompat.checkSelfPermission(this.getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+
+                return;
+            }
             switch (tm.getDataNetworkType()) {
                 case TelephonyManager.NETWORK_TYPE_LTE:
                     if (cellInfo instanceof CellInfoLte) {
@@ -218,7 +237,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                                 }
                             }
 
-                            if (isNeedWrite) {
+                            if (Store.isWriteWorking) {
                                 String[] str = new String[]{String.valueOf(lat), String.valueOf(lot),
                                         String.valueOf(Operator), "4G", String.valueOf(mcc), String.valueOf(mnc),
                                         String.valueOf(cellInfoLte.getCellIdentity().getTac()), String.valueOf(CELLID), String.valueOf(eNB),
@@ -255,7 +274,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                             int PSC = cellInfoWcdma.getCellIdentity().getPsc();
                             band_pci_psc.setText("Psc:   " + PSC);
 
-                            if (isNeedWrite) {
+                            if (Store.isWriteWorking) {
                                 String[] str = new String[]{
                                         String.valueOf(lat), String.valueOf(lot), String.valueOf(Operator), "3G",
                                         String.valueOf(mcc), String.valueOf(mnc),
@@ -288,7 +307,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                             int RNCID = CELLID / 65536;
                             enb_rnc_bsic.setText("Bcis:  " + cellInfoGsm.getCellIdentity().getBsic() + "   Rnc: " + RNCID);
 
-                            if (isNeedWrite) {
+                            if (Store.isWriteWorking) {
                                 String[] str = new String[]{
                                         String.valueOf(lat), String.valueOf(lot), String.valueOf(Operator), "2G",
                                         String.valueOf(mcc), String.valueOf(mnc),
@@ -410,6 +429,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         }
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onLocationChanged(Location location) {
         lat = (float) location.getLatitude();
@@ -417,4 +437,5 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         latitude_res.setText("Широта   " + lat);
         longitude_res.setText("Долгота   " + lot);
     }
+
 }

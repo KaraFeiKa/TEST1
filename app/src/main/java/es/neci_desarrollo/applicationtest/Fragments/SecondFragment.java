@@ -41,6 +41,7 @@ import es.neci_desarrollo.applicationtest.MainActivity;
 import es.neci_desarrollo.applicationtest.R;
 import es.neci_desarrollo.applicationtest.location.LocationListenerInterface;
 import es.neci_desarrollo.applicationtest.location.MyLocationListener;
+import es.neci_desarrollo.applicationtest.service.Store;
 
 
 public class SecondFragment extends Fragment implements LocationListenerInterface {
@@ -52,9 +53,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
     public SecondFragment(TelephonyManager tm) {
         this.tm = tm;
-
     }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,7 +87,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
     private void getLocation() {
         try {
             locationManager = (LocationManager) getActivity().getApplicationContext().getSystemService(LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 10, myLocationListener);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 5, myLocationListener);
 
         } catch (Exception ignored) {
 
@@ -101,7 +100,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
             ActivityCompat.requestPermissions((Activity) SecondFragment.this.getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
         }
 
-
+        Log.d("SF","Store neighbor: "+ Store.isWriteNeighbors);
         for (CellInfo cellInfo : cellInfoList) {
             switch (tm.getDataNetworkType()) {
                 case TelephonyManager.NETWORK_TYPE_LTE:
@@ -205,6 +204,20 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                             tvTaVal.setText(String.valueOf(cellInfoLte.getCellSignalStrength().getTimingAdvance()));
                             tableRow.addView(tvTaVal, 6);
 
+                            if (Store.isWriteWorking && Store.isWriteNeighbors) {
+                                String[] str = new String[]{"String.valueOf(latN)",
+                                        "String.valueOf(lotN)",
+                                        "4G","","",String.valueOf(band),
+                                        String.valueOf(cellInfoLte.getCellIdentity().getEarfcn()),
+                                        "","",
+                                        String.valueOf(cellInfoLte.getCellIdentity().getPci()),"","",
+                                        String.valueOf(cellInfoLte.getCellSignalStrength().getRssi()),
+                                        String.valueOf(cellInfoLte.getCellSignalStrength().getRsrp())
+                                        ,String.valueOf(cellInfoLte.getCellSignalStrength().getRsrq()),
+                                        String.valueOf(cellInfoLte.getCellSignalStrength().getTimingAdvance())};
+                                Store.writerN.writeNext(str, false);
+                            }
+
 
                             tableLayout.addView(tableRow, currRow);
                             currRow++;
@@ -267,6 +280,21 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                             tvdBmVal.setText(String.valueOf( cellInfoWcdma.getCellSignalStrength().getDbm()));
                             tableRow.addView(tvdBmVal, 2);
                             tableLayout.addView(tableRow, currRow);
+
+                            if (Store.isWriteWorking && Store.isWriteNeighbors) {
+                                String[] str = new String[]{"String.valueOf(latN)",
+                                        "String.valueOf(lotN)",
+                                        "3G","","","","",
+                                        String.valueOf(cellInfoWcdma.getCellIdentity().getUarfcn()),
+                                        "","",
+                                        String.valueOf(cellInfoWcdma.getCellIdentity().getPsc()),"",
+                                        "",
+                                        String.valueOf(cellInfoWcdma.getCellSignalStrength().getDbm())
+                                        ,"",
+                                        ""};
+                                Store.writerN.writeNext(str, false);
+                            }
+
                             currRow++;
 
                         }
@@ -348,6 +376,27 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                             }
                             tableRow.addView(tvRssiVal, 4);
                             tableLayout.addView(tableRow, currRow);
+
+                            if (Store.isWriteWorking && Store.isWriteNeighbors) {
+                                String[] str = new String[0];
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                                    str = new String[]{"String.valueOf(latN)",
+                                            "String.valueOf(lotN)",
+                                            "2G",
+                                            String.valueOf(cellInfoGsm.getCellIdentity().getLac()),
+                                            String.valueOf(cellInfoGsm.getCellIdentity().getCid()),
+                                                    "",
+                                                    "",
+                                                    "",
+                                                    String.valueOf( cellInfoGsm.getCellIdentity().getArfcn()),
+                                                    "","",
+                                                    String.valueOf(cellInfoGsm.getCellIdentity().getBsic()),
+                                                            String.valueOf( cellInfoGsm.getCellSignalStrength().getRssi()),
+                                            "","",""};
+                                }
+                                Store.writerN.writeNext(str, false);
+                            }
+
                             currRow++;
                         }
                     }
@@ -362,6 +411,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
         public void onCellInfoChanged(List<CellInfo> cellInfoList) {
             Log.d("NCI", "Changed");
             Neiborhood(cellInfoList);
+
             if (ContextCompat.checkSelfPermission(SecondFragment.this.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(SecondFragment.this.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                     && ContextCompat.checkSelfPermission(SecondFragment.this.getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(SecondFragment.this.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions((Activity) SecondFragment.this.getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
@@ -372,6 +422,5 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
     @Override
     public void onLocationChanged(Location location) {
-
     }
 }

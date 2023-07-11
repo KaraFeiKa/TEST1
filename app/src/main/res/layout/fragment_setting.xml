@@ -6,9 +6,17 @@
     android:background="@color/Grey"
     tools:context=".Fragments.SettingFragment">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="В АКТИВНОЙ РАЗРАБОТКЕ" />
+        android:orientation="vertical">
 
+        <Switch
+            android:id="@+id/WriteNeighbors"
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:text="Запись соседних БС"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
+    </LinearLayout>
 </FrameLayout>

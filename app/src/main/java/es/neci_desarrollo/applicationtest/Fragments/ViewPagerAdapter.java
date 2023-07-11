@@ -15,12 +15,19 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
         this.tm = tm;
     }
 
+//    private HomeFragment homeFragment;
+//    public void UpDate(){
+//        homeFragment = null;
+//    homeFragment = new HomeFragment(this.tm);
+//    }
+
     @NonNull
     @Override
     public Fragment createFragment(int position) {
+//        homeFragment = new HomeFragment(this.tm);
         switch (position)
         {
-            case 0: return  new HomeFragment(this.tm);
+            case 0: return new HomeFragment(this.tm);
             case 1: return new SecondFragment(this.tm);
             case 2: return new SettingFragment();
             default: return new HomeFragment(this.tm);
