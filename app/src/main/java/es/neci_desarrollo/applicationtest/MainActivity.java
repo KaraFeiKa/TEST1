@@ -30,7 +30,10 @@ import android.widget.TextView;
 import com.google.android.material.tabs.TabLayout;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+
+import es.neci_desarrollo.applicationtest.Fragments.HomeFragment;
 import es.neci_desarrollo.applicationtest.Fragments.ViewPagerAdapter;
 import es.neci_desarrollo.applicationtest.location.MyLocationListener;
 
@@ -41,28 +44,24 @@ public class MainActivity extends AppCompatActivity {
     ViewPager2 viewPager2;
     ViewPagerAdapter viewPagerAdapter;
     FrameLayout frameLayout;
-
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//        switch (requestCode) {
-//            case 100:
-//                if (grantResults.length > 3) {
-//                    Log.d("Permissions","accepted");
-//                    viewPagerAdapter = new ViewPagerAdapter(this, telephonyManager);
-////                    viewPagerAdapter.UpDate();
-//                    viewPagerAdapter.createFragment(0);
-//                }
-//        }
-//    }
-    @Override
+        @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         tabLayout = findViewById(R.id.TabLayout);
         viewPager2 = findViewById(R.id.viewPager);
         viewPagerAdapter = new ViewPagerAdapter(this, telephonyManager);
@@ -94,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
                     case 0:
                     case 1:
                     case 2:
-                        tabLayout.getTabAt(position).select();
+                        Objects.requireNonNull(tabLayout.getTabAt(position)).select();
                 }
                 super.onPageSelected(position);
             }

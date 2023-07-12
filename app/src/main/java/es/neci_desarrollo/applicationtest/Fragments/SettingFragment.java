@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.Switch;
 
 import es.neci_desarrollo.applicationtest.R;
-import es.neci_desarrollo.applicationtest.service.Store;
+import es.neci_desarrollo.applicationtest.Store;
 
 
 public class SettingFragment extends Fragment {

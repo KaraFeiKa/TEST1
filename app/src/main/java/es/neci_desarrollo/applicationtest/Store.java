@@ -1,12 +1,6 @@
-package es.neci_desarrollo.applicationtest.service;
-
-import android.app.Service;
-import android.content.Intent;
-import android.os.IBinder;
+package es.neci_desarrollo.applicationtest;
 
 import com.opencsv.CSVWriter;
-
-import es.neci_desarrollo.applicationtest.Fragments.HomeFragment;
 
 public class Store  {
     public Store() {

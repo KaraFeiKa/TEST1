@@ -22,6 +22,7 @@ import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoWcdma;
 import android.telephony.PhoneStateListener;
+import android.telephony.PhysicalChannelConfig;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -31,26 +32,25 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
-import com.google.android.material.tabs.TabLayout;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import es.neci_desarrollo.applicationtest.MainActivity;
 import es.neci_desarrollo.applicationtest.R;
+import es.neci_desarrollo.applicationtest.Store;
 import es.neci_desarrollo.applicationtest.location.LocationListenerInterface;
 import es.neci_desarrollo.applicationtest.location.MyLocationListener;
-import es.neci_desarrollo.applicationtest.service.Store;
 
 
 public class SecondFragment extends Fragment implements LocationListenerInterface {
     private TelephonyManager tm;
     private TableLayout tableLayout;
-    private MyLocationListener myLocationListener;
-    private LocationManager locationManager;
     CellInfoIDListener cellInfoIDListener;
-//    float latN, lotN = 0;
+    private LocationManager locationManager;
+    private MyLocationListener myLocationListener;
+    double lat, lot = 0;
+    int rssi, rsrq, rsrp, snr, Cqi, dBm, Level, AsuLevel, ta, EcNo, ber, eNB, TAC, band, EARFCN, CELLID, PCI, LAC,
+            UARFCN, PSC, RNCID, ARFCN, BSIC ,ss= 0;
 
     public SecondFragment(TelephonyManager tm) {
         this.tm = tm;
@@ -65,18 +65,19 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_second, container, false);
-        if (ActivityCompat.checkSelfPermission(this.getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            return null;
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
         }
-        tableLayout = (TableLayout) view.findViewById(R.id.tableLayout);
+        getLocation();
         myLocationListener = new MyLocationListener();
         myLocationListener.setLocationListenerInterface(this);
-        getLocation();
+        locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
+        tableLayout = (TableLayout) view.findViewById(R.id.tableLayout);
         cellInfoIDListener = new CellInfoIDListener();
         ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListener, CellInfoIDListener.LISTEN_CELL_INFO);
         Log.d("NCI", "Listener activate");
 
-        locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         tm = (TelephonyManager) getActivity().getSystemService(Context.TELEPHONY_SERVICE);
         List<CellInfo> cellInfoList = tm.getAllCellInfo();
         Neiborhood(cellInfoList);
@@ -94,6 +95,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
         }
     }
+
 
     private void Neiborhood(List<CellInfo> cellInfoList) {
         if (ContextCompat.checkSelfPermission(SecondFragment.this.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(SecondFragment.this.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -234,17 +236,19 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
                             TextView tvPciVal = new TextView(this.getContext());
                             tvPciVal.setTextSize(20);
-                            tvPciVal.setText(String.valueOf(cellInfoLte.getCellIdentity().getPci()));
+                            PCI = cellInfoLte.getCellIdentity().getPci();
+                            tvPciVal.setText(String.valueOf(PCI));
                             tableRowValues.addView(tvPciVal, 0);
 
                             TextView tvEarfcnVal = new TextView(this.getContext());
                             tvEarfcnVal.setTextSize(20);
-                            tvEarfcnVal.setText(String.valueOf(cellInfoLte.getCellIdentity().getEarfcn()));
+                            EARFCN = cellInfoLte.getCellIdentity().getEarfcn();
+                            tvEarfcnVal.setText(String.valueOf(EARFCN));
                             tableRowValues.addView(tvEarfcnVal, 1);
 
 
 
-                            int band = 0;
+                            band = 0;
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                 int[] bands = cellInfoLte.getCellIdentity().getBands();
                                 TextView tvBandVal = new TextView(this.getContext());
@@ -260,41 +264,30 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
                             TextView tvRssiVal = new TextView(this.getContext());
                             tvRssiVal.setTextSize(20);
-                            tvRssiVal.setText(String.valueOf(cellInfoLte.getCellSignalStrength().getRssi()));
+                            rssi = cellInfoLte.getCellSignalStrength().getRssi();
+                            tvRssiVal.setText(String.valueOf(rssi));
                             tableRowValues.addView(tvRssiVal, 3);
 
                             TextView tvRsrpVal = new TextView(this.getContext());
                             tvRsrpVal.setTextSize(20);
-                            tvRsrpVal.setText(String.valueOf(cellInfoLte.getCellSignalStrength().getRsrp()));
+                            rsrp = cellInfoLte.getCellSignalStrength().getRsrp();
+                            tvRsrpVal.setText(String.valueOf(rsrp));
                             tableRowValues.addView(tvRsrpVal, 4);
 
                             TextView tvRsrqVal = new TextView(this.getContext());
                             tvRsrqVal.setTextSize(20);
-                            tvRsrqVal.setText(String.valueOf(cellInfoLte.getCellSignalStrength().getRsrq()));
+                            rsrq = cellInfoLte.getCellSignalStrength().getRsrq();
+                            tvRsrqVal.setText(String.valueOf(rsrq));
                             tableRowValues.addView(tvRsrqVal, 5);
 
                             TextView tvTaVal = new TextView(this.getContext());
                             tvTaVal.setTextSize(20);
-                            tvTaVal.setText(String.valueOf(cellInfoLte.getCellSignalStrength().getTimingAdvance()));
+                            ta = cellInfoLte.getCellSignalStrength().getTimingAdvance();
+                            tvTaVal.setText(String.valueOf(ta));
                             tableRowValues.addView(tvTaVal, 6);
-
-                            if (Store.isWriteWorking && Store.isWriteNeighbors) {
-                                String[] str = new String[]{"String.valueOf(latN)",
-                                        "String.valueOf(lotN)",
-                                        "4G","","",String.valueOf(band),
-                                        String.valueOf(cellInfoLte.getCellIdentity().getEarfcn()),
-                                        "","",
-                                        String.valueOf(cellInfoLte.getCellIdentity().getPci()),"","",
-                                        String.valueOf(cellInfoLte.getCellSignalStrength().getRssi()),
-                                        String.valueOf(cellInfoLte.getCellSignalStrength().getRsrp())
-                                        ,String.valueOf(cellInfoLte.getCellSignalStrength().getRsrq()),
-                                        String.valueOf(cellInfoLte.getCellSignalStrength().getTimingAdvance())};
-                                Store.writerN.writeNext(str, false);
-                            }
-
-
                             tableLayout.addView(tableRowValues, currRow);
                             currRow++;
+                            WriteLteInfo();
                         }
                     }
                     break;
@@ -316,20 +309,20 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
                             TextView tvPscVal = new TextView(this.getContext());
                             tvPscVal.setTextSize(20);
-                            tvPscVal.setText(String.valueOf(cellInfoWcdma.getCellIdentity().getPsc()));
+                            PSC =cellInfoWcdma.getCellIdentity().getPsc();
+                            tvPscVal.setText(String.valueOf(PSC));
                             tableRowValues.addView(tvPscVal, 0);
 
                             TextView tvUarfcnVal = new TextView(this.getContext());
                             tvUarfcnVal.setTextSize(20);
-                            tvUarfcnVal.setText(String.valueOf(cellInfoWcdma.getCellIdentity().getUarfcn()));
+                            UARFCN = cellInfoWcdma.getCellIdentity().getUarfcn();
+                            tvUarfcnVal.setText(String.valueOf(UARFCN));
                             tableRowValues.addView(tvUarfcnVal, 1);
 
                             TextView tvdBmVal = new TextView(this.getContext());
-                            tvdBmVal.setTextSize(20);
                             Log.d("UMTS",cellInfoWcdma.getCellSignalStrength().toString());
                             String[] CellSignalStrengthArr = cellInfoWcdma.getCellSignalStrength().toString().split(" ");
-                            Log.d("UMTS","CellSignalStrengthArr: "+String.valueOf(CellSignalStrengthArr));
-                            int ss = 0;
+                            ss = 0;
                             if(CellSignalStrengthArr.length>1) {
                                 String[] elem = CellSignalStrengthArr[1].split("=");
                                 if (elem[0].contains("ss")) {
@@ -339,22 +332,9 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                             tvdBmVal.setText(String.valueOf(ss));
                             tableRowValues.addView(tvdBmVal, 2);
                             tableLayout.addView(tableRowValues, currRow);
+                                                        currRow++;
 
-                            if (Store.isWriteWorking && Store.isWriteNeighbors) {
-                                String[] str = new String[]{"String.valueOf(latN)",
-                                        "String.valueOf(lotN)",
-                                        "3G","","","","",
-                                        String.valueOf(cellInfoWcdma.getCellIdentity().getUarfcn()),
-                                        "","",
-                                        String.valueOf(cellInfoWcdma.getCellIdentity().getPsc()),"",
-                                        "",
-                                        String.valueOf(ss)
-                                        ,"",
-                                        ""};
-                                Store.writerN.writeNext(str, false);
-                            }
-
-                            currRow++;
+                            WriteUMTSInfo();
 
                         }
                     }
@@ -373,61 +353,53 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
                             TextView tvPscVal = new TextView(this.getContext());
                             tvPscVal.setTextSize(20);
-                            tvPscVal.setText(String.valueOf(cellInfoGsm.getCellIdentity().getLac()));
+                            LAC = cellInfoGsm.getCellIdentity().getLac();
+                            tvPscVal.setText(String.valueOf(LAC));
                             tableRow.addView(tvPscVal, 0);
 
                             TextView tvUarfcnVal = new TextView(this.getContext());
                             tvUarfcnVal.setTextSize(20);
-                            tvUarfcnVal.setText("  "+String.valueOf(cellInfoGsm.getCellIdentity().getCid()+"  "));
+                            CELLID = (cellInfoGsm.getCellIdentity().getCid());
+                            tvUarfcnVal.setText("  "+CELLID+"  ");
                             tableRow.addView(tvUarfcnVal, 1);
 
                             TextView tvdBmVal = new TextView(this.getContext());
                             tvdBmVal.setTextSize(20);
-                            tvdBmVal.setText("  "+String.valueOf( cellInfoGsm.getCellIdentity().getArfcn()));
+                            ARFCN = cellInfoGsm.getCellIdentity().getArfcn();
+                            tvdBmVal.setText("  "+ARFCN);
                             tableRow.addView(tvdBmVal, 2);
 
 
                             TextView tvBsicVal = new TextView(this.getContext());
                             tvBsicVal.setTextSize(20);
-                            tvBsicVal.setText("  "+String.valueOf(cellInfoGsm.getCellIdentity().getBsic()));
+                            BSIC = cellInfoGsm.getCellIdentity().getBsic();
+                            tvBsicVal.setText("  "+(BSIC));
                             tableRow.addView(tvBsicVal, 3);
 
 
                             TextView tvRssiVal = new TextView(this.getContext());
                             tvRssiVal.setTextSize(20);
+
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                tvRssiVal.setText("  "+String.valueOf( cellInfoGsm.getCellSignalStrength().getRssi()));
+                                rssi = cellInfoGsm.getCellSignalStrength().getRssi();
+                                tvRssiVal.setText("  "+( rssi));
                             }
                             tableRow.addView(tvRssiVal, 4);
                             tableLayout.addView(tableRow, currRow);
-
-                            if (Store.isWriteWorking && Store.isWriteNeighbors) {
-                                String[] str = new String[0];
-                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                                    str = new String[]{"String.valueOf(latN)",
-                                            "String.valueOf(lotN)",
-                                            "2G",
-                                            String.valueOf(cellInfoGsm.getCellIdentity().getLac()),
-                                            String.valueOf(cellInfoGsm.getCellIdentity().getCid()),
-                                                    "",
-                                                    "",
-                                                    "",
-                                                    String.valueOf( cellInfoGsm.getCellIdentity().getArfcn()),
-                                                    "","",
-                                                    String.valueOf(cellInfoGsm.getCellIdentity().getBsic()),
-                                                            String.valueOf( cellInfoGsm.getCellSignalStrength().getRssi()),
-                                            "","",""};
-                                }
-                                Store.writerN.writeNext(str, false);
-                            }
-
                             currRow++;
+
+                            WriteGSMInfo();
                         }
                     }
                     break;
                 default:
             }
         }
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+
     }
 
     private class CellInfoIDListener extends PhoneStateListener {
@@ -444,9 +416,59 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
         }
     }
 
-    @Override
-    public void onLocationChanged(Location location) {
-//        latN = (float) location.getLatitude();
-//        lotN = (float) location.getLongitude();
+    public void WriteLteInfo (){
+        if (Store.isWriteWorking && Store.isWriteNeighbors) {
+            String[] str = new String[]{String.valueOf(lat),
+                    String.valueOf(lot),
+                    "4G","","",String.valueOf(band),
+                    String.valueOf(EARFCN),
+                    "","",
+                    String.valueOf(PCI),"","",
+                    String.valueOf(rssi),
+                    String.valueOf(rsrp)
+                    ,String.valueOf(rsrq),
+                    String.valueOf(ta)};
+            Store.writerN.writeNext(str, false);
+        }
+    }
+
+    private void WriteUMTSInfo()
+    {
+        if (Store.isWriteWorking && Store.isWriteNeighbors) {
+            String[] str = new String[]{String.valueOf(lat),
+                    String.valueOf(lot),
+                    "3G","","","","",
+                    String.valueOf(UARFCN),
+                    "","",
+                    String.valueOf(PSC),"",
+                    "",
+                    String.valueOf(ss)
+                    ,"",
+                    ""};
+            Store.writerN.writeNext(str, false);
+        }
+    }
+
+    private void WriteGSMInfo()
+    {
+        if (Store.isWriteWorking && Store.isWriteNeighbors) {
+            String[] str = new String[0];
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                str = new String[]{String.valueOf(lat),
+                        String.valueOf(lot),
+                        "2G",
+                        String.valueOf(LAC),
+                        String.valueOf(CELLID),
+                        "",
+                        "",
+                        "",
+                        String.valueOf( ARFCN),
+                        "","",
+                        String.valueOf(BSIC),
+                        String.valueOf( rssi),
+                        "","",""};
+            }
+            Store.writerN.writeNext(str, false);
+        }
     }
 }
