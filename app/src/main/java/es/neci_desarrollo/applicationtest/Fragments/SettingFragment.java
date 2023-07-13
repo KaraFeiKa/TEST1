@@ -1,5 +1,7 @@
 package es.neci_desarrollo.applicationtest.Fragments;
 
+
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -7,7 +9,9 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.SeekBar;
 import android.widget.Switch;
+import android.widget.TextView;
 
 import es.neci_desarrollo.applicationtest.R;
 import es.neci_desarrollo.applicationtest.Store;
@@ -15,7 +19,10 @@ import es.neci_desarrollo.applicationtest.Store;
 
 public class SettingFragment extends Fragment {
 
+
+    SeekBar seekBar;
     Switch WriteNeighbors;
+    TextView textView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -23,12 +30,14 @@ public class SettingFragment extends Fragment {
 
     }
 
+    @SuppressLint("MissingInflatedId")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_setting, container, false);
         WriteNeighbors = view.findViewById(R.id.WriteNeighbors);
-
+        seekBar = view.findViewById(R.id.seekBar);
+        textView = view.findViewById(R.id.seekBarValue);
         View.OnClickListener writeNeighborsInSore = v -> {
             if (Store.isWriteNeighbors) {
                 Store.disableWriteNeighbors();
@@ -37,7 +46,26 @@ public class SettingFragment extends Fragment {
             }
         };
         WriteNeighbors.setOnClickListener(writeNeighborsInSore);
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                textView.setText(String.valueOf(seekBar.getProgress()));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+
+            }
+        });
         return view;
+
     }
 
 

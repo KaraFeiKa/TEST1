@@ -66,7 +66,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     Button LogStart;
     double lat, lot = 0;
     int rssi, rsrq, rsrp, snr, Cqi, dBm, Level, AsuLevel, ta, EcNo, ber, eNB, TAC, band, EARFCN, CELLID, PCI, LAC,
-            UARFCN, PSC, RNCID, ARFCN, BSIC = 0;
+            UARFCN, PSC, RNCID, ARFCN, BSIC, CQi, TAa, BERT = 0;
     String mcc = "";
     String mnc = "";
     String Operator;
@@ -82,18 +82,12 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 
-        getLocation();
-        cellInfoIDListener = new CellInfoIDListener();
-        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListener, CellInfoIDListener.LISTEN_CELL_INFO);
-        signalStrengthListener = new SignalStrengthListener();
-        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(signalStrengthListener, SignalStrengthListener.LISTEN_SIGNAL_STRENGTHS);
         super.onViewCreated(view, savedInstanceState);
         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
         }
-        List<CellInfo> cellInfoList = tm.getAllCellInfo();
-        startCell(cellInfoList);
+        getLocation();
     }
 
 
@@ -104,6 +98,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
 
         myLocationListener = new MyLocationListener();
         myLocationListener.setLocationListenerInterface(this);
+        locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
         latitude_res = view.findViewById(R.id.Latitude);
         longitude_res = view.findViewById(R.id.Longitude);
         Mnc_Mcc = view.findViewById(R.id.MCC_MNC);
@@ -121,10 +116,9 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         enb_rnc_bsic = view.findViewById(R.id.eNB_Rnc_Bsic);
         text = view.findViewById(R.id.text);
         LogStart = view.findViewById(R.id.button);
-        locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
+
         tm = (TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE);
         LogStart.setBackgroundColor(0xFF00FF00);
-
         Button.OnClickListener LogB = v -> {
 
 
@@ -137,7 +131,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     LocalDateTime now = LocalDateTime.now();
                     writer = new CSVWriter(new FileWriter(csv + dtf.format(now) + "_Main.csv"));
                     List<String[]> data = new ArrayList<String[]>();
-                    data.add(new String[]{"lat", "log", "Оператор", "Network", "mcc", "mnc",
+                    data.add(new String[]{"lat", "log", "Operator", "Network", "mcc", "mnc",
                             "TAC/LAC", "CID", "eNB", "Band", "Earfcn",
                             "Uarfcn", "Arfcn", "PCI", "PSC", "RNC",
                             "BSIC", "RSSI", "RSRP", "RSRQ",
@@ -147,7 +141,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     e.printStackTrace();
                 }
                 //Соседние БС
-                if(Store.isWriteNeighbors){
+                if (Store.isWriteNeighbors) {
                     try {
                         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
                         LocalDateTime now = LocalDateTime.now();
@@ -156,7 +150,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                         dataN.add(new String[]{"lat", "log", "Network",
                                 "TAC/LAC", "CID", "Band", "Earfcn",
                                 "Uarfcn", "Arfcn", "PCI", "PSC",
-                                "BSIC", "RSSI", "RSRP", "RSRQ",  "Ta"});
+                                "BSIC", "RSSI", "RSRP", "RSRQ", "Ta"});
                         Store.writerN.writeAll(dataN);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -167,7 +161,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             } else {
                 try {
                     writer.close();
-                    if(Store.isWriteNeighbors) {
+                    if (Store.isWriteNeighbors) {
                         Store.writerN.close();
                     }
                 } catch (IOException e) {
@@ -182,6 +176,21 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         LogStart.setOnClickListener(LogB);
         Log.d("HOME FRAGMENT", "onCreateView 2");
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        cellInfoIDListener = new CellInfoIDListener();
+        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListener, CellInfoIDListener.LISTEN_CELL_INFO);
+        signalStrengthListener = new SignalStrengthListener();
+        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(signalStrengthListener, SignalStrengthListener.LISTEN_SIGNAL_STRENGTHS);
+
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        List<CellInfo> cellInfoList = tm.getAllCellInfo();
+        startCell(cellInfoList);
     }
 
     private String DecToHex(int dec) {
@@ -284,10 +293,10 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                             Operator = (String) cellInfoGsm.getCellIdentity().getOperatorAlphaLong();
                             OPerator.setText("Оператор:  " + Operator + " 2G");
                             lac_tac.setText("LAC:   " + cellInfoGsm.getCellIdentity().getLac());
-                            int CELLID = cellInfoGsm.getCellIdentity().getCid();
+                            CELLID = cellInfoGsm.getCellIdentity().getCid();
                             cid.setText("Cell ID:  " + CELLID);
                             earfcn_uarfcn_aerfcn.setText("Arfcn:   " + (cellInfoGsm.getCellIdentity().getArfcn()));
-                            int RNCID = CELLID / 65536;
+                            RNCID = CELLID / 65536;
                             enb_rnc_bsic.setText("Bcis:  " + cellInfoGsm.getCellIdentity().getBsic() + "   Rnc: " + RNCID);
                             LAC = cellInfoGsm.getCellIdentity().getLac();
                             ARFCN = cellInfoGsm.getCellIdentity().getArfcn();
@@ -331,14 +340,17 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                             Cqi = ((CellSignalStrengthLte) cellSignalStrength).getCqi();
                             dBm = cellSignalStrength.getDbm();
                             if (Cqi != Integer.MAX_VALUE) {
+                                CQi = Cqi;
                                 cqi_dBm.setText("dBm: " + dBm + "  Cqi: " + Cqi);
                             } else {
+
                                 cqi_dBm.setText("dBm: " + dBm + "  Cqi:  _");
                             }
                             AsuLevel = cellSignalStrength.getAsuLevel();
                             Level = cellSignalStrength.getLevel();
                             ta = ((CellSignalStrengthLte) cellSignalStrength).getTimingAdvance();
                             if (ta != Integer.MAX_VALUE) {
+                                TAa = ta;
                                 TA.setText("TA   " + (ta));
                             } else {
                                 TA.setText("TA   _");
@@ -380,10 +392,18 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                                 rssi = ((CellSignalStrengthGsm) cellSignalStrength).getRssi();
                             }
                             ber = ((CellSignalStrengthGsm) cellSignalStrength).getBitErrorRate();
-                            RSRQ_SNR_ECNO.setText("Bit Error Rate:  " + ber);
+                            if (ber != Integer.MAX_VALUE)
+                            {
+                                BERT = ber;
+                                RSRQ_SNR_ECNO.setText("Bit Error Rate:  " + ber);
+                            } else
+                            {
+                                RSRQ_SNR_ECNO.setText("Bit Error Rate:  " +"   _");
+                            }
                             dBm = cellSignalStrength.getDbm();
                             ta = ((CellSignalStrengthGsm) cellSignalStrength).getTimingAdvance();
                             if (ta != Integer.MAX_VALUE) {
+                                TAa = ta;
                                 TA.setText("Ta:   " + ta);
                             } else {
                                 TA.setText(("TA:   -"));
@@ -442,7 +462,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     String.valueOf(band), String.valueOf(EARFCN), "", "", String.valueOf(PCI)
                     , "", "", "", String.valueOf(rssi), String.valueOf(rsrp),
                     String.valueOf(rsrq),
-                    String.valueOf(snr), "", "", String.valueOf(Cqi), String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(ta)};
+                    String.valueOf(snr), "", "", String.valueOf(CQi), String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(TAa)};
             writer.writeNext(str, false);
         }
     }
@@ -455,9 +475,9 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     String.valueOf(mcc), String.valueOf(mnc),
                     String.valueOf(LAC), String.valueOf(CELLID), "", "", "",
                     String.valueOf(UARFCN), "", "", String.valueOf(PSC), String.valueOf(RNCID),
-                    "", String.valueOf(rssi), String.valueOf(rsrp), String.valueOf(rsrq),
-                    String.valueOf(snr), String.valueOf(EcNo), "", String.valueOf(Cqi),
-                    String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(ta)
+                    "", "", "", "",
+                    "", String.valueOf(EcNo), "", "",
+                    String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), ""
             };
             writer.writeNext(str, false);
         }
@@ -471,9 +491,9 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     String.valueOf(mcc), String.valueOf(mnc),
                     String.valueOf(LAC), String.valueOf(CELLID), "", "", "",
                     "", String.valueOf(ARFCN), "", "",
-                    String.valueOf(RNCID), String.valueOf(BSIC), String.valueOf(rssi), String.valueOf(rsrp),
-                    String.valueOf(rsrq), String.valueOf(snr), "", String.valueOf(ber), String.valueOf(Cqi), String.valueOf(dBm), String.valueOf(Level),
-                    String.valueOf(AsuLevel), String.valueOf(ta)};
+                    String.valueOf(RNCID), String.valueOf(BSIC), String.valueOf(rssi), "",
+                    "", "", "", String.valueOf(BERT), String.valueOf(Cqi), String.valueOf(dBm), String.valueOf(Level),
+                    String.valueOf(AsuLevel), String.valueOf(TAa)};
             writer.writeNext(str, false);
         }
     }
