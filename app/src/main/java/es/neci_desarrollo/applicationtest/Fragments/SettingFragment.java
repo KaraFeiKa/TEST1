@@ -6,6 +6,7 @@ import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,6 +39,7 @@ public class SettingFragment extends Fragment {
         WriteNeighbors = view.findViewById(R.id.WriteNeighbors);
         seekBar = view.findViewById(R.id.seekBar);
         textView = view.findViewById(R.id.seekBarValue);
+        textView.setText("7");
         View.OnClickListener writeNeighborsInSore = v -> {
             if (Store.isWriteNeighbors) {
                 Store.disableWriteNeighbors();
@@ -46,7 +48,7 @@ public class SettingFragment extends Fragment {
             }
         };
         WriteNeighbors.setOnClickListener(writeNeighborsInSore);
-
+        seekBar.setProgress(Store.range);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -60,8 +62,8 @@ public class SettingFragment extends Fragment {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
-
+                Store.setRange(seekBar.getProgress());
+                Log.d("Settings","Bar: "+Store.range);
             }
         });
         return view;

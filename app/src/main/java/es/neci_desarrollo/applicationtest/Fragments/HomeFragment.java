@@ -39,6 +39,7 @@ import android.widget.TextView;
 
 import com.opencsv.CSVWriter;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -55,12 +56,14 @@ import es.neci_desarrollo.applicationtest.Store;
 
 
 public class HomeFragment extends Fragment implements LocationListenerInterface {
-    String csv = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/";
+    private static LocationManager locationManager;
+    String nocProjectDirInDownload = "noc-project";
+    String csv = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + nocProjectDirInDownload;
     private TelephonyManager tm;
-    private LocationManager locationManager;
+    //    private LocationManager locationManager;
     SignalStrengthListener signalStrengthListener;
     CellInfoIDListener cellInfoIDListener;
-    private MyLocationListener myLocationListener;
+    private static MyLocationListener myLocationListener;
     TextView latitude_res, longitude_res, Mnc_Mcc, RSSI_RSRP, RSRQ_SNR_ECNO, text, earfcn_uarfcn_aerfcn,
             lac_tac, cid, band_pci_psc, TA, OPerator, cqi_dBm, asulevel, level, enb_rnc_bsic;
     Button LogStart;
@@ -95,7 +98,10 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
-
+        File appDir = new File(csv);
+        if (!appDir.exists()) {
+            appDir.mkdirs();
+        }
         myLocationListener = new MyLocationListener();
         myLocationListener.setLocationListenerInterface(this);
         locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
@@ -123,13 +129,18 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
 
 
             if (!Store.isWriteWorking) {
+                if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                        && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
+                }
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, Store.range, myLocationListener);
                 LogStart.setText("Отсановить запись");
                 LogStart.setBackgroundColor(0xFFFF0000);
                 text.setText("Идет запись");
                 try {
                     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
                     LocalDateTime now = LocalDateTime.now();
-                    writer = new CSVWriter(new FileWriter(csv + dtf.format(now) + "_Main.csv"));
+                    writer = new CSVWriter(new FileWriter(csv + "/" + dtf.format(now) + "_Main.csv"));
                     List<String[]> data = new ArrayList<String[]>();
                     data.add(new String[]{"lat", "log", "Operator", "Network", "mcc", "mnc",
                             "TAC/LAC", "CID", "eNB", "Band", "Earfcn",
@@ -137,6 +148,28 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                             "BSIC", "RSSI", "RSRP", "RSRQ",
                             "SNR", "EcNo", "BER", "Cqi", "dBm", "Level", "Asulevel", "Ta"});
                     writer.writeAll(data);
+                    switch (tm.getDataNetworkType()) {
+                        case TelephonyManager.NETWORK_TYPE_LTE:
+                            WriteLteInfo();
+                            break;
+                        case TelephonyManager.NETWORK_TYPE_UMTS:
+                        case TelephonyManager.NETWORK_TYPE_HSDPA:
+                        case TelephonyManager.NETWORK_TYPE_HSPA:
+                        case TelephonyManager.NETWORK_TYPE_HSPAP:
+                        case TelephonyManager.NETWORK_TYPE_EVDO_0:
+                        case TelephonyManager.NETWORK_TYPE_EVDO_A:
+                        case TelephonyManager.NETWORK_TYPE_EVDO_B:
+                            WriteUMTSInfo();
+                            break;
+                        case TelephonyManager.NETWORK_TYPE_EDGE:
+                        case TelephonyManager.NETWORK_TYPE_GPRS:
+                        case TelephonyManager.NETWORK_TYPE_GSM:
+                            WriteGSMInfo();
+                            break;
+                        default:
+                    }
+
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -145,7 +178,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     try {
                         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
                         LocalDateTime now = LocalDateTime.now();
-                        Store.writerN = new CSVWriter(new FileWriter(csv + dtf.format(now) + "_Neighbors.csv"));
+                        Store.writerN = new CSVWriter(new FileWriter(csv + "/" + dtf.format(now) + "_Neighbors.csv"));
                         List<String[]> dataN = new ArrayList<String[]>();
                         dataN.add(new String[]{"lat", "log", "Network",
                                 "TAC/LAC", "CID", "Band", "Earfcn",
@@ -200,13 +233,16 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     public int HexToDec(String hex) {
         return Integer.parseInt(hex, 16);
     }
-
+    @SuppressLint("MissingPermission")
+    public static void updateRangeLocation() {
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, Store.range, myLocationListener);
+    }
 
     @SuppressLint("MissingPermission")
     private void getLocation() {
         try {
             locationManager = (LocationManager) getActivity().getApplicationContext().getSystemService(LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 5, myLocationListener);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, Store.range, myLocationListener);
 
         } catch (Exception ignored) {
 

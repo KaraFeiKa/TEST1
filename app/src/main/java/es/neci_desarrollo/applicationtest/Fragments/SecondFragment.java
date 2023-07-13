@@ -50,7 +50,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
     CellInfoIDListener cellInfoIDListener;
     private LocationManager locationManager;
     private MyLocationListener myLocationListener;
-    double lat, lot = 0;
+    double latN, lotN = 0;
     int rssi, rsrq, rsrp, ta, band, EARFCN, CELLID, PCI, LAC,
             UARFCN, PSC, ARFCN, BSIC ,ss= 0;
 
@@ -96,7 +96,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
     private void getLocation() {
         try {
             locationManager = (LocationManager) getActivity().getApplicationContext().getSystemService(LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 5, myLocationListener);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 1, myLocationListener);
 
         } catch (Exception ignored) {
 
@@ -406,7 +406,8 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
     @Override
     public void onLocationChanged(Location location) {
-
+        latN = location.getLatitude();
+        lotN = location.getLongitude();
     }
 
     private class CellInfoIDListener extends PhoneStateListener {
@@ -425,8 +426,8 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
     public void WriteLteInfo (){
         if (Store.isWriteWorking && Store.isWriteNeighbors) {
-            String[] str = new String[]{String.valueOf(lat),
-                    String.valueOf(lot),
+            String[] str = new String[]{String.valueOf(latN),
+                    String.valueOf(lotN),
                     "4G","","",String.valueOf(band),
                     String.valueOf(EARFCN),
                     "","",
@@ -442,8 +443,8 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
     private void WriteUMTSInfo()
     {
         if (Store.isWriteWorking && Store.isWriteNeighbors) {
-            String[] str = new String[]{String.valueOf(lat),
-                    String.valueOf(lot),
+            String[] str = new String[]{String.valueOf(latN),
+                    String.valueOf(lotN),
                     "3G","","","","",
                     String.valueOf(UARFCN),
                     "","",
@@ -461,8 +462,8 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
         if (Store.isWriteWorking && Store.isWriteNeighbors) {
             String[] str = new String[0];
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                str = new String[]{String.valueOf(lat),
-                        String.valueOf(lot),
+                str = new String[]{String.valueOf(latN),
+                        String.valueOf(lotN),
                         "2G",
                         String.valueOf(LAC),
                         String.valueOf(CELLID),
