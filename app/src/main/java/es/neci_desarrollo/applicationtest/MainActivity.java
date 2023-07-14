@@ -1,41 +1,20 @@
 package es.neci_desarrollo.applicationtest;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.viewpager2.widget.ViewPager2;
 import android.Manifest;
-import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.pm.PackageManager;
-import android.location.LocationManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.telephony.CellInfo;
-import android.telephony.CellInfoGsm;
-import android.telephony.CellInfoLte;
-import android.telephony.CellInfoWcdma;
-import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
-import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.TableLayout;
-import android.widget.TableRow;
-import android.widget.TextView;
 import com.google.android.material.tabs.TabLayout;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
-import es.neci_desarrollo.applicationtest.Fragments.HomeFragment;
-import es.neci_desarrollo.applicationtest.Fragments.ViewPagerAdapter;
-import es.neci_desarrollo.applicationtest.location.MyLocationListener;
+import es.neci_desarrollo.applicationtest.Fragments.ViewPagerAdapter;;
 
 
 public class MainActivity extends AppCompatActivity {

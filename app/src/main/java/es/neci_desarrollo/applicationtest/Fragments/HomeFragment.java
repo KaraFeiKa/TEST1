@@ -60,7 +60,6 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     String nocProjectDirInDownload = "noc-project";
     String csv = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + nocProjectDirInDownload;
     private TelephonyManager tm;
-    //    private LocationManager locationManager;
     SignalStrengthListener signalStrengthListener;
     CellInfoIDListener cellInfoIDListener;
     private static MyLocationListener myLocationListener;
@@ -69,7 +68,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     Button LogStart;
     double lat, lot = 0;
     int rssi, rsrq, rsrp, snr, Cqi, dBm, Level, AsuLevel, ta, EcNo, ber, eNB, TAC, band, EARFCN, CELLID, PCI, LAC,
-            UARFCN, PSC, RNCID, ARFCN, BSIC, CQi, TAa, BERT = 0;
+            UARFCN, PSC, RNCID, ARFCN, BSIC, CQi, TAa, BERT,BANDTRUE = 0;
     String mcc = "";
     String mnc = "";
     String Operator;
@@ -98,6 +97,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
+
         File appDir = new File(csv);
         if (!appDir.exists()) {
             appDir.mkdirs();
@@ -124,6 +124,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         LogStart = view.findViewById(R.id.button);
 
         tm = (TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE);
+        LogStart.setBackgroundColor(0xFF00FF00);
         LogStart.setBackgroundColor(0xFF00FF00);
         Button.OnClickListener LogB = v -> {
 
@@ -211,6 +212,10 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         return view;
     }
 
+
+
+
+
     @Override
     public void onResume() {
         super.onResume();
@@ -260,6 +265,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                 case TelephonyManager.NETWORK_TYPE_LTE:
                     if (cellInfo instanceof CellInfoLte) {
                         CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
+                        Log.d("LTE ALL", ((CellInfoLte) cellInfo).toString());
                         if (cellInfoLte.isRegistered()) {
                             mcc = cellInfoLte.getCellIdentity().getMccString();
                             mnc = cellInfoLte.getCellIdentity().getMncString();
@@ -282,8 +288,14 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                                         .collect(Collectors.joining(", ")) + "   Pci:  " + PCI);
                                 if (bands.length > 0) {
                                     band = bands[0];
+                                    BANDTRUE = band;
                                 }
                             }
+                            else
+                            {
+                                band_pci_psc.setText("Band:  " + "N/A"  +"   Pci:  " + PCI);
+                            }
+
                             TAC = cellInfoLte.getCellIdentity().getTac();
                             EARFCN = cellInfoLte.getCellIdentity().getEarfcn();
                         }
@@ -495,7 +507,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             String[] str = new String[]{String.valueOf(lat), String.valueOf(lot),
                     String.valueOf(Operator), "4G", String.valueOf(mcc), String.valueOf(mnc),
                     String.valueOf(TAC), String.valueOf(CELLID), String.valueOf(eNB),
-                    String.valueOf(band), String.valueOf(EARFCN), "", "", String.valueOf(PCI)
+                    String.valueOf(BANDTRUE), String.valueOf(EARFCN), "", "", String.valueOf(PCI)
                     , "", "", "", String.valueOf(rssi), String.valueOf(rsrp),
                     String.valueOf(rsrq),
                     String.valueOf(snr), "", "", String.valueOf(CQi), String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(TAa)};
