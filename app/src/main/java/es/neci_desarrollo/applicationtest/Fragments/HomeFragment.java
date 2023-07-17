@@ -212,11 +212,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         return view;
     }
 
-
-
-
-
-    @Override
+        @Override
     public void onResume() {
         super.onResume();
         cellInfoIDListener = new CellInfoIDListener();
@@ -265,8 +261,8 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                 case TelephonyManager.NETWORK_TYPE_LTE:
                     if (cellInfo instanceof CellInfoLte) {
                         CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
-                        Log.d("LTE ALL", ((CellInfoLte) cellInfo).toString());
                         if (cellInfoLte.isRegistered()) {
+                            Log.d("LTE ALL", ((CellInfoLte) cellInfo).getCellSignalStrength().toString());
                             mcc = cellInfoLte.getCellIdentity().getMccString();
                             mnc = cellInfoLte.getCellIdentity().getMncString();
                             Mnc_Mcc.setText("MCC: " + mcc + "  MNC: " + mnc);
@@ -380,6 +376,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                 }
                 switch (tm.getDataNetworkType()) {
                     case TelephonyManager.NETWORK_TYPE_LTE:
+                        Log.d("LTE ALL 1", ((CellSignalStrengthLte)cellSignalStrength).toString());
                         if (cellSignalStrength instanceof CellSignalStrengthLte) {
                             snr = ((CellSignalStrengthLte) cellSignalStrength).getRssnr();
                             rssi = ((CellSignalStrengthLte) cellSignalStrength).getRssi();

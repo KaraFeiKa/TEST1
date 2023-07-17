@@ -121,43 +121,43 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
                 TextView tvPci = new TextView(this.getContext());
                 tvPci.setTextSize(20);
-                tvPci.setTextColor(R.color.white);
+
                 tvPci.setText("PCI   ");
                 tableRowLte.addView(tvPci, 0);
 
                 TextView tvEarfcn = new TextView(this.getContext());
                 tvEarfcn.setTextSize(20);
-                tvEarfcn.setTextColor(R.color.white);
+
                 tvEarfcn.setText("Earfcn   ");
                 tableRowLte.addView(tvEarfcn, 1);
 
                 TextView tvBand = new TextView(this.getContext());
                 tvBand.setTextSize(20);
-                tvBand.setTextColor(R.color.white);
+
                 tvBand.setText("Band  ");
                 tableRowLte.addView(tvBand, 2);
 
                 TextView tvRssi = new TextView(this.getContext());
                 tvRssi.setTextSize(20);
-                tvRssi.setTextColor(R.color.white);
+
                 tvRssi.setText("RSSI  ");
                 tableRowLte.addView(tvRssi, 3);
 
                 TextView tvRsrp = new TextView(this.getContext());
                 tvRsrp.setTextSize(20);
-                tvRsrp.setTextColor(R.color.white);
+
                 tvRsrp.setText("RSRP  ");
                 tableRowLte.addView(tvRsrp, 4);
 
                 TextView tvRsrq = new TextView(this.getContext());
                 tvRsrq.setTextSize(20);
-                tvRsrq.setTextColor(R.color.white);
+
                 tvRsrq.setText("RSRQ  ");
                 tableRowLte.addView(tvRsrq, 5);
 
                 TextView tvTa = new TextView(this.getContext());
                 tvTa.setTextSize(20);
-                tvTa.setTextColor(R.color.white);
+
                 tvTa.setText("Ta  ");
                 tableRowLte.addView(tvTa, 6);
 
@@ -179,19 +179,19 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
                 TextView tvPsc = new TextView(this.getContext());
                 tvPsc.setTextSize(20);
-                tvPsc.setTextColor(R.color.white);
+
                 tvPsc.setText("PSC   ");
                 tableRowUMTS.addView(tvPsc, 0);
 
                 TextView tvUarfcn = new TextView(this.getContext());
                 tvUarfcn.setTextSize(20);
-                tvUarfcn.setTextColor(R.color.white);
+
                 tvUarfcn.setText("Uarfcn   ");
                 tableRowUMTS.addView(tvUarfcn, 1);
 
                 TextView tvDbm = new TextView(this.getContext());
                 tvDbm.setTextSize(20);
-                tvDbm.setTextColor(R.color.white);
+
                 tvDbm.setText("dBm  ");
                 tableRowUMTS.addView(tvDbm, 2);
 
@@ -208,31 +208,31 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
                 TextView tvLAC = new TextView(this.getContext());
                 tvLAC.setTextSize(20);
-                tvLAC.setTextColor(R.color.white);
+
                 tvLAC.setText("LAC     ");
                 tableRow.addView(tvLAC, 0);
 
                 TextView tvCid = new TextView(this.getContext());
                 tvCid.setTextSize(20);
-                tvCid.setTextColor(R.color.white);
+
                 tvCid.setText("   CID   ");
                 tableRow.addView(tvCid, 1);
 
                 TextView tvArfcn = new TextView(this.getContext());
                 tvArfcn.setTextSize(20);
-                tvArfcn.setTextColor(R.color.white);
+
                 tvArfcn.setText("ARFCN    ");
                 tableRow.addView(tvArfcn, 2);
 
                 TextView tvBsic = new TextView(this.getContext());
                 tvBsic.setTextSize(20);
-                tvBsic.setTextColor(R.color.white);
+
                 tvBsic.setText("BSIC    ");
                 tableRow.addView( tvBsic, 3);
 
                 TextView tvRSSI = new TextView(this.getContext());
                 tvRSSI.setTextSize(20);
-                tvRSSI.setTextColor(R.color.white);
+
                 tvRSSI.setText("RSSI    ");
                 tableRow.addView(tvRSSI, 4);
 
@@ -255,14 +255,14 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
                             TextView tvPciVal = new TextView(this.getContext());
                             tvPciVal.setTextSize(20);
-                            tvPciVal.setTextColor(R.color.white);
+
                             PCI = cellInfoLte.getCellIdentity().getPci();
                             tvPciVal.setText(String.valueOf(PCI));
                             tableRowValues.addView(tvPciVal, 0);
 
                             TextView tvEarfcnVal = new TextView(this.getContext());
                             tvEarfcnVal.setTextSize(20);
-                            tvEarfcnVal.setTextColor(R.color.white);
+
                             EARFCN = cellInfoLte.getCellIdentity().getEarfcn();
                             tvEarfcnVal.setText(String.valueOf(EARFCN));
                             tableRowValues.addView(tvEarfcnVal, 1);
@@ -274,7 +274,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                                 int[] bands = cellInfoLte.getCellIdentity().getBands();
                                 TextView tvBandVal = new TextView(this.getContext());
                                 tvBandVal.setTextSize(20);
-                                tvBandVal.setTextColor(R.color.white);
+
                                 tvBandVal.setText(Arrays.stream(bands).mapToObj(String::valueOf)
                                         .collect(Collectors.joining(", ")));
                                 if (bands.length > 0) {
@@ -285,7 +285,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                             else {
                                 TextView tvBandVal = new TextView(this.getContext());
                                 tvBandVal.setTextSize(20);
-                                tvBandVal.setTextColor(R.color.white);
+
                                 tvBandVal.setText("N/a");
                                 tableRowValues.addView(tvBandVal, 2);
                             }
@@ -293,28 +293,28 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
                             TextView tvRssiVal = new TextView(this.getContext());
                             tvRssiVal.setTextSize(20);
-                            tvRssiVal.setTextColor(R.color.white);
+
                             rssi = cellInfoLte.getCellSignalStrength().getRssi();
                             tvRssiVal.setText(String.valueOf(rssi));
                             tableRowValues.addView(tvRssiVal, 3);
 
                             TextView tvRsrpVal = new TextView(this.getContext());
                             tvRsrpVal.setTextSize(20);
-                            tvRsrpVal.setTextColor(R.color.white);
+
                             rsrp = cellInfoLte.getCellSignalStrength().getRsrp();
                             tvRsrpVal.setText(String.valueOf(rsrp));
                             tableRowValues.addView(tvRsrpVal, 4);
 
                             TextView tvRsrqVal = new TextView(this.getContext());
                             tvRsrqVal.setTextSize(20);
-                            tvRsrqVal.setTextColor(R.color.white);
+
                             rsrq = cellInfoLte.getCellSignalStrength().getRsrq();
                             tvRsrqVal.setText(String.valueOf(rsrq));
                             tableRowValues.addView(tvRsrqVal, 5);
 
                             TextView tvTaVal = new TextView(this.getContext());
                             tvTaVal.setTextSize(20);
-                            tvTaVal.setTextColor(R.color.white);
+
                             ta = cellInfoLte.getCellSignalStrength().getTimingAdvance();
                             if (ta != Integer.MAX_VALUE) {
                                 TAa = ta;
@@ -347,14 +347,14 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
                             TextView tvPscVal = new TextView(this.getContext());
                             tvPscVal.setTextSize(20);
-                            tvPscVal.setTextColor(R.color.white);
+
                             PSC =cellInfoWcdma.getCellIdentity().getPsc();
                             tvPscVal.setText(String.valueOf(PSC));
                             tableRowValues.addView(tvPscVal, 0);
 
                             TextView tvUarfcnVal = new TextView(this.getContext());
                             tvUarfcnVal.setTextSize(20);
-                            tvUarfcnVal.setTextColor(R.color.white);
+
                             UARFCN = cellInfoWcdma.getCellIdentity().getUarfcn();
                             tvUarfcnVal.setText(String.valueOf(UARFCN));
                             tableRowValues.addView(tvUarfcnVal, 1);
@@ -369,7 +369,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                                 }
                             }
                             tvdBmVal.setTextSize(20);
-                            tvdBmVal.setTextColor(R.color.white);
+
                             tvdBmVal.setText(String.valueOf(ss));
                             tableRowValues.addView(tvdBmVal, 2);
                             tableLayout.addView(tableRowValues, currRow);
@@ -394,28 +394,28 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
                             TextView tvPscVal = new TextView(this.getContext());
                             tvPscVal.setTextSize(20);
-                            tvPscVal.setTextColor(R.color.white);
+
                             LAC = cellInfoGsm.getCellIdentity().getLac();
                             tvPscVal.setText(String.valueOf(LAC));
                             tableRow.addView(tvPscVal, 0);
 
                             TextView tvUarfcnVal = new TextView(this.getContext());
                             tvUarfcnVal.setTextSize(20);
-                            tvUarfcnVal.setTextColor(R.color.white);
+
                             CELLID = (cellInfoGsm.getCellIdentity().getCid());
                             tvUarfcnVal.setText("  "+CELLID+"  ");
                             tableRow.addView(tvUarfcnVal, 1);
 
                             TextView tvdBmVal = new TextView(this.getContext());
                             tvdBmVal.setTextSize(20);
-                            tvdBmVal.setTextColor(R.color.white);
+
                             ARFCN = cellInfoGsm.getCellIdentity().getArfcn();
                             tvdBmVal.setText("  "+ARFCN);
                             tableRow.addView(tvdBmVal, 2);
 
 
                             TextView tvBsicVal = new TextView(this.getContext());
-                            tvBsicVal.setTextColor(R.color.white);
+
                             tvBsicVal.setTextSize(20);
                             BSIC = cellInfoGsm.getCellIdentity().getBsic();
                             tvBsicVal.setText("  "+(BSIC));
@@ -424,7 +424,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
                             TextView tvRssiVal = new TextView(this.getContext());
                             tvRssiVal.setTextSize(20);
-                            tvRssiVal.setTextColor(R.color.white);
+
 
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                 rssi = cellInfoGsm.getCellSignalStrength().getRssi();
