@@ -58,16 +58,17 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
     }
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
+        }
                super.onCreate(savedInstanceState);
 
     }
 
     @Override
+    @SuppressLint("MissingPermission")
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
-        }
         List<CellInfo> cellInfoList = tm.getAllCellInfo();
         Neiborhood(cellInfoList);
         super.onViewCreated(view, savedInstanceState);
@@ -103,12 +104,9 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
     }
 
 
-    @SuppressLint("ResourceAsColor")
+    @SuppressLint({"ResourceAsColor","MissingPermission"})
+
     private void Neiborhood(List<CellInfo> cellInfoList) {
-        if (ContextCompat.checkSelfPermission(SecondFragment.this.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(SecondFragment.this.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(SecondFragment.this.getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(SecondFragment.this.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) SecondFragment.this.getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
-        }
         tableLayout.removeAllViews();
         int currRow = 0;
         switch(this.tm.getDataNetworkType()){
@@ -295,23 +293,39 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                             tvRssiVal.setTextSize(20);
 
                             rssi = cellInfoLte.getCellSignalStrength().getRssi();
-                            tvRssiVal.setText(String.valueOf(rssi));
+                            if (rssi != Integer.MAX_VALUE)
+                            {
+                                tvRssiVal.setText(String.valueOf(rssi));
+                            }else {
+                                tvRssiVal.setText(String.valueOf("N/a"));
+                            }
+
                             tableRowValues.addView(tvRssiVal, 3);
 
                             TextView tvRsrpVal = new TextView(this.getContext());
                             tvRsrpVal.setTextSize(20);
 
                             rsrp = cellInfoLte.getCellSignalStrength().getRsrp();
-                            tvRsrpVal.setText(String.valueOf(rsrp));
+                            if (rsrp != Integer.MAX_VALUE)
+                            {
+                                tvRsrpVal.setText(String.valueOf(rsrp));
+                            }else {
+                                tvRsrpVal.setText(String.valueOf("N/a"));
+                            }
                             tableRowValues.addView(tvRsrpVal, 4);
 
                             TextView tvRsrqVal = new TextView(this.getContext());
                             tvRsrqVal.setTextSize(20);
 
                             rsrq = cellInfoLte.getCellSignalStrength().getRsrq();
-                            tvRsrqVal.setText(String.valueOf(rsrq));
-                            tableRowValues.addView(tvRsrqVal, 5);
+                            if (rsrq != Integer.MAX_VALUE)
+                            {
+                                tvRsrqVal.setText(String.valueOf(rsrq));
+                            }else {
+                                tvRsrqVal.setText(String.valueOf("N/a"));
+                            }
 
+                            tableRowValues.addView(tvRsrqVal, 5);
                             TextView tvTaVal = new TextView(this.getContext());
                             tvTaVal.setTextSize(20);
 
@@ -320,7 +334,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                                 TAa = ta;
                                 tvTaVal.setText(String.valueOf(TAa));
                             } else {
-                                tvTaVal.setText("_");
+                                tvTaVal.setText("N/a");
                             }
                             tableRowValues.addView(tvTaVal, 6);
                             tableLayout.addView(tableRowValues, currRow);
@@ -451,14 +465,11 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
     private class CellInfoIDListener extends PhoneStateListener {
         @Override
+        @SuppressLint("MissingPermission")
         public void onCellInfoChanged(List<CellInfo> cellInfoList) {
             Log.d("NCI", "Changed");
             Neiborhood(cellInfoList);
 
-            if (ContextCompat.checkSelfPermission(SecondFragment.this.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(SecondFragment.this.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                    && ContextCompat.checkSelfPermission(SecondFragment.this.getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(SecondFragment.this.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions((Activity) SecondFragment.this.getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
-            }
             super.onCellInfoChanged( cellInfoList);
         }
     }

@@ -143,10 +143,10 @@
 
                     <Button
                         android:id="@+id/button"
-                        android:layout_width="130sp"
-                        android:layout_height="70dp"
-                        android:layout_marginStart="150sp"
-                        android:layout_marginEnd="240sp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal"
                         android:text="Начать запись" />
 
                     <TextView
