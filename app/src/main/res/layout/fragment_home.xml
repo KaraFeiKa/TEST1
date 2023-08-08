@@ -70,6 +70,20 @@
                         android:textSize="25sp" />
 
                     <TextView
+                        android:id="@+id/ModeName"
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:textColor="@color/white"
+                        android:textSize="25sp" />
+
+                    <TextView
+                        android:id="@+id/friq"
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:textColor="@color/white"
+                        android:textSize="25sp" />
+
+                    <TextView
                         android:id="@+id/TA"
                         android:layout_width="match_parent"
                         android:layout_height="38dp"

@@ -24,6 +24,7 @@ import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoWcdma;
 import android.telephony.PhoneStateListener;
+import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -104,7 +105,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
     }
 
 
-    @SuppressLint({"ResourceAsColor","MissingPermission"})
+    @SuppressLint({"ResourceAsColor", "MissingPermission", "SetTextI18n"})
 
     private void Neiborhood(List<CellInfo> cellInfoList) {
         tableLayout.removeAllViews();
@@ -297,7 +298,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                             {
                                 tvRssiVal.setText(String.valueOf(rssi));
                             }else {
-                                tvRssiVal.setText(String.valueOf("N/a"));
+                                tvRssiVal.setText("N/a");
                             }
 
                             tableRowValues.addView(tvRssiVal, 3);
@@ -310,7 +311,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                             {
                                 tvRsrpVal.setText(String.valueOf(rsrp));
                             }else {
-                                tvRsrpVal.setText(String.valueOf("N/a"));
+                                tvRsrpVal.setText("N/a");
                             }
                             tableRowValues.addView(tvRsrpVal, 4);
 
@@ -322,7 +323,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                             {
                                 tvRsrqVal.setText(String.valueOf(rsrq));
                             }else {
-                                tvRsrqVal.setText(String.valueOf("N/a"));
+                                tvRsrqVal.setText("N/a");
                             }
 
                             tableRowValues.addView(tvRsrqVal, 5);
@@ -456,7 +457,6 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
             }
         }
     }
-
     @Override
     public void onLocationChanged(Location location) {
         latN = location.getLatitude();
@@ -465,12 +465,10 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
     private class CellInfoIDListener extends PhoneStateListener {
         @Override
-        @SuppressLint("MissingPermission")
+        @SuppressLint({"SetTextI18n", "MissingPermission"})
         public void onCellInfoChanged(List<CellInfo> cellInfoList) {
-            Log.d("NCI", "Changed");
             Neiborhood(cellInfoList);
-
-            super.onCellInfoChanged( cellInfoList);
+            super.onCellInfoChanged(cellInfoList);
         }
     }
 

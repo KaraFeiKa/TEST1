@@ -19,6 +19,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.os.Environment;
+import android.telephony.CellIdentity;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
@@ -28,7 +29,10 @@ import android.telephony.CellSignalStrengthGsm;
 import android.telephony.CellSignalStrengthLte;
 import android.telephony.CellSignalStrengthWcdma;
 import android.telephony.PhoneStateListener;
+import android.telephony.PhysicalChannelConfig;
+import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
+import android.telephony.TelephonyCallback;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -48,6 +52,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import es.neci_desarrollo.applicationtest.R;
@@ -63,14 +68,18 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     private TelephonyManager tm;
     SignalStrengthListener signalStrengthListener;
     CellInfoIDListener cellInfoIDListener;
+
     private static MyLocationListener myLocationListener;
     TextView latitude_res, longitude_res, Mnc_Mcc, RSSI_RSRP, RSRQ_SNR_ECNO, text, earfcn_uarfcn_aerfcn,
-            lac_tac, cid, band_pci_psc, TA, OPerator, cqi_dBm, asulevel, level, enb_rnc_bsic;
+            lac_tac, cid, band_pci_psc, TA, OPerator, cqi_dBm, asulevel, level, enb_rnc_bsic, ul_dl, mode_name;
     Button LogStart;
     double lat, lot = 0;
     int rssi, rsrq, rsrp, snr, Cqi, dBm, Level, AsuLevel, ta, EcNo, ber, eNB, TAC, band, EARFCN, CELLID, PCI, LAC,
-            UARFCN, PSC, RNCID, ARFCN, BSIC, CQi, TAa, BERT,BANDTRUE,bw, bwTrue = 0;
+            UARFCN, PSC, RNCID, ARFCN, BSIC, CQi, TAa, BERT, BandPlus, bw, bwTrue, FUL, FDL,bandwidnth;
+    int [] bandwidnths;
     String mcc = "";
+    String NameR = "";
+    String Mode = "";
     String mnc = "";
     String Operator;
     CSVWriter writer = null;
@@ -87,8 +96,9 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
 
         super.onViewCreated(view, savedInstanceState);
         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
+                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.MODIFY_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.MODIFY_PHONE_STATE}, 100);
         }
         getLocation();
     }
@@ -96,8 +106,9 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
+                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.MODIFY_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.MODIFY_PHONE_STATE}, 100);
         }
         super.onCreate(savedInstanceState);
     }
@@ -123,6 +134,8 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         lac_tac = view.findViewById(R.id.LAC_TAC);
         cid = view.findViewById(R.id.CID);
         band_pci_psc = view.findViewById(R.id.Band_Pci_Psc);
+        mode_name = view.findViewById(R.id.ModeName);
+        ul_dl = view.findViewById(R.id.friq);
         TA = view.findViewById(R.id.TA);
         OPerator = view.findViewById(R.id.Operator);
         cqi_dBm = view.findViewById(R.id.Cqi_dBm);
@@ -132,15 +145,19 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         text = view.findViewById(R.id.text);
         LogStart = view.findViewById(R.id.button);
 
+
         tm = (TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE);
+
+
         LogStart.setBackgroundColor(0xFF00FF00);
         Button.OnClickListener LogB = v -> {
 
 
             if (!Store.isWriteWorking) {
                 if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                        && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
+                        && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                        && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.MODIFY_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.MODIFY_PHONE_STATE}, 100);
                 }
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, Store.range, myLocationListener);
                 LogStart.setText("Отсановить запись");
@@ -216,23 +233,21 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             }
         };
         LogStart.setOnClickListener(LogB);
-        Log.d("HOME FRAGMENT", "onCreateView 2");
         return view;
     }
 
-        @Override
+    @Override
+    @SuppressLint("MissingPermission")
     public void onResume() {
         super.onResume();
         cellInfoIDListener = new CellInfoIDListener();
         ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListener, CellInfoIDListener.LISTEN_CELL_INFO);
         signalStrengthListener = new SignalStrengthListener();
         ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(signalStrengthListener, SignalStrengthListener.LISTEN_SIGNAL_STRENGTHS);
-
-        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
         List<CellInfo> cellInfoList = tm.getAllCellInfo();
         startCell(cellInfoList);
+        calc();
+        Bandwidths();
     }
 
     private String DecToHex(int dec) {
@@ -242,10 +257,446 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     public int HexToDec(String hex) {
         return Integer.parseInt(hex, 16);
     }
+
     @SuppressLint("MissingPermission")
     public static void updateRangeLocation() {
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, Store.range, myLocationListener);
     }
+
+    private void Bandwidths(){
+        PhoneStateListener phoneStateListener = new PhoneStateListener() {
+            @Override
+            public void onServiceStateChanged(ServiceState serviceState) {
+                Log.d("Check",serviceState.toString());
+                bandwidnths = serviceState.getCellBandwidths();
+                if (bandwidnths.length > 0)
+                {
+                    bandwidnth = bandwidnths[0];
+                    Arrays.stream(bandwidnths).mapToObj(String::valueOf)
+                            .collect(Collectors.joining(", "));
+                }
+            }
+        };
+        tm.listen(phoneStateListener, PhoneStateListener.LISTEN_SERVICE_STATE);
+    }
+
+    private void calc() {
+        int FDL_low, NDL, NOffs_DL, FUL_low, NUL, NOffs_UL;
+        if (0 <= EARFCN && EARFCN <= 599) {
+            NameR = "2100";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 2110;
+            NOffs_DL = 0;
+            BandPlus = 1;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 1920;
+            NOffs_UL = 18000;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+
+        }
+        if (600 <= EARFCN && EARFCN <= 1199) {
+            NameR = "1900 PCS";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 1930;
+            NOffs_DL = 600;
+            BandPlus = 2;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 1850;
+            NOffs_UL = 18600;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (1200 <= EARFCN && EARFCN <= 1949) {
+            NameR = "1800+";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 1805;
+            NOffs_DL = 1200;
+            BandPlus = 3;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 1710;
+            NOffs_UL = 19200;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (1950 <= EARFCN && EARFCN <= 2399) {
+            NameR = "AWS-1";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 2110;
+            NOffs_DL = 1950;
+            BandPlus = 4;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 1710;
+            NOffs_UL = 19950;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (2400 <= EARFCN && EARFCN <= 2649) {
+            NameR = "850";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 869;
+            NOffs_DL = 2400;
+            BandPlus = 5;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 824;
+            NOffs_UL = 20400;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (2750 <= EARFCN && EARFCN <= 3449) {
+            NameR = "2600";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 2620;
+            NOffs_DL = 2750;
+            BandPlus = 7;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 2500;
+            NOffs_UL = 20750;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (3450 <= EARFCN && EARFCN <= 3799) {
+            NameR = "900 GSM";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 925;
+            NOffs_DL = 3450;
+            BandPlus = 8;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 880;
+            NOffs_UL = 21450;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (3800 <= EARFCN && EARFCN <= 4149) {
+            NameR = "1800";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = (int) 1844.9;
+            NOffs_DL = 3800;
+            BandPlus = 9;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = (int) 1749.9;
+            NOffs_UL = 21800;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+
+        if (4150 <= EARFCN && EARFCN <= 4749) {
+            NameR = "AWS-3";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 2110;
+            NOffs_DL = 4150;
+            BandPlus = 10;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 1710;
+            NOffs_UL = 22150;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (4750 <= EARFCN && EARFCN <= 4949) {
+            NameR = "1500 Lower";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = (int) 1475.9;
+            NOffs_DL = 4750;
+            BandPlus = 11;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = (int) 1427.9;
+            NOffs_UL = 22750;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (5010 <= EARFCN && EARFCN <= 5179) {
+            NameR = "700 a";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 729;
+            NOffs_DL = 5010;
+            BandPlus = 12;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = (int) 699;
+            NOffs_UL = 23010;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (5180 <= EARFCN && EARFCN <= 5279) {
+            NameR = "700 c";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 746;
+            NOffs_DL = 5180;
+            BandPlus = 13;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = (int) 777;
+            NOffs_UL = 23180;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (5280 <= EARFCN && EARFCN <= 5379) {
+            NameR = "700 PS";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 758;
+            NOffs_DL = 5280;
+            BandPlus = 14;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = (int) 788;
+            NOffs_UL = 23280;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (5730 <= EARFCN && EARFCN <= 5849) {
+            NameR = "700 b";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 734;
+            NOffs_DL = 5730;
+            BandPlus = 17;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = (int) 704;
+            NOffs_UL = 23730;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (5850 <= EARFCN && EARFCN <= 5999) {
+            NameR = "800 Lower";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 860;
+            NOffs_DL = 5850;
+            BandPlus = 18;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 815;
+            NOffs_UL = 23850;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (6000 <= EARFCN && EARFCN <= 6149) {
+            NameR = "800 Upper";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 875;
+            NOffs_DL = 6000;
+            BandPlus = 19;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 830;
+            NOffs_UL = 24000;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (6150 <= EARFCN && EARFCN <= 6449) {
+            NameR = "800 DD";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 791;
+            NOffs_DL = 6150;
+            BandPlus = 20;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 832;
+            NOffs_UL = 24150;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (6450 <= EARFCN && EARFCN <= 6599) {
+            NameR = "1500 Upper";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = (int) 1495.9;
+            NOffs_DL = 6450;
+            BandPlus = 21;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = (int) 1447.9;
+            NOffs_UL = 24450;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (6600 <= EARFCN && EARFCN <= 7399) {
+            NameR = "3500";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 3510;
+            NOffs_DL = 6600;
+            BandPlus = 22;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 3410;
+            NOffs_UL = 24600;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (7700 <= EARFCN && EARFCN <= 8039) {
+            NameR = "1600 L-band";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 1525;
+            NOffs_DL = 7700;
+            BandPlus = 24;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = (int) 1626.5;
+            NOffs_UL = 25700;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (8040 <= EARFCN && EARFCN <= 8689) {
+            NameR = "1900+";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 1930;
+            NOffs_DL = 8040;
+            BandPlus = 25;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 1850;
+            NOffs_UL = 26040;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (8690 <= EARFCN && EARFCN <= 9039) {
+            NameR = "850+";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 859;
+            NOffs_DL = 8690;
+            BandPlus = 26;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 814;
+            NOffs_UL = 26690;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (9040 <= EARFCN && EARFCN <= 9209) {
+            NameR = "800 SMR";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 852;
+            NOffs_DL = 8690;
+            BandPlus = 27;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 814;
+            NOffs_UL = 26690;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (9210 <= EARFCN && EARFCN <= 9659) {
+            NameR = "700 APT";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 758;
+            NOffs_DL = 9210;
+            BandPlus = 28;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 703;
+            NOffs_UL = 27210;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (9660 <= EARFCN && EARFCN <= 9769) {
+            NameR = "700 d";
+            Mode = "SDL";
+            NDL = EARFCN;
+            FDL_low = 717;
+            NOffs_DL = 9660;
+            BandPlus = 29;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+
+        }
+        if (9770 <= EARFCN && EARFCN <= 9869) {
+            NameR = "2300 WCS";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = 2350;
+            NOffs_DL = 9770;
+            BandPlus = 30;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = 2305;
+            NOffs_UL = 27660;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (9870 <= EARFCN && EARFCN <= 9919) {
+            NameR = "450";
+            Mode = "FDD";
+            NDL = EARFCN;
+            FDL_low = (int) 462.5;
+            NOffs_DL = 9870;
+            BandPlus = 31;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCN + 18000;
+            FUL_low = (int) 452.5;
+            NOffs_UL = 27760;
+            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+        }
+        if (9920 <= EARFCN && EARFCN <= 10359) {
+            NameR = "1500 L-band";
+            Mode = "SDL";
+            NDL = EARFCN;
+            FDL_low = 1452;
+            NOffs_DL = 9920;
+            BandPlus = 32;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+        }
+        if (36000 <= EARFCN && EARFCN <= 36199) {
+            NameR = "TD 1900";
+            Mode = "TDD";
+            NDL = EARFCN;
+            FDL_low = 1900;
+            NOffs_DL = 36000;
+            BandPlus = 33;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+        }
+        if (36200 <= EARFCN && EARFCN <= 36349) {
+            NameR = "TD 2000";
+            Mode = "TDD";
+            NDL = EARFCN;
+            FDL_low = 2010;
+            NOffs_DL = 36200;
+            BandPlus = 34;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+        }
+        if (36200 <= EARFCN && EARFCN <= 36349) {
+            NameR = "TD PCS Lower";
+            Mode = "TDD";
+            NDL = EARFCN;
+            FDL_low = 1850;
+            NOffs_DL = 36350;
+            BandPlus = 35;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+        }
+        if (36950 <= EARFCN && EARFCN <= 37549) {
+            NameR = "TD PCS Upper";
+            Mode = "TDD";
+            NDL = EARFCN;
+            FDL_low = 1930;
+            NOffs_DL = 36950;
+            BandPlus = 36;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+        }
+        if (37550 <= EARFCN && EARFCN <= 37749) {
+            NameR = "TD PCS Center gap";
+            Mode = "TDD";
+            NDL = EARFCN;
+            FDL_low = 1910;
+            NOffs_DL = 37550;
+            BandPlus = 37;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+        }
+        if (37750 <= EARFCN && EARFCN <= 38249) {
+            NameR = "TD 2600";
+            Mode = "TDD";
+            NDL = EARFCN;
+            FDL_low = 2570;
+            NOffs_DL = 37750;
+            BandPlus = 38;
+            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+        }
+    }
+
 
     @SuppressLint("MissingPermission")
     private void getLocation() {
@@ -260,16 +711,18 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
 
     @SuppressLint({"SetTextI18n", "MissingPermission"})
     private void startCell(List<CellInfo> cellInfoList) {
+        Log.d("Infa",cellInfoList.toString());
         for (CellInfo cellInfo : cellInfoList) {
             switch (tm.getDataNetworkType()) {
                 case TelephonyManager.NETWORK_TYPE_LTE:
                     if (cellInfo instanceof CellInfoLte) {
                         CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
                         if (cellInfoLte.isRegistered()) {
-                            Log.d("LTE",((CellInfoLte) cellInfo).toString());
                             mcc = cellInfoLte.getCellIdentity().getMccString();
                             mnc = cellInfoLte.getCellIdentity().getMncString();
                             bw = cellInfoLte.getCellIdentity().getBandwidth();
+                            mode_name.setText("BW:  "+bandwidnth/1000+" МГц");
+                            ul_dl.setText("DL:  "+FDL+" МГц    " +"UL:  "+FUL+" МГц");
                             if (bw != Integer.MAX_VALUE)
                             {
                                 bwTrue = bw;
@@ -279,26 +732,27 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                             OPerator.setText("Оператор:  " + Operator + "  4G");
                             lac_tac.setText("TAC:   " + cellInfoLte.getCellIdentity().getTac());
                             CELLID = cellInfoLte.getCellIdentity().getCi();
-                            cid.setText("Cell ID:  " + CELLID);
+                            cid.setText("Cell ID:  " + CELLID + "  PCI:  "+PCI);
                             earfcn_uarfcn_aerfcn.setText("Earfcn:   " + (cellInfoLte.getCellIdentity().getEarfcn()));
                             String cellidHex = DecToHex(CELLID);
                             String eNBHex = cellidHex.substring(0, cellidHex.length() - 2);
                             eNB = HexToDec(eNBHex);
                             enb_rnc_bsic.setText("eNB:   " + eNB);
                             PCI = cellInfoLte.getCellIdentity().getPci();
-                            band = 0;
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                 int[] bands = cellInfoLte.getCellIdentity().getBands();
-                                band_pci_psc.setText("Band:  " + Arrays.stream(bands).mapToObj(String::valueOf)
-                                        .collect(Collectors.joining(", "))+"  BW: "+ bwTrue/1000+" МГц" + "  Pci:  " + PCI);
                                 if (bands.length > 0) {
                                     band = bands[0];
-                                    BANDTRUE = band;
+                                    band_pci_psc.setText("Band:  " + band+ (" ("+NameR+") ")+ "  Режим:  "+Mode);
+                                }
+                                else
+                                {
+                                    band_pci_psc.setText("Band:  " + BandPlus+("("+NameR+")")+ "Режим:  "+Mode );
                                 }
                             }
                             else
                             {
-                                band_pci_psc.setText("Band:  " + "N/A"+"  BW: "+ bwTrue/1000+" МГц"  +"   Pci:  " + PCI);
+                                band_pci_psc.setText("Band:  " + BandPlus +("("+NameR+")")+ "Режим:  "+Mode);
                             }
 
                             TAC = cellInfoLte.getCellIdentity().getTac();
@@ -316,7 +770,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     if (cellInfo instanceof CellInfoWcdma) {
                         CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
                         if (cellInfoWcdma.isRegistered()) {
-                            Log.d("UMTS ALL", ((CellInfoWcdma) cellInfo).toString());
+
                             mcc = cellInfoWcdma.getCellIdentity().getMccString();
                             mnc = cellInfoWcdma.getCellIdentity().getMncString();
                             Mnc_Mcc.setText("MCC: " + mcc + "  MNC: " + mnc);
@@ -364,6 +818,8 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         }
     }
 
+
+
     private class CellInfoIDListener extends PhoneStateListener {
         @Override
         @SuppressLint({"SetTextI18n", "MissingPermission"})
@@ -372,6 +828,8 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             super.onCellInfoChanged(cellInfoList);
         }
     }
+
+
 
     private class SignalStrengthListener extends PhoneStateListener {
         @SuppressLint({"SetTextI18n", "MissingPermission"})
@@ -507,7 +965,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             String[] str = new String[]{String.valueOf(lat), String.valueOf(lot),
                     String.valueOf(Operator), "4G", String.valueOf(mcc), String.valueOf(mnc),
                     String.valueOf(TAC), String.valueOf(CELLID), String.valueOf(eNB),
-                    String.valueOf(BANDTRUE), String.valueOf(EARFCN), "", "", String.valueOf(PCI)
+                    String.valueOf(band), String.valueOf(EARFCN), "", "", String.valueOf(PCI)
                     , "", "", "", String.valueOf(rssi), String.valueOf(rsrp),
                     String.valueOf(rsrq),
                     String.valueOf(snr), "", "", String.valueOf(CQi), String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(TAa)};
