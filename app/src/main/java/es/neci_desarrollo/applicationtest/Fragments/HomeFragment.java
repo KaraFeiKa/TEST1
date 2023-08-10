@@ -51,6 +51,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -68,14 +69,43 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     private TelephonyManager tm;
     SignalStrengthListener signalStrengthListener;
     CellInfoIDListener cellInfoIDListener;
+    BWListener bwListener;
 
     private static MyLocationListener myLocationListener;
     TextView latitude_res, longitude_res, Mnc_Mcc, RSSI_RSRP, RSRQ_SNR_ECNO, text, earfcn_uarfcn_aerfcn,
             lac_tac, cid, band_pci_psc, TA, OPerator, cqi_dBm, asulevel, level, enb_rnc_bsic, ul_dl, mode_name;
     Button LogStart;
     double lat, lot = 0;
-    int rssi, rsrq, rsrp, snr, Cqi, dBm, Level, AsuLevel, ta, EcNo, ber, eNB, TAC, band, EARFCN, CELLID, PCI, LAC,
-            UARFCN, PSC, RNCID, ARFCN, BSIC, CQi, TAa, BERT, BandPlus, bw, bwTrue, FUL, FDL,bandwidnth;
+    int rssi;
+    int rsrq;
+    int rsrp;
+    int snr;
+    int Cqi;
+    int dBm;
+    int Level;
+    int AsuLevel;
+    int ta;
+    int EcNo;
+    int ber;
+    int eNB;
+    int TAC;
+    int band;
+    int EARFCN;
+    int CELLID;
+    int PCI;
+    int LAC;
+    int UARFCN;
+    int PSC;
+    int RNCID;
+    int ARFCN;
+    int BSIC;
+    int CQi;
+    int TAa;
+    int BERT;
+    int BandPlus;
+    int FUL;
+    int FDL;
+    int [] convertedBands;
     int [] bandwidnths;
     String mcc = "";
     String NameR = "";
@@ -168,11 +198,13 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     LocalDateTime now = LocalDateTime.now();
                     writer = new CSVWriter(new FileWriter(csv + "/" + dtf.format(now) + "_Main.csv"));
                     List<String[]> data = new ArrayList<String[]>();
-                    data.add(new String[]{"lat", "log", "Operator", "Network", "mcc", "mnc",
-                            "TAC/LAC", "CID", "eNB", "Band", "Earfcn",
-                            "Uarfcn", "Arfcn", "PCI", "PSC", "RNC",
-                            "BSIC", "RSSI", "RSRP", "RSRQ",
-                            "SNR", "EcNo", "BER", "Cqi", "dBm", "Level", "Asulevel", "Ta"});
+                    data.add(new String[]{"lat", "log", "Operator", "Network", "mcc", "mnc","Mode",
+                            "TAC/LAC", "CID", "eNB", "Band","Bandwidnths, MHz", "Earfcn",
+                            "Uarfcn", "Arfcn","UL, MHz","DL, MHz", "PCI", "PSC", "RNC",
+                            "BSIC", "RSSI, dBm", "RSRP, dBm", "RSRQ, dB",
+                            "SNR, dB", "EcNo, dB", "BER", "Cqi", "dBm", "Level", "Asulevel", "Ta"});
+
+
                     writer.writeAll(data);
                     switch (tm.getDataNetworkType()) {
                         case TelephonyManager.NETWORK_TYPE_LTE:
@@ -244,11 +276,12 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListener, CellInfoIDListener.LISTEN_CELL_INFO);
         signalStrengthListener = new SignalStrengthListener();
         ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(signalStrengthListener, SignalStrengthListener.LISTEN_SIGNAL_STRENGTHS);
+        bwListener = new BWListener();
+        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(bwListener, PhoneStateListener.LISTEN_SERVICE_STATE);
         List<CellInfo> cellInfoList = tm.getAllCellInfo();
         startCell(cellInfoList);
         calc();
-        Bandwidths();
-    }
+   }
 
     private String DecToHex(int dec) {
         return String.format("%x", dec);
@@ -262,24 +295,6 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     public static void updateRangeLocation() {
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, Store.range, myLocationListener);
     }
-
-    private void Bandwidths(){
-        PhoneStateListener phoneStateListener = new PhoneStateListener() {
-            @Override
-            public void onServiceStateChanged(ServiceState serviceState) {
-                Log.d("Check",serviceState.toString());
-                bandwidnths = serviceState.getCellBandwidths();
-                if (bandwidnths.length > 0)
-                {
-                    bandwidnth = bandwidnths[0];
-                    Arrays.stream(bandwidnths).mapToObj(String::valueOf)
-                            .collect(Collectors.joining(", "));
-                }
-            }
-        };
-        tm.listen(phoneStateListener, PhoneStateListener.LISTEN_SERVICE_STATE);
-    }
-
     private void calc() {
         int FDL_low, NDL, NOffs_DL, FUL_low, NUL, NOffs_UL;
         if (0 <= EARFCN && EARFCN <= 599) {
@@ -711,22 +726,16 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
 
     @SuppressLint({"SetTextI18n", "MissingPermission"})
     private void startCell(List<CellInfo> cellInfoList) {
-        Log.d("Infa",cellInfoList.toString());
         for (CellInfo cellInfo : cellInfoList) {
             switch (tm.getDataNetworkType()) {
                 case TelephonyManager.NETWORK_TYPE_LTE:
                     if (cellInfo instanceof CellInfoLte) {
                         CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
                         if (cellInfoLte.isRegistered()) {
+                            calc();
                             mcc = cellInfoLte.getCellIdentity().getMccString();
                             mnc = cellInfoLte.getCellIdentity().getMncString();
-                            bw = cellInfoLte.getCellIdentity().getBandwidth();
-                            mode_name.setText("BW:  "+bandwidnth/1000+" МГц");
                             ul_dl.setText("DL:  "+FDL+" МГц    " +"UL:  "+FUL+" МГц");
-                            if (bw != Integer.MAX_VALUE)
-                            {
-                                bwTrue = bw;
-                            }
                             Mnc_Mcc.setText("MCC: " + mcc + "  MNC: " + mnc);
                             Operator = (String) cellInfoLte.getCellIdentity().getOperatorAlphaLong();
                             OPerator.setText("Оператор:  " + Operator + "  4G");
@@ -747,12 +756,12 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                                 }
                                 else
                                 {
-                                    band_pci_psc.setText("Band:  " + BandPlus+("("+NameR+")")+ "Режим:  "+Mode );
+                                    band_pci_psc.setText("Band:  " + BandPlus+(" ("+NameR+") ")+ "  Режим:  "+Mode );
                                 }
                             }
                             else
                             {
-                                band_pci_psc.setText("Band:  " + BandPlus +("("+NameR+")")+ "Режим:  "+Mode);
+                                band_pci_psc.setText("Band:  " + BandPlus +(" ("+NameR+") ")+ "  Режим:  "+Mode);
                             }
 
                             TAC = cellInfoLte.getCellIdentity().getTac();
@@ -818,6 +827,28 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         }
     }
 
+    private class BWListener extends PhoneStateListener
+    {
+        public void onServiceStateChanged(ServiceState serviceState) {
+
+            bandwidnths = serviceState.getCellBandwidths();
+            if (bandwidnths.length > 0)
+            {
+                convertedBands = new int[bandwidnths.length];
+                for(int i=0;i<bandwidnths.length;i++){
+                    convertedBands[i]=bandwidnths[i]/1000;
+                }
+                if (convertedBands.length > 1)
+                {
+                    mode_name.setText("BW:  ["+Arrays.stream(convertedBands).mapToObj(String::valueOf).collect(Collectors.joining("/"))+"] CA, МГц" );
+                }else
+                {
+                    mode_name.setText("BW:  "+Arrays.stream(convertedBands).mapToObj(String::valueOf).collect(Collectors.joining("/"))+" МГц" );
+                }
+            }
+        }
+    }
+
 
 
     private class CellInfoIDListener extends PhoneStateListener {
@@ -864,7 +895,13 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                                 TA.setText("TA:   N/A");
                             }
                             RSRQ_SNR_ECNO.setText("RSRQ: " + rsrq + "  дБ" + "  SNR: " + snr + "  дБ");
-                            RSSI_RSRP.setText("RSSI: " + rssi + "  дБм" + "   RSRP: " + rsrp + "  дБм");
+                            if (rssi != Integer.MAX_VALUE)
+                            {
+                                RSSI_RSRP.setText("RSSI: " + rssi + "  дБм" + "   RSRP: " + rsrp + "  дБм");
+                            }
+                            else {
+                                RSSI_RSRP.setText("RSSI: " +  " N/A " + "   RSRP: " + rsrp + "  дБм");
+                            }
                             level.setText("Level:  " + Level);
                             asulevel.setText("Asulevel:  " + AsuLevel + "  дБм");
                         }
@@ -963,12 +1000,12 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     public void WriteLteInfo (){
         if (Store.isWriteWorking) {
             String[] str = new String[]{String.valueOf(lat), String.valueOf(lot),
-                    String.valueOf(Operator), "4G", String.valueOf(mcc), String.valueOf(mnc),
+                    String.valueOf(Operator), "4G", String.valueOf(mcc), String.valueOf(mnc),String.valueOf(Mode),
                     String.valueOf(TAC), String.valueOf(CELLID), String.valueOf(eNB),
-                    String.valueOf(band), String.valueOf(EARFCN), "", "", String.valueOf(PCI)
+                    (band+" ("+NameR+")"),String.valueOf(Arrays.stream(convertedBands).mapToObj(String::valueOf).collect(Collectors.joining("/"))), String.valueOf(EARFCN), "", "",String.valueOf(FUL),String.valueOf(FDL), String.valueOf(PCI)
                     , "", "", "", String.valueOf(rssi), String.valueOf(rsrp),
                     String.valueOf(rsrq),
-                    String.valueOf(snr), "", "", String.valueOf(CQi), String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(TAa)};
+                    String.valueOf(snr), "", "", String.valueOf(CQi), String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(TAa),};
             writer.writeNext(str, false);
         }
     }
@@ -978,9 +1015,9 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         if (Store.isWriteWorking) {
             String[] str = new String[]{
                     String.valueOf(lat), String.valueOf(lot), String.valueOf(Operator), "3G",
-                    String.valueOf(mcc), String.valueOf(mnc),
-                    String.valueOf(LAC), String.valueOf(CELLID), "", "", "",
-                    String.valueOf(UARFCN), "", "", String.valueOf(PSC), String.valueOf(RNCID),
+                    String.valueOf(mcc), String.valueOf(mnc),"",
+                    String.valueOf(LAC), String.valueOf(CELLID), "", "","","",
+                    String.valueOf(UARFCN), "","","", "", String.valueOf(PSC), String.valueOf(RNCID),
                     "", "", "", "",
                     "", String.valueOf(EcNo), "", "",
                     String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), ""
@@ -994,9 +1031,9 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         if (Store.isWriteWorking) {
             String[] str = new String[]{
                     String.valueOf(lat), String.valueOf(lot), String.valueOf(Operator), "2G",
-                    String.valueOf(mcc), String.valueOf(mnc),
-                    String.valueOf(LAC), String.valueOf(CELLID), "", "", "",
-                    "", String.valueOf(ARFCN), "", "",
+                    String.valueOf(mcc), String.valueOf(mnc),"",
+                    String.valueOf(LAC), String.valueOf(CELLID), "", "", "","",
+                    "", String.valueOf(ARFCN),"","", "", "",
                     String.valueOf(RNCID), String.valueOf(BSIC), String.valueOf(rssi), "",
                     "", "", "", String.valueOf(BERT), String.valueOf(Cqi), String.valueOf(dBm), String.valueOf(Level),
                     String.valueOf(AsuLevel), String.valueOf(TAa)};
