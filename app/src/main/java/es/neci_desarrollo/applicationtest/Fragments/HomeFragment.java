@@ -776,6 +776,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                 case TelephonyManager.NETWORK_TYPE_EVDO_0:
                 case TelephonyManager.NETWORK_TYPE_EVDO_A:
                 case TelephonyManager.NETWORK_TYPE_EVDO_B:
+                case TelephonyManager.NETWORK_TYPE_HSUPA:
                     if (cellInfo instanceof CellInfoWcdma) {
                         CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
                         if (cellInfoWcdma.isRegistered()) {
@@ -913,6 +914,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     case TelephonyManager.NETWORK_TYPE_EVDO_0:
                     case TelephonyManager.NETWORK_TYPE_EVDO_A:
                     case TelephonyManager.NETWORK_TYPE_EVDO_B:
+                    case TelephonyManager.NETWORK_TYPE_HSUPA:
                         if (cellSignalStrength instanceof CellSignalStrengthWcdma) {
                             Log.d("UMTS ALL 1", ((CellSignalStrengthWcdma)cellSignalStrength).toString());
                             AsuLevel = cellSignalStrength.getAsuLevel();
@@ -986,6 +988,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             case TelephonyManager.NETWORK_TYPE_EVDO_0:
             case TelephonyManager.NETWORK_TYPE_EVDO_A:
             case TelephonyManager.NETWORK_TYPE_EVDO_B:
+            case TelephonyManager.NETWORK_TYPE_HSUPA:
                 WriteUMTSInfo();
                 break;
             case TelephonyManager.NETWORK_TYPE_EDGE:

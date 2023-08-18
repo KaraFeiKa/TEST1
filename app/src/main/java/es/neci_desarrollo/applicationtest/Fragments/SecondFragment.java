@@ -174,6 +174,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
             case TelephonyManager.NETWORK_TYPE_EVDO_0:
             case TelephonyManager.NETWORK_TYPE_EVDO_A:
             case TelephonyManager.NETWORK_TYPE_EVDO_B:
+            case TelephonyManager.NETWORK_TYPE_HSUPA:
                 if (getContext() != null)
                 {
                     TableRow tableRowUMTS = new TableRow(this.getContext());
@@ -363,6 +364,7 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                 case TelephonyManager.NETWORK_TYPE_EVDO_0:
                 case TelephonyManager.NETWORK_TYPE_EVDO_A:
                 case TelephonyManager.NETWORK_TYPE_EVDO_B:
+                case TelephonyManager.NETWORK_TYPE_HSUPA:
                     if (cellInfo instanceof CellInfoWcdma) {
                         CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
                         if (cellInfoWcdma.isRegistered() == false) {
