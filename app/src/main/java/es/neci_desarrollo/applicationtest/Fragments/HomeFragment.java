@@ -105,8 +105,8 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     int BandPlus;
     int FUL;
     int FDL;
-    int [] convertedBands;
-    int [] bandwidnths;
+    int [] convertedBands = new int[]{0};
+    int [] bandwidnths = new int[]{0};
     String mcc = "";
     String NameR = "";
     String Mode = "";
@@ -115,6 +115,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     CSVWriter writer = null;
 
     private boolean isNeedWrite = false;
+
 
 
     public HomeFragment(TelephonyManager tm) {
@@ -655,6 +656,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             NOffs_DL = 9920;
             BandPlus = 32;
             FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FUL = 0;
         }
         if (36000 <= EARFCN && EARFCN <= 36199) {
             NameR = "TD 1900";
@@ -664,6 +666,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             NOffs_DL = 36000;
             BandPlus = 33;
             FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FUL = 0;
         }
         if (36200 <= EARFCN && EARFCN <= 36349) {
             NameR = "TD 2000";
@@ -673,6 +676,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             NOffs_DL = 36200;
             BandPlus = 34;
             FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FUL = 0;
         }
         if (36200 <= EARFCN && EARFCN <= 36349) {
             NameR = "TD PCS Lower";
@@ -682,6 +686,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             NOffs_DL = 36350;
             BandPlus = 35;
             FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FUL = 0;
         }
         if (36950 <= EARFCN && EARFCN <= 37549) {
             NameR = "TD PCS Upper";
@@ -691,6 +696,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             NOffs_DL = 36950;
             BandPlus = 36;
             FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FUL = 0;
         }
         if (37550 <= EARFCN && EARFCN <= 37749) {
             NameR = "TD PCS Center gap";
@@ -700,6 +706,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             NOffs_DL = 37550;
             BandPlus = 37;
             FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FUL = 0;
         }
         if (37750 <= EARFCN && EARFCN <= 38249) {
             NameR = "TD 2600";
@@ -709,10 +716,9 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             NOffs_DL = 37750;
             BandPlus = 38;
             FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FUL = 0;
         }
     }
-
-
     @SuppressLint("MissingPermission")
     private void getLocation() {
         try {
@@ -723,7 +729,6 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
 
         }
     }
-
     @SuppressLint({"SetTextI18n", "MissingPermission"})
     private void startCell(List<CellInfo> cellInfoList) {
         for (CellInfo cellInfo : cellInfoList) {
@@ -827,7 +832,6 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             }
         }
     }
-
     private class BWListener extends PhoneStateListener
     {
         public void onServiceStateChanged(ServiceState serviceState) {
@@ -849,9 +853,6 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             }
         }
     }
-
-
-
     private class CellInfoIDListener extends PhoneStateListener {
         @Override
         @SuppressLint({"SetTextI18n", "MissingPermission"})
@@ -860,9 +861,6 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             super.onCellInfoChanged(cellInfoList);
         }
     }
-
-
-
     private class SignalStrengthListener extends PhoneStateListener {
         @SuppressLint({"SetTextI18n", "MissingPermission"})
         @Override
@@ -872,7 +870,6 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                 switch (tm.getDataNetworkType()) {
                     case TelephonyManager.NETWORK_TYPE_LTE:
                         if (cellSignalStrength instanceof CellSignalStrengthLte) {
-                            Log.d("LTE 1",((CellSignalStrengthLte) cellSignalStrength).toString());
                             snr = ((CellSignalStrengthLte) cellSignalStrength).getRssnr();
                             rssi = ((CellSignalStrengthLte) cellSignalStrength).getRssi();
                             rsrp = ((CellSignalStrengthLte) cellSignalStrength).getRsrp();
@@ -916,7 +913,6 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     case TelephonyManager.NETWORK_TYPE_EVDO_B:
                     case TelephonyManager.NETWORK_TYPE_HSUPA:
                         if (cellSignalStrength instanceof CellSignalStrengthWcdma) {
-                            Log.d("UMTS ALL 1", ((CellSignalStrengthWcdma)cellSignalStrength).toString());
                             AsuLevel = cellSignalStrength.getAsuLevel();
                             Level = cellSignalStrength.getLevel();
                             level.setText("Level:  " + Level);
@@ -969,10 +965,10 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             }
         }
     }
-
     @SuppressLint({"SetTextI18n", "MissingPermission"})
     @Override
     public void onLocationChanged(Location location) {
+        Log.d("Check",location.toString());
         lat = location.getLatitude();
         lot = location.getLongitude();
         latitude_res.setText("Широта:   " + lat);
@@ -999,20 +995,22 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             default:
         }
     }
-
     public void WriteLteInfo (){
         if (Store.isWriteWorking) {
+            String bandwidth = "";
+            if(convertedBands != null){
+                bandwidth = String.valueOf(Arrays.stream(convertedBands).mapToObj(String::valueOf).collect(Collectors.joining("/")));
+            }
             String[] str = new String[]{String.valueOf(lat), String.valueOf(lot),
                     String.valueOf(Operator), "4G", String.valueOf(mcc), String.valueOf(mnc),String.valueOf(Mode),
                     String.valueOf(TAC), String.valueOf(CELLID), String.valueOf(eNB),
-                    (band+" ("+NameR+")"),String.valueOf(Arrays.stream(convertedBands).mapToObj(String::valueOf).collect(Collectors.joining("/"))), String.valueOf(EARFCN), "", "",String.valueOf(FUL),String.valueOf(FDL), String.valueOf(PCI)
+                    (band+" ("+NameR+")"),bandwidth, String.valueOf(EARFCN), "", "",String.valueOf(FUL),String.valueOf(FDL), String.valueOf(PCI)
                     , "", "", "", String.valueOf(rssi), String.valueOf(rsrp),
                     String.valueOf(rsrq),
                     String.valueOf(snr), "", "", String.valueOf(CQi), String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(TAa),};
             writer.writeNext(str, false);
         }
     }
-
     private void WriteUMTSInfo()
     {
         if (Store.isWriteWorking) {
@@ -1041,6 +1039,22 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     "", "", "", String.valueOf(BERT), String.valueOf(Cqi), String.valueOf(dBm), String.valueOf(Level),
                     String.valueOf(AsuLevel), String.valueOf(TAa)};
             writer.writeNext(str, false);
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (Store.isWriteWorking) {
+            try {
+                writer.close();
+                if (Store.isWriteNeighbors) {
+                    Store.writerN.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Store.disableWrite();
         }
     }
 }

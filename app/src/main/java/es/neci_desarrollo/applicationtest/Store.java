@@ -13,6 +13,7 @@ public class Store  {
     public static int range = 7;
     public static CSVWriter writerN;
 
+
     public static void setRange(int range) {
         Store.range = range;
         HomeFragment.updateRangeLocation();
