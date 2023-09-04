@@ -76,34 +76,11 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             lac_tac, cid, band_pci_psc, TA, OPerator, cqi_dBm, asulevel, level, enb_rnc_bsic, ul_dl, mode_name;
     Button LogStart;
     double lat, lot = 0;
-    int rssi;
-    int rsrq;
-    int rsrp;
-    int snr;
-    int Cqi;
-    int dBm;
-    int Level;
-    int AsuLevel;
-    int ta;
-    int EcNo;
-    int ber;
-    int eNB;
-    int TAC;
-    int band;
-    int EARFCN;
-    int CELLID;
-    int PCI;
-    int LAC;
-    int UARFCN;
-    int PSC;
-    int RNCID;
-    int ARFCN;
-    int BSIC;
-    int CQi;
-    int TAa;
-    int BERT;
-    int BandPlus;
-    int FUL;
+    int rssi;    int rsrq;    int rsrp;    int snr;    int Cqi;    int dBm;    int Level;    int AsuLevel;    int ta;    int EcNo;
+    int ber;    int eNB;    int TAC;    int band;    int EARFCN;    int CELLID;    int PCI;    int LAC;
+    int UARFCN;    int PSC;    int RNCID;    int ARFCN;    int BSIC;    int CQi;    int TAa;
+    int BERT;    int BandPlus;
+    int FUL; int ss;
     int FDL;
     int [] convertedBands = new int[]{0};
     int [] bandwidnths = new int[]{0};
@@ -148,11 +125,22 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
+        try {
+            Log.d("public directory", csv);
+            File appDir = new File(csv);
+            if (!appDir.exists() && !appDir.isDirectory()) {
+                if (appDir.mkdirs()) {
+                    Log.d("public directory", "creted");
+                } else {
+                    Log.d("public directory", "not creted");
+                    csv = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
 
-        File appDir = new File(csv);
-        if (!appDir.exists()) {
-            appDir.mkdirs();
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
+
         myLocationListener = new MyLocationListener();
         myLocationListener.setLocationListenerInterface(this);
         locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
@@ -819,8 +807,8 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                             CELLID = cellInfoGsm.getCellIdentity().getCid();
                             cid.setText("Cell ID:  " + CELLID);
                             earfcn_uarfcn_aerfcn.setText("Arfcn:   " + (cellInfoGsm.getCellIdentity().getArfcn()));
-                            RNCID = CELLID / 65536;
-                            enb_rnc_bsic.setText("Bcis:  " + cellInfoGsm.getCellIdentity().getBsic() + "   Rnc: " + RNCID);
+//                            RNCID = CELLID / 65536;
+                            enb_rnc_bsic.setText("Bcis:  " + cellInfoGsm.getCellIdentity().getBsic() + "   Rnc: ");
                             LAC = cellInfoGsm.getCellIdentity().getLac();
                             ARFCN = cellInfoGsm.getCellIdentity().getArfcn();
                             BSIC = cellInfoGsm.getCellIdentity().getBsic();
@@ -913,16 +901,28 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     case TelephonyManager.NETWORK_TYPE_EVDO_B:
                     case TelephonyManager.NETWORK_TYPE_HSUPA:
                         if (cellSignalStrength instanceof CellSignalStrengthWcdma) {
+                            Log.d("Check",cellSignalStrength.toString());
                             AsuLevel = cellSignalStrength.getAsuLevel();
                             Level = cellSignalStrength.getLevel();
                             level.setText("Level:  " + Level);
                             asulevel.setText("Asulevel:  " + AsuLevel + "  дБм");
                             dBm = cellSignalStrength.getDbm();
-                            cqi_dBm.setText("dBm: " + dBm );
+                            cqi_dBm.setText("RSCP: " + dBm );
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                 EcNo = ((CellSignalStrengthWcdma) cellSignalStrength).getEcNo();
                             }
                             RSRQ_SNR_ECNO.setText("EcNo:   " + EcNo + "  дБ");
+
+                            String[] CellSignalStrengthArr = cellSignalStrength.toString().split(" ");
+                            ss = 0;
+                            if(CellSignalStrengthArr.length>1) {
+                                String[] elem = CellSignalStrengthArr[1].split("=");
+                                if (elem[0].contains("ss")) {
+                                    ss = Integer.parseInt(elem[1]);
+                                }
+                            }
+                            RSSI_RSRP.setText("RSSI: " + ss + "  дБм");
+
                         }
                         break;
                     case TelephonyManager.NETWORK_TYPE_EDGE:
@@ -1019,7 +1019,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     String.valueOf(mcc), String.valueOf(mnc),"",
                     String.valueOf(LAC), String.valueOf(CELLID), "", "","","",
                     String.valueOf(UARFCN), "","","", "", String.valueOf(PSC), String.valueOf(RNCID),
-                    "", "", "", "",
+                    "", String.valueOf(ss), "", "",
                     "", String.valueOf(EcNo), "", "",
                     String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), ""
             };

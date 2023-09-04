@@ -19,6 +19,7 @@
 
 
     <application
+        android:requestLegacyExternalStorage="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -46,6 +47,7 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-    </application>
+    </application
+>
 
 </manifest>
