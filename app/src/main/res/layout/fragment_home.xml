@@ -162,7 +162,13 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center_horizontal"
-                        android:text="Начать запись" />
+                        android:text="Начать запись (Не нажимать)" />
+
+                    <Button
+                        android:id="@+id/button2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Start" />
 
                     <TextView
                         android:id="@+id/text"

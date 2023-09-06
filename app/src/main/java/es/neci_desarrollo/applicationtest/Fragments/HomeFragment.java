@@ -6,6 +6,7 @@ import static android.content.Context.TELEPHONY_SERVICE;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
@@ -60,6 +61,7 @@ import es.neci_desarrollo.applicationtest.R;
 import es.neci_desarrollo.applicationtest.location.LocationListenerInterface;
 import es.neci_desarrollo.applicationtest.location.MyLocationListener;
 import es.neci_desarrollo.applicationtest.Store;
+import es.neci_desarrollo.applicationtest.location.MyService;
 
 
 public class HomeFragment extends Fragment implements LocationListenerInterface {
@@ -75,6 +77,10 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     TextView latitude_res, longitude_res, Mnc_Mcc, RSSI_RSRP, RSRQ_SNR_ECNO, text, earfcn_uarfcn_aerfcn,
             lac_tac, cid, band_pci_psc, TA, OPerator, cqi_dBm, asulevel, level, enb_rnc_bsic, ul_dl, mode_name;
     Button LogStart;
+Button backk;
+Button backkStop;
+Boolean isWriteInBackground=Store.isWriteWorkingBackground;
+
     double lat, lot = 0;
     int rssi;    int rsrq;    int rsrp;    int snr;    int Cqi;    int dBm;    int Level;    int AsuLevel;    int ta;    int EcNo;
     int ber;    int eNB;    int TAC;    int band;    int EARFCN;    int CELLID;    int PCI;    int LAC;
@@ -108,23 +114,21 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                 && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.MODIFY_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.MODIFY_PHONE_STATE}, 100);
         }
+        tm = (TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE);
+        myLocationListener = new MyLocationListener();
+        myLocationListener.setLocationListenerInterface(this);
+        locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
         getLocation();
-    }
+        cellInfoIDListener = new CellInfoIDListener();
+        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListener, CellInfoIDListener.LISTEN_CELL_INFO);
+        signalStrengthListener = new SignalStrengthListener();
+        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(signalStrengthListener, SignalStrengthListener.LISTEN_SIGNAL_STRENGTHS);
+        bwListener = new BWListener();
+        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(bwListener, PhoneStateListener.LISTEN_SERVICE_STATE);
+        List<CellInfo> cellInfoList = tm.getAllCellInfo();
+        startCell(cellInfoList);
+        calc();
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.MODIFY_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.MODIFY_PHONE_STATE}, 100);
-        }
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_home, container, false);
         try {
             Log.d("public directory", csv);
             File appDir = new File(csv);
@@ -140,33 +144,6 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
         }catch (Exception e){
             e.printStackTrace();
         }
-
-        myLocationListener = new MyLocationListener();
-        myLocationListener.setLocationListenerInterface(this);
-        locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
-        latitude_res = view.findViewById(R.id.Latitude);
-        longitude_res = view.findViewById(R.id.Longitude);
-        Mnc_Mcc = view.findViewById(R.id.MCC_MNC);
-        RSSI_RSRP = view.findViewById(R.id.RSRP_RSSI);
-        RSRQ_SNR_ECNO = view.findViewById(R.id.RSRQ_SNR_EcNo);
-        earfcn_uarfcn_aerfcn = view.findViewById(R.id.Earfcn_Uarfcn_Aerfcn);
-        lac_tac = view.findViewById(R.id.LAC_TAC);
-        cid = view.findViewById(R.id.CID);
-        band_pci_psc = view.findViewById(R.id.Band_Pci_Psc);
-        mode_name = view.findViewById(R.id.ModeName);
-        ul_dl = view.findViewById(R.id.friq);
-        TA = view.findViewById(R.id.TA);
-        OPerator = view.findViewById(R.id.Operator);
-        cqi_dBm = view.findViewById(R.id.Cqi_dBm);
-        level = view.findViewById(R.id.Level);
-        asulevel = view.findViewById(R.id.AsuLevel);
-        enb_rnc_bsic = view.findViewById(R.id.eNB_Rnc_Bsic);
-        text = view.findViewById(R.id.text);
-        LogStart = view.findViewById(R.id.button);
-
-
-        tm = (TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE);
-
 
         LogStart.setBackgroundColor(0xFF00FF00);
         Button.OnClickListener LogB = v -> {
@@ -192,8 +169,6 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                             "Uarfcn", "Arfcn","UL, MHz","DL, MHz", "PCI", "PSC", "RNC",
                             "BSIC", "RSSI, dBm", "RSRP, dBm", "RSRQ, dB",
                             "SNR, dB", "EcNo, dB", "BER", "Cqi", "dBm", "Level", "Asulevel", "Ta"});
-
-
                     writer.writeAll(data);
                     switch (tm.getDataNetworkType()) {
                         case TelephonyManager.NETWORK_TYPE_LTE:
@@ -248,30 +223,99 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     e.printStackTrace();
                 }
                 LogStart.setBackgroundColor(0xFF00FF00);
-                LogStart.setText("Начать запись");
+                LogStart.setText("Начать запись (Не нажимать)");
                 text.setText("Запись сохранена");
                 Store.disableWrite();
             }
         };
         LogStart.setOnClickListener(LogB);
-        return view;
+
+        backk.setBackgroundColor(0xFF00FF00);
+        backk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!isWriteInBackground){
+                    Log.d("write","start");
+                    StartServive();
+                    backk.setText("Остановить запись (в фоне)");
+                    text.setText("Идет запись");
+                    backk.setBackgroundColor(0xFFFF0000);
+                    Store.isWriteWorkingBackground=true;
+                    isWriteInBackground=true;
+                }else{
+                    Log.d("write","stop");
+                    stopService();
+                    backk.setText("Начать (в фоне)");
+                    text.setText("Запись сохранена!");
+                    backk.setBackgroundColor(0xFF00FF00);
+                    Store.isWriteWorkingBackground=false;
+                    isWriteInBackground=false;
+                }
+
+            }
+        });
     }
 
     @Override
-    @SuppressLint("MissingPermission")
-    public void onResume() {
-        super.onResume();
-        cellInfoIDListener = new CellInfoIDListener();
-        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListener, CellInfoIDListener.LISTEN_CELL_INFO);
-        signalStrengthListener = new SignalStrengthListener();
-        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(signalStrengthListener, SignalStrengthListener.LISTEN_SIGNAL_STRENGTHS);
-        bwListener = new BWListener();
-        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(bwListener, PhoneStateListener.LISTEN_SERVICE_STATE);
-        List<CellInfo> cellInfoList = tm.getAllCellInfo();
-        startCell(cellInfoList);
-        calc();
-   }
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.MODIFY_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.MODIFY_PHONE_STATE}, 100);
+        }
+        super.onCreate(savedInstanceState);
+    }
 
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_home, container, false);
+        latitude_res = view.findViewById(R.id.Latitude);
+        longitude_res = view.findViewById(R.id.Longitude);
+        Mnc_Mcc = view.findViewById(R.id.MCC_MNC);
+        RSSI_RSRP = view.findViewById(R.id.RSRP_RSSI);
+        RSRQ_SNR_ECNO = view.findViewById(R.id.RSRQ_SNR_EcNo);
+        earfcn_uarfcn_aerfcn = view.findViewById(R.id.Earfcn_Uarfcn_Aerfcn);
+        lac_tac = view.findViewById(R.id.LAC_TAC);
+        cid = view.findViewById(R.id.CID);
+        band_pci_psc = view.findViewById(R.id.Band_Pci_Psc);
+        mode_name = view.findViewById(R.id.ModeName);
+        ul_dl = view.findViewById(R.id.friq);
+        TA = view.findViewById(R.id.TA);
+        OPerator = view.findViewById(R.id.Operator);
+        cqi_dBm = view.findViewById(R.id.Cqi_dBm);
+        level = view.findViewById(R.id.Level);
+        asulevel = view.findViewById(R.id.AsuLevel);
+        enb_rnc_bsic = view.findViewById(R.id.eNB_Rnc_Bsic);
+        text = view.findViewById(R.id.text);
+        LogStart = view.findViewById(R.id.button);
+        backk = view.findViewById(R.id.button2);
+        String bname = "Начать запись (в фоне)";
+        if(Store.isWriteWorkingBackground || isWriteInBackground){
+            bname ="Остановить запись (в фоне)";
+        }
+        backk.setText(bname);
+
+
+
+//backkStop.setOnClickListener(new View.OnClickListener() {
+//    @Override
+//    public void onClick(View v) {
+//        stopService();
+//    }
+//});
+        return view;
+    }
+    public void StartServive() {
+        Intent serviceIntent = new Intent(getContext(), MyService.class);
+        serviceIntent.putExtra("inputExtra", "Foreground Service Example in Android");
+//        ContextCompat.startForegroundService(getContext(), serviceIntent);
+        getContext().startForegroundService(serviceIntent);
+    }
+    public void stopService() {
+        Intent serviceIntent = new Intent(getContext(), MyService.class);
+        getContext().stopService(serviceIntent);
+    }
     private String DecToHex(int dec) {
         return String.format("%x", dec);
     }
@@ -717,6 +761,9 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
 
         }
     }
+
+
+
     @SuppressLint({"SetTextI18n", "MissingPermission"})
     private void startCell(List<CellInfo> cellInfoList) {
         for (CellInfo cellInfo : cellInfoList) {
@@ -968,7 +1015,6 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     @SuppressLint({"SetTextI18n", "MissingPermission"})
     @Override
     public void onLocationChanged(Location location) {
-        Log.d("Check",location.toString());
         lat = location.getLatitude();
         lot = location.getLongitude();
         latitude_res.setText("Широта:   " + lat);
@@ -1039,22 +1085,6 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
                     "", "", "", String.valueOf(BERT), String.valueOf(Cqi), String.valueOf(dBm), String.valueOf(Level),
                     String.valueOf(AsuLevel), String.valueOf(TAa)};
             writer.writeNext(str, false);
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (Store.isWriteWorking) {
-            try {
-                writer.close();
-                if (Store.isWriteNeighbors) {
-                    Store.writerN.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            Store.disableWrite();
         }
     }
 }

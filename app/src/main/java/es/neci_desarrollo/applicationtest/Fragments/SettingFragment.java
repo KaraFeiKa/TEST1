@@ -39,7 +39,7 @@ public class SettingFragment extends Fragment {
         WriteNeighbors = view.findViewById(R.id.WriteNeighbors);
         seekBar = view.findViewById(R.id.seekBar);
         textView = view.findViewById(R.id.seekBarValue);
-        textView.setText("7");
+        textView.setText(String.valueOf(Store.range));
         View.OnClickListener writeNeighborsInSore = v -> {
             if (Store.isWriteNeighbors) {
                 Store.disableWriteNeighbors();

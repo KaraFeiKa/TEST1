@@ -10,6 +10,8 @@ public class Store  {
     }
     public static boolean isWriteNeighbors;
     public static boolean isWriteWorking;
+    public static boolean isWriteWorkingBackground;
+
     public static int range = 7;
     public static CSVWriter writerN;
 
