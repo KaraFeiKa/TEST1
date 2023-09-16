@@ -16,6 +16,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Environment;
 import android.os.IBinder;
+import android.telecom.Connection;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
@@ -61,23 +62,26 @@ public class MyService extends Service implements LocationListenerInterface{
     SignalStrengthListener signalStrengthListener;
     CellInfoIDListener cellInfoIDListener;
     BWListener bwListener;
+    CallList callList;
     private CSVWriter writer;
     private Double lat,lot;
+
 
     int rssi;    int rsrq;    int rsrp;    int snr;    int Cqi;    int dBm;    int Level;    int AsuLevel;    int ta;    int EcNo;
     int ber;    int eNB;    int TAC;    int band;    int EARFCN;    int CELLID;    int PCI;    int LAC;
     int UARFCN;    int PSC;    int RNCID;    int ARFCN;    int BSIC;    int CQi;    int TAa;
     int BERT;    int BandPlus;
-    int FUL; int ss;
-    int FDL;
+    double FUL; int ss;
+    double FDL;
     int [] convertedBands = new int[]{0};
     int [] bandwidnths = new int[]{0};
+    String Tech = "";
+    String call = "";
     String mcc = "";
     String NameR = "";
     String Mode = "";
     String mnc = "";
     String Operator;
-    Button LogStart;
 
     String nocProjectDirInDownload = "noc-project";
     String csv = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + nocProjectDirInDownload;
@@ -100,20 +104,29 @@ public class MyService extends Service implements LocationListenerInterface{
     public void onLocationChanged(Location location) {
         lat = location.getLatitude();
         lot = location.getLongitude();
-        if(writer!=null) {
-            String bandwidth = "";
-            if(convertedBands != null){
-                bandwidth = String.valueOf(Arrays.stream(convertedBands).mapToObj(String::valueOf).collect(Collectors.joining("/")));
-            }
-            String[] str = new String[]{String.valueOf(lat), String.valueOf(lot),
-                    String.valueOf(Operator), "4G", String.valueOf(mcc), String.valueOf(mnc),String.valueOf(Mode),
-                    String.valueOf(TAC), String.valueOf(CELLID), String.valueOf(eNB),
-                    (band+" ("+NameR+")"),bandwidth, String.valueOf(EARFCN), "", "",String.valueOf(FUL),String.valueOf(FDL), String.valueOf(PCI)
-                    , "", "", "", String.valueOf(rssi), String.valueOf(rsrp),
-                    String.valueOf(rsrq),
-                    String.valueOf(snr), "", "", String.valueOf(CQi), String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(TAa),};
-            writer.writeNext(str, false);
+        switch (tm.getDataNetworkType()) {
+            case TelephonyManager.NETWORK_TYPE_LTE:
+                WriteLteInfo();
+                break;
+            case TelephonyManager.NETWORK_TYPE_UMTS:
+            case TelephonyManager.NETWORK_TYPE_HSDPA:
+            case TelephonyManager.NETWORK_TYPE_HSPA:
+            case TelephonyManager.NETWORK_TYPE_HSPAP:
+            case TelephonyManager.NETWORK_TYPE_EVDO_0:
+            case TelephonyManager.NETWORK_TYPE_EVDO_A:
+            case TelephonyManager.NETWORK_TYPE_EVDO_B:
+            case TelephonyManager.NETWORK_TYPE_HSUPA:
+                WriteUMTSInfo();
+                break;
+            case TelephonyManager.NETWORK_TYPE_EDGE:
+            case TelephonyManager.NETWORK_TYPE_GPRS:
+            case TelephonyManager.NETWORK_TYPE_GSM:
+                WriteGSMInfo();
+                break;
+            default:
         }
+
+
     }
     @SuppressLint({"SetTextI18n", "MissingPermission"})
     public void onCreate(){
@@ -138,10 +151,14 @@ public class MyService extends Service implements LocationListenerInterface{
         ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).listen(signalStrengthListener, SignalStrengthListener.LISTEN_SIGNAL_STRENGTHS);
         bwListener = new BWListener();
         ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).listen(bwListener, PhoneStateListener.LISTEN_SERVICE_STATE);
+        callList = new CallList();
+        ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).listen(callList, PhoneStateListener.LISTEN_CALL_STATE);
         List<CellInfo> cellInfoList = tm.getAllCellInfo();
         startCell(cellInfoList);
         getLocation();
         calc();
+        calcUmts();
+        calcGsm();
 
 
 
@@ -189,6 +206,7 @@ public class MyService extends Service implements LocationListenerInterface{
                         CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
                         if (cellInfoLte.isRegistered()) {
                             calc();
+                            Tech = "4G";
                             mcc = cellInfoLte.getCellIdentity().getMccString();
                             mnc = cellInfoLte.getCellIdentity().getMncString();
                             Operator = (String) cellInfoLte.getCellIdentity().getOperatorAlphaLong();
@@ -201,6 +219,8 @@ public class MyService extends Service implements LocationListenerInterface{
                                 int[] bands = cellInfoLte.getCellIdentity().getBands();
                                 if (bands.length > 0) {
                                     band = bands[0];
+                                }else {
+                                    band = BandPlus;
                                 }
                             }
                             TAC = cellInfoLte.getCellIdentity().getTac();
@@ -219,7 +239,8 @@ public class MyService extends Service implements LocationListenerInterface{
                     if (cellInfo instanceof CellInfoWcdma) {
                         CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
                         if (cellInfoWcdma.isRegistered()) {
-
+                            calcUmts();
+                            Tech = "3G";
                             mcc = cellInfoWcdma.getCellIdentity().getMccString();
                             mnc = cellInfoWcdma.getCellIdentity().getMncString();
                             Operator = (String) cellInfoWcdma.getCellIdentity().getOperatorAlphaLong();
@@ -234,9 +255,12 @@ public class MyService extends Service implements LocationListenerInterface{
                 case TelephonyManager.NETWORK_TYPE_EDGE:
                 case TelephonyManager.NETWORK_TYPE_GPRS:
                 case TelephonyManager.NETWORK_TYPE_GSM:
+                case TelephonyManager.NETWORK_TYPE_IDEN:
                     if (cellInfo instanceof CellInfoGsm) {
                         CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
                         if (cellInfoGsm.isRegistered()) {
+                            calcGsm();
+                            Tech = "2G";
                             mcc = cellInfoGsm.getCellIdentity().getMccString();
                             mnc = cellInfoGsm.getCellIdentity().getMncString();
                             Operator = (String) cellInfoGsm.getCellIdentity().getOperatorAlphaLong();
@@ -252,14 +276,6 @@ public class MyService extends Service implements LocationListenerInterface{
             }
         }
     }
-
-//    @Nullable
-//    @Override
-//    public ComponentName startForegroundService(Intent service) {
-//        Log.d("BackG","Foregrund");
-//        return super.startForegroundService(service);
-//    }
-
     private class CellInfoIDListener extends PhoneStateListener {
         @Override
         @SuppressLint({"SetTextI18n", "MissingPermission"})
@@ -271,16 +287,6 @@ public class MyService extends Service implements LocationListenerInterface{
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("BackG","StartCommand");
-//        new Timer().scheduleAtFixedRate(new TimerTask(){
-//            @Override
-//            public void run(){
-//                Log.i("interval", "This function is called every 5 seconds.");
-//                String[] str = new String[]{String.valueOf(lat), String.valueOf(lot)};
-//                writer.writeNext(str, false);
-//            }
-//        },0,5000);
-
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -347,6 +353,7 @@ public class MyService extends Service implements LocationListenerInterface{
                     case TelephonyManager.NETWORK_TYPE_EDGE:
                     case TelephonyManager.NETWORK_TYPE_GPRS:
                     case TelephonyManager.NETWORK_TYPE_GSM:
+                    case TelephonyManager.NETWORK_TYPE_IDEN:
                         if (cellSignalStrength instanceof CellSignalStrengthGsm) {
                             AsuLevel = cellSignalStrength.getAsuLevel();
                             Level = cellSignalStrength.getLevel();
@@ -385,6 +392,30 @@ public class MyService extends Service implements LocationListenerInterface{
                     convertedBands[i]=bandwidnths[i]/1000;
                 }
             }
+        }
+    }
+
+    private class CallList extends PhoneStateListener
+    {
+        @Override
+        public void onCallStateChanged(int state, String incomingNumber) {
+            switch (state) {
+                case TelephonyManager.CALL_STATE_IDLE:
+                    call = "IDLE";
+                    break;
+                case TelephonyManager.CALL_STATE_RINGING:
+                    call = "RINGING";
+                    break;
+                case TelephonyManager.CALL_STATE_OFFHOOK:
+                    call = "OFFHOOK";
+                    break;
+            }
+        }
+        public void onHandoverComplete(Connection connection) {
+
+        }
+        public void onHandoverFailed(Connection connection, int error) {
+            // Handover failed, do something
         }
     }
 
@@ -811,6 +842,175 @@ public class MyService extends Service implements LocationListenerInterface{
             FUL = 0;
         }
     }
+    private void calcUmts() {
+        int FDL_low, NDL, NOffs_DL, FUL_low, NUL, NOffs_UL;
+        if (10562 <= UARFCN && UARFCN <= 10838) {
+            NameR = "2100";
+            Mode = "FDD";
+            NDL = UARFCN;
+            NOffs_DL = 0;
+            BandPlus = 1;
+            FDL = NOffs_DL+NDL/5;
+            NUL = UARFCN - 225;
+            NOffs_UL = 0;
+            FUL = NOffs_UL+NUL/5;
 
-
+        }
+        if (9662 <= UARFCN && UARFCN <= 9938) {
+            NameR = "1900 PCS";
+            Mode = "FDD";
+            NDL = UARFCN;
+            NOffs_DL = 0;
+            BandPlus = 2;
+            FDL = NOffs_DL+NDL/5;
+            NUL = UARFCN - 225;
+            NOffs_UL = 0;
+            FUL = NOffs_UL+NUL/5;
+        }
+        if (1162 <= UARFCN && UARFCN <= 1513) {
+            NameR = "1800 DCS";
+            Mode = "FDD";
+            NDL = UARFCN;
+            NOffs_DL = 1575;
+            BandPlus = 3;
+            FDL = NOffs_DL+NDL/5;
+            NUL = UARFCN - 225;
+            NOffs_UL = 1525;
+            FUL = NOffs_UL+NUL/5;
+        }
+        if (1537 <= UARFCN && UARFCN <= 1738) {
+            NameR = "AWS-1";
+            Mode = "FDD";
+            NDL = UARFCN;
+            NOffs_DL = 1805;
+            BandPlus = 4;
+            FDL = NOffs_DL+NDL/5;
+            NUL = UARFCN - 225;
+            NOffs_UL = 1450;
+            FUL = NOffs_UL+NUL/5;
+        }
+        if (4357 <= UARFCN && UARFCN <= 4458) {
+            NameR = "850";
+            Mode = "FDD";
+            NDL = UARFCN;
+            NOffs_DL = 0;
+            BandPlus = 5;
+            FDL = NOffs_DL+NDL/5;
+            NUL = UARFCN - 225;
+            NOffs_UL = 0;
+            FUL = NOffs_UL+NUL/5;
+        }
+        if (2237 <= UARFCN && UARFCN <= 2563) {
+            NameR = "2600";
+            Mode = "FDD";
+            NDL = UARFCN;
+            NOffs_DL = 2175;
+            BandPlus = 7;
+            FDL = NOffs_DL+NDL/5;
+            NUL = UARFCN - 225;
+            NOffs_UL = 2100;
+            FUL = NOffs_UL+NUL/5;
+        }
+        if (2237 <= UARFCN && UARFCN <= 2563) {
+            NameR = "900 GSM";
+            Mode = "FDD";
+            NDL = UARFCN;
+            NOffs_DL = 340;
+            BandPlus = 8;
+            FDL = NOffs_DL+NDL/5;
+            NUL = UARFCN - 225;
+            NOffs_UL = 340;
+            FUL = NOffs_UL+NUL/5;
+        }
+        if (3112 <= UARFCN && UARFCN <= 3388) {
+            NameR = "AWS-1+";
+            Mode = "FDD";
+            NDL = UARFCN;
+            NOffs_DL = 1490;
+            BandPlus = 10;
+            FDL = NOffs_DL+NDL/5;
+            NUL = UARFCN - 225;
+            NOffs_UL = 1135;
+            FUL = NOffs_UL+NUL/5;
+        }
+        if (3712 <= UARFCN && UARFCN <= 3787) {
+            NameR = "1500 Lower";
+            Mode = "FDD";
+            NDL = UARFCN;
+            NOffs_DL = 736;
+            BandPlus = 11;
+            FDL = NOffs_DL+NDL/5;
+            NUL = UARFCN - 225;
+            NOffs_UL = 733;
+            FUL = NOffs_UL+NUL/5;
+        }
+        if (3842 <= UARFCN && UARFCN <= 3903) {
+            NameR = "700 a";
+            Mode = "FDD";
+            NDL = UARFCN;
+            NOffs_DL = -37;
+            BandPlus = 12;
+            FDL = NOffs_DL+NDL/5;
+            NUL = UARFCN - 225;
+            NOffs_UL = -22;
+            FUL = NOffs_UL+NUL/5;
+        }
+    }
+    private void calcGsm(){
+        if (0 <= ARFCN && ARFCN <= 124) {
+            NameR = "E-GSM";
+            FUL = 890+0.2*ARFCN;
+            FDL = FUL + 45;
+        }
+        if (512 <= ARFCN && ARFCN <= 885) {
+            NameR = "DCS 1800";
+            FUL = 1710.2+0.2*(ARFCN-512);
+            FDL = FUL + 95;
+        }
+    }
+    public void WriteLteInfo (){
+        if(writer!=null) {
+            String bandwidth = "";
+            if(convertedBands != null){
+                bandwidth = String.valueOf(Arrays.stream(convertedBands).mapToObj(String::valueOf).collect(Collectors.joining("/")));
+            }
+            String[] str = new String[]{String.valueOf(lat), String.valueOf(lot),
+                    String.valueOf(Operator), "4G", String.valueOf(mcc), String.valueOf(mnc),String.valueOf(Mode),
+                    String.valueOf(TAC), String.valueOf(CELLID), String.valueOf(eNB),
+                    (band+" ("+NameR+")"),bandwidth, String.valueOf(EARFCN), "", "",String.valueOf(FUL),String.valueOf(FDL), String.valueOf(PCI)
+                    , "", "", "", String.valueOf(rssi), String.valueOf(rsrp),
+                    String.valueOf(rsrq),
+                    String.valueOf(snr), "", "", String.valueOf(CQi), String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(TAa),};
+            writer.writeNext(str, false);
+        }
+    }
+    private void WriteUMTSInfo()
+    {
+        if(writer!=null) {
+            String[] str = new String[]{
+                    String.valueOf(lat), String.valueOf(lot), String.valueOf(Operator), "3G",
+                    String.valueOf(mcc), String.valueOf(mnc),Mode,
+                    String.valueOf(LAC), String.valueOf(CELLID), "",(BandPlus+" ("+NameR+")"),"","",
+                    String.valueOf(UARFCN), "",String.valueOf(FUL),String.valueOf(FDL), "", String.valueOf(PSC), String.valueOf(RNCID),
+                    "", String.valueOf(ss), "", "",
+                    "", String.valueOf(EcNo), "", "",
+                    String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), ""
+            };
+            writer.writeNext(str, false);
+        }
+    }
+    private void WriteGSMInfo()
+    {
+        if(writer!=null){
+            String[] str = new String[]{
+                    String.valueOf(lat), String.valueOf(lot), String.valueOf(Operator), "2G",
+                    String.valueOf(mcc), String.valueOf(mnc),"",
+                    String.valueOf(LAC), String.valueOf(CELLID), "", NameR, "","",
+                    "", String.valueOf(ARFCN),String.valueOf(FUL),String.valueOf(FDL), "", "",
+                    String.valueOf(RNCID), String.valueOf(BSIC), String.valueOf(rssi), "",
+                    "", "", "", String.valueOf(BERT), String.valueOf(Cqi), String.valueOf(dBm), String.valueOf(Level),
+                    String.valueOf(AsuLevel), String.valueOf(TAa)};
+            writer.writeNext(str, false);
+        }
+    }
 }

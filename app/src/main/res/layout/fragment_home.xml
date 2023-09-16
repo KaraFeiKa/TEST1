@@ -84,6 +84,13 @@
                         android:textSize="25sp" />
 
                     <TextView
+                        android:id="@+id/Speed"
+                        android:layout_width="match_parent"
+                        android:layout_height="38dp"
+                        android:textColor="@color/white"
+                        android:textSize="25sp" />
+
+                    <TextView
                         android:id="@+id/TA"
                         android:layout_width="match_parent"
                         android:layout_height="38dp"
@@ -155,14 +162,6 @@
                         android:layout_height="38dp"
                         android:textColor="@color/white"
                         android:textSize="25sp" />
-
-                    <Button
-                        android:id="@+id/button"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:gravity="center_horizontal"
-                        android:text="Начать запись (Не нажимать)" />
 
                     <Button
                         android:id="@+id/button2"
