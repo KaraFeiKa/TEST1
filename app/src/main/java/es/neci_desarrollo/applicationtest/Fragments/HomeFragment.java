@@ -24,7 +24,6 @@ import androidx.fragment.app.Fragment;
 
 import android.os.Environment;
 import android.telecom.Connection;
-import android.telephony.CellIdentity;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
@@ -34,10 +33,8 @@ import android.telephony.CellSignalStrengthGsm;
 import android.telephony.CellSignalStrengthLte;
 import android.telephony.CellSignalStrengthWcdma;
 import android.telephony.PhoneStateListener;
-import android.telephony.PhysicalChannelConfig;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
-import android.telephony.TelephonyCallback;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -50,24 +47,27 @@ import com.opencsv.CSVWriter;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import es.neci_desarrollo.applicationtest.R;
 import es.neci_desarrollo.applicationtest.location.LocationListenerInterface;
 import es.neci_desarrollo.applicationtest.location.MyLocationListener;
 import es.neci_desarrollo.applicationtest.Store;
-import es.neci_desarrollo.applicationtest.location.MyService;
+import es.neci_desarrollo.applicationtest.MyService;
+import es.neci_desarrollo.applicationtest.speed.ITrafficSpeedListener;
+import es.neci_desarrollo.applicationtest.speed.TrafficSpeedMeasurer;
+import es.neci_desarrollo.applicationtest.speed.Utils;
 
 
 public class HomeFragment extends Fragment implements LocationListenerInterface {
     private static LocationManager locationManager;
+    private static final boolean SHOW_SPEED_IN_BITS = false;
+
+    private TrafficSpeedMeasurer mTrafficSpeedMeasurer;
     String nocProjectDirInDownload = "noc-project";
     String csv = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + nocProjectDirInDownload;
     private TelephonyManager tm;
-    private ConnectivityManager cm;
     SignalStrengthListener signalStrengthListener;
     CellInfoIDListener cellInfoIDListener;
     BWListener bwListener;
@@ -83,7 +83,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
     double lat, lot = 0;
     int rssi;    int rsrq;    int rsrp;    int snr;    int Cqi;    int dBm;    int Level;    int AsuLevel;    int ta;    int EcNo;
     int ber;    int eNB;    int TAC;    int band;    int EARFCN;    int CELLID;    int PCI;    int LAC;
-    int UARFCN;    int PSC;    int RNCID;    int ARFCN;    int BSIC;    int CQi;    int TAa; int UpLinkSpeed; int DownLinkSpeed;
+    int UARFCN;    int PSC;    int RNCID;    int ARFCN;    int BSIC;    int CQi;    int TAa; double UpLinkSpeed; double DownLinkSpeed;
     int BERT;    int BandPlus;
     double FUL; int ss;
     double FDL;
@@ -96,6 +96,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
     String mnc = "";
     String Operator;
     CSVWriter writer = null;
+
 
     private boolean isNeedWrite = false;
 
@@ -114,7 +115,8 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
                 && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.MODIFY_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.MODIFY_PHONE_STATE}, 100);
         }
-
+        mTrafficSpeedMeasurer = new TrafficSpeedMeasurer(TrafficSpeedMeasurer.TrafficType.MOBILE);
+        mTrafficSpeedMeasurer.startMeasuring();
         tm = (TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE);
         myLocationListener = new MyLocationListener();
         myLocationListener.setLocationListenerInterface(this);
@@ -128,7 +130,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
         ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(bwListener, PhoneStateListener.LISTEN_SERVICE_STATE);
         callList = new CallList();
         ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(callList, PhoneStateListener.LISTEN_CALL_STATE);
-        List<CellInfo> cellInfoList = tm.getAllCellInfo();
+          List<CellInfo> cellInfoList = tm.getAllCellInfo();
         startCell(cellInfoList);
         calc();
         calcUmts();
@@ -809,11 +811,13 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
 
  private class CallList extends PhoneStateListener
  {
+
      @Override
      public void onCallStateChanged(int state, String incomingNumber) {
+         ConnectivityManager cm = (ConnectivityManager) getActivity().getSystemService(CONNECTIVITY_SERVICE);
          switch (state) {
              case TelephonyManager.CALL_STATE_IDLE:
-                 call = "IDEL";
+                 call = "IDLE";
                  break;
              case TelephonyManager.CALL_STATE_RINGING:
                  call = "RINGING";
@@ -836,8 +840,6 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
     @SuppressLint({"SetTextI18n", "MissingPermission"})
     private void startCell(List<CellInfo> cellInfoList) {
         for (CellInfo cellInfo : cellInfoList) {
-            switch (tm.getDataNetworkType()) {
-                case TelephonyManager.NETWORK_TYPE_LTE:
                     if (cellInfo instanceof CellInfoLte) {
                         CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
                         if (cellInfoLte.isRegistered()) {
@@ -876,16 +878,8 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
                             TAC = cellInfoLte.getCellIdentity().getTac();
                             EARFCN = cellInfoLte.getCellIdentity().getEarfcn();
                         }
+
                     }
-                    break;
-                case TelephonyManager.NETWORK_TYPE_UMTS:
-                case TelephonyManager.NETWORK_TYPE_HSDPA:
-                case TelephonyManager.NETWORK_TYPE_HSPA:
-                case TelephonyManager.NETWORK_TYPE_HSPAP:
-                case TelephonyManager.NETWORK_TYPE_EVDO_0:
-                case TelephonyManager.NETWORK_TYPE_EVDO_A:
-                case TelephonyManager.NETWORK_TYPE_EVDO_B:
-                case TelephonyManager.NETWORK_TYPE_HSUPA:
                     if (cellInfo instanceof CellInfoWcdma) {
                         CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
                         if (cellInfoWcdma.isRegistered()) {
@@ -909,11 +903,6 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
                             UARFCN = cellInfoWcdma.getCellIdentity().getUarfcn();
                         }
                     }
-                    break;
-                case TelephonyManager.NETWORK_TYPE_EDGE:
-                case TelephonyManager.NETWORK_TYPE_GPRS:
-                case TelephonyManager.NETWORK_TYPE_GSM:
-                case TelephonyManager.NETWORK_TYPE_IDEN:
                     if (cellInfo instanceof CellInfoGsm) {
                         CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
                         if (cellInfoGsm.isRegistered()) {
@@ -936,12 +925,9 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
                             BSIC = cellInfoGsm.getCellIdentity().getBsic();
                         }
                     }
-                    break;
-                default:
-                    OPerator.setText("Необработано");
             }
         }
-    }
+
     private class BWListener extends PhoneStateListener
     {
         public void onServiceStateChanged(ServiceState serviceState) {
@@ -978,8 +964,6 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
 
             List<CellSignalStrength> strengthAmplitude = signalStrength.getCellSignalStrengths();
             for (CellSignalStrength cellSignalStrength : strengthAmplitude) {
-                switch (tm.getDataNetworkType()) {
-                    case TelephonyManager.NETWORK_TYPE_LTE:
                         if (cellSignalStrength instanceof CellSignalStrengthLte) {
                             snr = ((CellSignalStrengthLte) cellSignalStrength).getRssnr();
                             rssi = ((CellSignalStrengthLte) cellSignalStrength).getRssi();
@@ -999,9 +983,9 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
                             ta = ((CellSignalStrengthLte) cellSignalStrength).getTimingAdvance();
                             if (ta != Integer.MAX_VALUE) {
                                 TAa = ta;
-                                TA.setText("TA:   " + (TAa) + "  RCC:  " + call);
+                                TA.setText("TA:   " + (TAa) + "  RRC:  " + call);
                             } else {
-                                TA.setText("TA:   N/A"+ "  RCC:  " + call);
+                                TA.setText("TA:   N/A"+ "  RRC:  " + call);
                             }
                             RSRQ_SNR_ECNO.setText("RSRQ: " + rsrq + "  дБ" + "  SNR: " + snr + "  дБ");
                             if (rssi != Integer.MAX_VALUE)
@@ -1014,15 +998,6 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
                             level.setText("Level:  " + Level);
                             asulevel.setText("Asulevel:  " + AsuLevel + "  дБм");
                         }
-                        break;
-                    case TelephonyManager.NETWORK_TYPE_UMTS:
-                    case TelephonyManager.NETWORK_TYPE_HSDPA:
-                    case TelephonyManager.NETWORK_TYPE_HSPA:
-                    case TelephonyManager.NETWORK_TYPE_HSPAP:
-                    case TelephonyManager.NETWORK_TYPE_EVDO_0:
-                    case TelephonyManager.NETWORK_TYPE_EVDO_A:
-                    case TelephonyManager.NETWORK_TYPE_EVDO_B:
-                    case TelephonyManager.NETWORK_TYPE_HSUPA:
                         if (cellSignalStrength instanceof CellSignalStrengthWcdma) {
                             Log.d("Check",cellSignalStrength.toString());
                             AsuLevel = cellSignalStrength.getAsuLevel();
@@ -1044,15 +1019,10 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
                                     ss = Integer.parseInt(elem[1]);
                                 }
                             }
-                            TA.setText("RCC:  " + call);
+                            TA.setText("RRC:  " + call);
                             RSSI_RSRP.setText("RSSI: " + ss + "  дБм");
 
                         }
-                        break;
-                    case TelephonyManager.NETWORK_TYPE_EDGE:
-                    case TelephonyManager.NETWORK_TYPE_GPRS:
-                    case TelephonyManager.NETWORK_TYPE_GSM:
-                    case TelephonyManager.NETWORK_TYPE_IDEN:
                         if (cellSignalStrength instanceof CellSignalStrengthGsm) {
                             cqi_dBm.setText("dBm:   " + cellSignalStrength.getDbm());
                             AsuLevel = cellSignalStrength.getAsuLevel();
@@ -1073,20 +1043,15 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
                             ta = ((CellSignalStrengthGsm) cellSignalStrength).getTimingAdvance();
                             if (ta != Integer.MAX_VALUE) {
                                 TAa = ta;
-                                TA.setText("TA:   " + (TAa) + "  RCC:  " + call);
+                                TA.setText("TA:   " + (TAa) + "  RRC:  " + call);
                             } else {
-                                TA.setText("TA:   N/A"+ "  RCC:  " + call);
+                                TA.setText("TA:   N/A"+ "  RRC:  " + call);
                             }
                             RSSI_RSRP.setText("RSSI:   " + rssi + "  дБм");
                             level.setText("Level:  " + Level);
                             asulevel.setText("Asulevel:  " + AsuLevel + "  дБм");
                             cqi_dBm.setText("dBm: " + dBm);
                         }
-
-                        break;
-                    default:
-                        OPerator.setText("Необработано");
-                }
             }
         }
     }
@@ -1098,4 +1063,38 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
         latitude_res.setText("Широта:   " + lat);
         longitude_res.setText("Долгота:   " + lot);
     }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mTrafficSpeedMeasurer.stopMeasuring();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mTrafficSpeedMeasurer.removeListener(mStreamSpeedListener);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mTrafficSpeedMeasurer.registerListener(mStreamSpeedListener);
+    }
+
+
+    private ITrafficSpeedListener mStreamSpeedListener = new ITrafficSpeedListener() {
+
+        @Override
+        public void onTrafficSpeedMeasured(final double upStream, final double downStream) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    String upStreamSpeed = Utils.parseSpeed(upStream, SHOW_SPEED_IN_BITS);
+                    String downStreamSpeed = Utils.parseSpeed(downStream, SHOW_SPEED_IN_BITS);
+                    speed.setText("UL:  " + upStreamSpeed + "   DL:   " + downStreamSpeed);
+                }
+            });
+        }
+    };
 }

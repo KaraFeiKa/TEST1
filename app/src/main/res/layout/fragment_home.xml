@@ -84,14 +84,23 @@
                         android:textSize="25sp" />
 
                     <TextView
-                        android:id="@+id/Speed"
+                        android:id="@+id/TA"
                         android:layout_width="match_parent"
                         android:layout_height="38dp"
                         android:textColor="@color/white"
                         android:textSize="25sp" />
 
                     <TextView
-                        android:id="@+id/TA"
+                        android:id="@+id/textView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Скорость"
+                        android:textAlignment="center"
+                        android:textColor="@color/white"
+                        android:textSize="30sp" />
+
+                    <TextView
+                        android:id="@+id/Speed"
                         android:layout_width="match_parent"
                         android:layout_height="38dp"
                         android:textColor="@color/white"
@@ -100,11 +109,10 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="GPS"
+                        android:text="Координаты"
                         android:textAlignment="center"
                         android:textColor="@color/white"
                         android:textSize="30sp" />
-
 
 
                     <TextView

@@ -1,4 +1,4 @@
-package es.neci_desarrollo.applicationtest.location;
+package es.neci_desarrollo.applicationtest;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -15,7 +15,9 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.telecom.Connection;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
@@ -53,8 +55,15 @@ import java.util.stream.Collectors;
 import es.neci_desarrollo.applicationtest.Fragments.HomeFragment;
 import es.neci_desarrollo.applicationtest.R;
 import es.neci_desarrollo.applicationtest.Store;
+import es.neci_desarrollo.applicationtest.location.LocationListenerInterface;
+import es.neci_desarrollo.applicationtest.location.MyLocationListener;
+import es.neci_desarrollo.applicationtest.speed.ITrafficSpeedListener;
+import es.neci_desarrollo.applicationtest.speed.TrafficSpeedMeasurer;
+import es.neci_desarrollo.applicationtest.speed.Utils;
 
-public class MyService extends Service implements LocationListenerInterface{
+public class MyService extends Service implements LocationListenerInterface {
+    private static final boolean SHOW_SPEED_IN_BITS = false;
+    private TrafficSpeedMeasurer mTrafficSpeedMeasurer;
     public static final String CHANNEL_ID = "AAAA";
     private static LocationManager locationManager;
     private MyLocationListener myLocationListener;
@@ -76,6 +85,8 @@ public class MyService extends Service implements LocationListenerInterface{
     int [] convertedBands = new int[]{0};
     int [] bandwidnths = new int[]{0};
     String Tech = "";
+    String upStreamSpeed;
+    String downStreamSpeed;
     String call = "";
     String mcc = "";
     String NameR = "";
@@ -104,29 +115,27 @@ public class MyService extends Service implements LocationListenerInterface{
     public void onLocationChanged(Location location) {
         lat = location.getLatitude();
         lot = location.getLongitude();
-        switch (tm.getDataNetworkType()) {
-            case TelephonyManager.NETWORK_TYPE_LTE:
-                WriteLteInfo();
-                break;
-            case TelephonyManager.NETWORK_TYPE_UMTS:
-            case TelephonyManager.NETWORK_TYPE_HSDPA:
-            case TelephonyManager.NETWORK_TYPE_HSPA:
-            case TelephonyManager.NETWORK_TYPE_HSPAP:
-            case TelephonyManager.NETWORK_TYPE_EVDO_0:
-            case TelephonyManager.NETWORK_TYPE_EVDO_A:
-            case TelephonyManager.NETWORK_TYPE_EVDO_B:
-            case TelephonyManager.NETWORK_TYPE_HSUPA:
-                WriteUMTSInfo();
-                break;
-            case TelephonyManager.NETWORK_TYPE_EDGE:
-            case TelephonyManager.NETWORK_TYPE_GPRS:
-            case TelephonyManager.NETWORK_TYPE_GSM:
-                WriteGSMInfo();
-                break;
-            default:
+        List<CellInfo> cellInfoList = tm.getAllCellInfo();
+        for (CellInfo cellInfo : cellInfoList) {
+            if (cellInfo instanceof CellInfoLte) {
+                CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
+                if (cellInfoLte.isRegistered()) {
+                    WriteLteInfo();
+                }
+            }
+            if (cellInfo instanceof CellInfoWcdma) {
+                CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
+                if (cellInfoWcdma.isRegistered()) {
+                    WriteUMTSInfo();
+                }
+            }
+            if (cellInfo instanceof CellInfoGsm) {
+                CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
+                if (cellInfoGsm.isRegistered()) {
+                    WriteGSMInfo();
+                }
+            }
         }
-
-
     }
     @SuppressLint({"SetTextI18n", "MissingPermission"})
     public void onCreate(){
@@ -141,6 +150,8 @@ public class MyService extends Service implements LocationListenerInterface{
                 .setContentTitle("")
                 .setContentText("").build();
         startForeground(1, notification);
+        mTrafficSpeedMeasurer = new TrafficSpeedMeasurer(TrafficSpeedMeasurer.TrafficType.ALL);
+        mTrafficSpeedMeasurer.startMeasuring();
         tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
         myLocationListener = new MyLocationListener();
         myLocationListener.setLocationListenerInterface(this);
@@ -158,20 +169,20 @@ public class MyService extends Service implements LocationListenerInterface{
         getLocation();
         calc();
         calcUmts();
-        calcGsm();
+        calcArfcn();
 
 
 
         try {
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
             LocalDateTime now = LocalDateTime.now();
-            writer = new CSVWriter(new FileWriter(csv + "/" + dtf.format(now) + "_Main_BG.csv"));
+            writer = new CSVWriter(new FileWriter(csv + "/" + dtf.format(now) + "_Main"+Tech+".csv"));
             List<String[]> data = new ArrayList<String[]>();
             data.add(new String[]{"lat", "log", "Operator", "Network", "mcc", "mnc","Mode",
                     "TAC/LAC", "CID", "eNB", "Band","Bandwidnths, MHz", "Earfcn",
                     "Uarfcn", "Arfcn","UL, MHz","DL, MHz", "PCI", "PSC", "RNC",
                     "BSIC", "RSSI, dBm", "RSRP, dBm", "RSRQ, dB",
-                    "SNR, dB", "EcNo, dB", "BER", "Cqi", "dBm", "Level", "Asulevel", "Ta"});
+                    "SNR, dB", "EcNo, dB", "BER", "Cqi", "dBm", "Level", "Asulevel", "Ta","UP Speed","DL Speed"});
             writer.writeAll(data);
         } catch (IOException e) {
             e.printStackTrace();
@@ -181,6 +192,7 @@ public class MyService extends Service implements LocationListenerInterface{
     @Override
     public void onDestroy() {
         super.onDestroy();
+        mTrafficSpeedMeasurer.stopMeasuring();
         try {
             writer.close();
         } catch (IOException e) {
@@ -200,8 +212,6 @@ public class MyService extends Service implements LocationListenerInterface{
     @SuppressLint({"SetTextI18n", "MissingPermission"})
     private void startCell(List<CellInfo> cellInfoList) {
         for (CellInfo cellInfo : cellInfoList) {
-            switch (tm.getDataNetworkType()) {
-                case TelephonyManager.NETWORK_TYPE_LTE:
                     if (cellInfo instanceof CellInfoLte) {
                         CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
                         if (cellInfoLte.isRegistered()) {
@@ -227,15 +237,6 @@ public class MyService extends Service implements LocationListenerInterface{
                             EARFCN = cellInfoLte.getCellIdentity().getEarfcn();
                         }
                     }
-                    break;
-                case TelephonyManager.NETWORK_TYPE_UMTS:
-                case TelephonyManager.NETWORK_TYPE_HSDPA:
-                case TelephonyManager.NETWORK_TYPE_HSPA:
-                case TelephonyManager.NETWORK_TYPE_HSPAP:
-                case TelephonyManager.NETWORK_TYPE_EVDO_0:
-                case TelephonyManager.NETWORK_TYPE_EVDO_A:
-                case TelephonyManager.NETWORK_TYPE_EVDO_B:
-                case TelephonyManager.NETWORK_TYPE_HSUPA:
                     if (cellInfo instanceof CellInfoWcdma) {
                         CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
                         if (cellInfoWcdma.isRegistered()) {
@@ -251,15 +252,10 @@ public class MyService extends Service implements LocationListenerInterface{
                             UARFCN = cellInfoWcdma.getCellIdentity().getUarfcn();
                         }
                     }
-                    break;
-                case TelephonyManager.NETWORK_TYPE_EDGE:
-                case TelephonyManager.NETWORK_TYPE_GPRS:
-                case TelephonyManager.NETWORK_TYPE_GSM:
-                case TelephonyManager.NETWORK_TYPE_IDEN:
                     if (cellInfo instanceof CellInfoGsm) {
                         CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
                         if (cellInfoGsm.isRegistered()) {
-                            calcGsm();
+                            calcArfcn();
                             Tech = "2G";
                             mcc = cellInfoGsm.getCellIdentity().getMccString();
                             mnc = cellInfoGsm.getCellIdentity().getMncString();
@@ -271,9 +267,6 @@ public class MyService extends Service implements LocationListenerInterface{
                             BSIC = cellInfoGsm.getCellIdentity().getBsic();
                         }
                     }
-                    break;
-                default:
-            }
         }
     }
     private class CellInfoIDListener extends PhoneStateListener {
@@ -287,13 +280,15 @@ public class MyService extends Service implements LocationListenerInterface{
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        mTrafficSpeedMeasurer.registerListener(mStreamSpeedListener);
         return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
+        mTrafficSpeedMeasurer.removeListener(mStreamSpeedListener);
         Log.d("BackG","onBind");
+
         return null;
     }
 
@@ -303,8 +298,6 @@ public class MyService extends Service implements LocationListenerInterface{
         public void onSignalStrengthsChanged(SignalStrength signalStrength) {
             List<CellSignalStrength> strengthAmplitude = signalStrength.getCellSignalStrengths();
             for (CellSignalStrength cellSignalStrength : strengthAmplitude) {
-                switch (tm.getDataNetworkType()) {
-                    case TelephonyManager.NETWORK_TYPE_LTE:
                         if (cellSignalStrength instanceof CellSignalStrengthLte) {
                             snr = ((CellSignalStrengthLte) cellSignalStrength).getRssnr();
                             rssi = ((CellSignalStrengthLte) cellSignalStrength).getRssi();
@@ -321,16 +314,7 @@ public class MyService extends Service implements LocationListenerInterface{
                             if (ta != Integer.MAX_VALUE) {
                                 TAa = ta;
                             }
-                            break;
                         }
-                    case TelephonyManager.NETWORK_TYPE_UMTS:
-                    case TelephonyManager.NETWORK_TYPE_HSDPA:
-                    case TelephonyManager.NETWORK_TYPE_HSPA:
-                    case TelephonyManager.NETWORK_TYPE_HSPAP:
-                    case TelephonyManager.NETWORK_TYPE_EVDO_0:
-                    case TelephonyManager.NETWORK_TYPE_EVDO_A:
-                    case TelephonyManager.NETWORK_TYPE_EVDO_B:
-                    case TelephonyManager.NETWORK_TYPE_HSUPA:
                         if (cellSignalStrength instanceof CellSignalStrengthWcdma) {
                             Log.d("Check",cellSignalStrength.toString());
                             AsuLevel = cellSignalStrength.getAsuLevel();
@@ -349,11 +333,6 @@ public class MyService extends Service implements LocationListenerInterface{
                             }
 
                         }
-                        break;
-                    case TelephonyManager.NETWORK_TYPE_EDGE:
-                    case TelephonyManager.NETWORK_TYPE_GPRS:
-                    case TelephonyManager.NETWORK_TYPE_GSM:
-                    case TelephonyManager.NETWORK_TYPE_IDEN:
                         if (cellSignalStrength instanceof CellSignalStrengthGsm) {
                             AsuLevel = cellSignalStrength.getAsuLevel();
                             Level = cellSignalStrength.getLevel();
@@ -371,11 +350,6 @@ public class MyService extends Service implements LocationListenerInterface{
                                 TAa = ta;
                             }
                         }
-
-                        break;
-                    default:
-                        break;
-                }
             }
         }
     }
@@ -428,11 +402,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 2110;
             NOffs_DL = 0;
             BandPlus = 1;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 1920;
             NOffs_UL = 18000;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
 
         }
         if (600 <= EARFCN && EARFCN <= 1199) {
@@ -442,11 +416,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 1930;
             NOffs_DL = 600;
             BandPlus = 2;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 1850;
             NOffs_UL = 18600;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (1200 <= EARFCN && EARFCN <= 1949) {
             NameR = "1800+";
@@ -455,11 +429,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 1805;
             NOffs_DL = 1200;
             BandPlus = 3;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 1710;
             NOffs_UL = 19200;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (1950 <= EARFCN && EARFCN <= 2399) {
             NameR = "AWS-1";
@@ -468,11 +442,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 2110;
             NOffs_DL = 1950;
             BandPlus = 4;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 1710;
             NOffs_UL = 19950;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (2400 <= EARFCN && EARFCN <= 2649) {
             NameR = "850";
@@ -481,11 +455,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 869;
             NOffs_DL = 2400;
             BandPlus = 5;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 824;
             NOffs_UL = 20400;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (2750 <= EARFCN && EARFCN <= 3449) {
             NameR = "2600";
@@ -494,11 +468,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 2620;
             NOffs_DL = 2750;
             BandPlus = 7;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 2500;
             NOffs_UL = 20750;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (3450 <= EARFCN && EARFCN <= 3799) {
             NameR = "900 GSM";
@@ -507,11 +481,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 925;
             NOffs_DL = 3450;
             BandPlus = 8;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 880;
             NOffs_UL = 21450;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (3800 <= EARFCN && EARFCN <= 4149) {
             NameR = "1800";
@@ -520,11 +494,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = (int) 1844.9;
             NOffs_DL = 3800;
             BandPlus = 9;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = (int) 1749.9;
             NOffs_UL = 21800;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
 
         if (4150 <= EARFCN && EARFCN <= 4749) {
@@ -534,11 +508,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 2110;
             NOffs_DL = 4150;
             BandPlus = 10;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 1710;
             NOffs_UL = 22150;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (4750 <= EARFCN && EARFCN <= 4949) {
             NameR = "1500 Lower";
@@ -547,11 +521,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = (int) 1475.9;
             NOffs_DL = 4750;
             BandPlus = 11;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = (int) 1427.9;
             NOffs_UL = 22750;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (5010 <= EARFCN && EARFCN <= 5179) {
             NameR = "700 a";
@@ -560,11 +534,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 729;
             NOffs_DL = 5010;
             BandPlus = 12;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
-            FUL_low = (int) 699;
+            FUL_low = 699;
             NOffs_UL = 23010;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (5180 <= EARFCN && EARFCN <= 5279) {
             NameR = "700 c";
@@ -573,11 +547,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 746;
             NOffs_DL = 5180;
             BandPlus = 13;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
-            FUL_low = (int) 777;
+            FUL_low =  777;
             NOffs_UL = 23180;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (5280 <= EARFCN && EARFCN <= 5379) {
             NameR = "700 PS";
@@ -586,11 +560,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 758;
             NOffs_DL = 5280;
             BandPlus = 14;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL =  (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
-            FUL_low = (int) 788;
+            FUL_low = 788;
             NOffs_UL = 23280;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (5730 <= EARFCN && EARFCN <= 5849) {
             NameR = "700 b";
@@ -599,11 +573,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 734;
             NOffs_DL = 5730;
             BandPlus = 17;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL =  (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
-            FUL_low = (int) 704;
+            FUL_low = 704;
             NOffs_UL = 23730;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (5850 <= EARFCN && EARFCN <= 5999) {
             NameR = "800 Lower";
@@ -612,11 +586,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 860;
             NOffs_DL = 5850;
             BandPlus = 18;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 815;
             NOffs_UL = 23850;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL =  (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (6000 <= EARFCN && EARFCN <= 6149) {
             NameR = "800 Upper";
@@ -625,11 +599,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 875;
             NOffs_DL = 6000;
             BandPlus = 19;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL =  (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 830;
             NOffs_UL = 24000;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (6150 <= EARFCN && EARFCN <= 6449) {
             NameR = "800 DD";
@@ -638,11 +612,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 791;
             NOffs_DL = 6150;
             BandPlus = 20;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL =  (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 832;
             NOffs_UL = 24150;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL =  (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (6450 <= EARFCN && EARFCN <= 6599) {
             NameR = "1500 Upper";
@@ -651,11 +625,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = (int) 1495.9;
             NOffs_DL = 6450;
             BandPlus = 21;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = (int) 1447.9;
             NOffs_UL = 24450;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL =  (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (6600 <= EARFCN && EARFCN <= 7399) {
             NameR = "3500";
@@ -664,11 +638,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 3510;
             NOffs_DL = 6600;
             BandPlus = 22;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 3410;
             NOffs_UL = 24600;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (7700 <= EARFCN && EARFCN <= 8039) {
             NameR = "1600 L-band";
@@ -677,11 +651,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 1525;
             NOffs_DL = 7700;
             BandPlus = 24;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = (int) 1626.5;
             NOffs_UL = 25700;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (8040 <= EARFCN && EARFCN <= 8689) {
             NameR = "1900+";
@@ -690,11 +664,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 1930;
             NOffs_DL = 8040;
             BandPlus = 25;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 1850;
             NOffs_UL = 26040;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (8690 <= EARFCN && EARFCN <= 9039) {
             NameR = "850+";
@@ -703,11 +677,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 859;
             NOffs_DL = 8690;
             BandPlus = 26;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 814;
             NOffs_UL = 26690;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (9040 <= EARFCN && EARFCN <= 9209) {
             NameR = "800 SMR";
@@ -716,11 +690,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 852;
             NOffs_DL = 8690;
             BandPlus = 27;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 814;
             NOffs_UL = 26690;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (9210 <= EARFCN && EARFCN <= 9659) {
             NameR = "700 APT";
@@ -729,11 +703,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 758;
             NOffs_DL = 9210;
             BandPlus = 28;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 703;
             NOffs_UL = 27210;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (9660 <= EARFCN && EARFCN <= 9769) {
             NameR = "700 d";
@@ -742,7 +716,7 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 717;
             NOffs_DL = 9660;
             BandPlus = 29;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
 
         }
         if (9770 <= EARFCN && EARFCN <= 9869) {
@@ -752,11 +726,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 2350;
             NOffs_DL = 9770;
             BandPlus = 30;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = 2305;
             NOffs_UL = 27660;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (9870 <= EARFCN && EARFCN <= 9919) {
             NameR = "450";
@@ -765,11 +739,11 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = (int) 462.5;
             NOffs_DL = 9870;
             BandPlus = 31;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
             FUL_low = (int) 452.5;
             NOffs_UL = 27760;
-            FUL = (int) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
         if (9920 <= EARFCN && EARFCN <= 10359) {
             NameR = "1500 L-band";
@@ -778,7 +752,7 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 1452;
             NOffs_DL = 9920;
             BandPlus = 32;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             FUL = 0;
         }
         if (36000 <= EARFCN && EARFCN <= 36199) {
@@ -788,7 +762,7 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 1900;
             NOffs_DL = 36000;
             BandPlus = 33;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             FUL = 0;
         }
         if (36200 <= EARFCN && EARFCN <= 36349) {
@@ -798,7 +772,7 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 2010;
             NOffs_DL = 36200;
             BandPlus = 34;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             FUL = 0;
         }
         if (36200 <= EARFCN && EARFCN <= 36349) {
@@ -808,7 +782,7 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 1850;
             NOffs_DL = 36350;
             BandPlus = 35;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             FUL = 0;
         }
         if (36950 <= EARFCN && EARFCN <= 37549) {
@@ -818,7 +792,7 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 1930;
             NOffs_DL = 36950;
             BandPlus = 36;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             FUL = 0;
         }
         if (37550 <= EARFCN && EARFCN <= 37749) {
@@ -828,7 +802,7 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 1910;
             NOffs_DL = 37550;
             BandPlus = 37;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             FUL = 0;
         }
         if (37750 <= EARFCN && EARFCN <= 38249) {
@@ -838,12 +812,12 @@ public class MyService extends Service implements LocationListenerInterface{
             FDL_low = 2570;
             NOffs_DL = 37750;
             BandPlus = 38;
-            FDL = (int) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             FUL = 0;
         }
     }
     private void calcUmts() {
-        int FDL_low, NDL, NOffs_DL, FUL_low, NUL, NOffs_UL;
+        int  NDL, NOffs_DL, NUL, NOffs_UL;
         if (10562 <= UARFCN && UARFCN <= 10838) {
             NameR = "2100";
             Mode = "FDD";
@@ -851,7 +825,7 @@ public class MyService extends Service implements LocationListenerInterface{
             NOffs_DL = 0;
             BandPlus = 1;
             FDL = NOffs_DL+NDL/5;
-            NUL = UARFCN - 225;
+            NUL = UARFCN - 950;
             NOffs_UL = 0;
             FUL = NOffs_UL+NUL/5;
 
@@ -863,7 +837,7 @@ public class MyService extends Service implements LocationListenerInterface{
             NOffs_DL = 0;
             BandPlus = 2;
             FDL = NOffs_DL+NDL/5;
-            NUL = UARFCN - 225;
+            NUL = UARFCN - 400;
             NOffs_UL = 0;
             FUL = NOffs_UL+NUL/5;
         }
@@ -956,7 +930,7 @@ public class MyService extends Service implements LocationListenerInterface{
             FUL = NOffs_UL+NUL/5;
         }
     }
-    private void calcGsm(){
+    private void calcArfcn() {
         if (0 <= ARFCN && ARFCN <= 124) {
             NameR = "E-GSM";
             FUL = 890+0.2*ARFCN;
@@ -980,7 +954,7 @@ public class MyService extends Service implements LocationListenerInterface{
                     (band+" ("+NameR+")"),bandwidth, String.valueOf(EARFCN), "", "",String.valueOf(FUL),String.valueOf(FDL), String.valueOf(PCI)
                     , "", "", "", String.valueOf(rssi), String.valueOf(rsrp),
                     String.valueOf(rsrq),
-                    String.valueOf(snr), "", "", String.valueOf(CQi), String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(TAa),};
+                    String.valueOf(snr), "", "", String.valueOf(CQi), String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(TAa),upStreamSpeed,downStreamSpeed};
             writer.writeNext(str, false);
         }
     }
@@ -989,13 +963,12 @@ public class MyService extends Service implements LocationListenerInterface{
         if(writer!=null) {
             String[] str = new String[]{
                     String.valueOf(lat), String.valueOf(lot), String.valueOf(Operator), "3G",
-                    String.valueOf(mcc), String.valueOf(mnc),Mode,
+                    String.valueOf(mcc), String.valueOf(mnc),String.valueOf(Mode),
                     String.valueOf(LAC), String.valueOf(CELLID), "",(BandPlus+" ("+NameR+")"),"","",
                     String.valueOf(UARFCN), "",String.valueOf(FUL),String.valueOf(FDL), "", String.valueOf(PSC), String.valueOf(RNCID),
                     "", String.valueOf(ss), "", "",
                     "", String.valueOf(EcNo), "", "",
-                    String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), ""
-            };
+                    String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), "",String.valueOf(upStreamSpeed),String.valueOf(downStreamSpeed)};
             writer.writeNext(str, false);
         }
     }
@@ -1009,8 +982,22 @@ public class MyService extends Service implements LocationListenerInterface{
                     "", String.valueOf(ARFCN),String.valueOf(FUL),String.valueOf(FDL), "", "",
                     String.valueOf(RNCID), String.valueOf(BSIC), String.valueOf(rssi), "",
                     "", "", "", String.valueOf(BERT), String.valueOf(Cqi), String.valueOf(dBm), String.valueOf(Level),
-                    String.valueOf(AsuLevel), String.valueOf(TAa)};
+                    String.valueOf(AsuLevel), String.valueOf(TAa),String.valueOf(upStreamSpeed),String.valueOf(downStreamSpeed)};
             writer.writeNext(str, false);
         }
     }
+
+
+    private ITrafficSpeedListener mStreamSpeedListener = new ITrafficSpeedListener() {
+        @Override
+        public void onTrafficSpeedMeasured(final double upStream, final double downStream) {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    upStreamSpeed = Utils.parseSpeed(upStream, SHOW_SPEED_IN_BITS);
+                    downStreamSpeed = Utils.parseSpeed(downStream, SHOW_SPEED_IN_BITS);
+                }
+            });
+        }
+    };
 }

@@ -88,7 +88,6 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
         tableLayout = (TableLayout) view.findViewById(R.id.tableLayout);
         cellInfoIDListener = new CellInfoIDListener();
         ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListener, CellInfoIDListener.LISTEN_CELL_INFO);
-        Log.d("NCI", "Listener activate");
 
         tm = (TelephonyManager) getActivity().getSystemService(Context.TELEPHONY_SERVICE);
         return view;
@@ -111,10 +110,9 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
     private void Neiborhood(List<CellInfo> cellInfoList) {
         tableLayout.removeAllViews();
         int currRow = 0;
-        switch(this.tm.getDataNetworkType()){
-            case TelephonyManager.NETWORK_TYPE_LTE:
-                if (getContext() != null)
-                {
+        for (CellInfo cellInfo : cellInfoList) {
+            if (cellInfo instanceof CellInfoLte) {
+                if (getContext() != null) {
                     TableRow tableRowLte = new TableRow(this.getContext());
                     tableRowLte.setLayoutParams(new TableLayout.LayoutParams(
                             TableLayout.LayoutParams.MATCH_PARENT,
@@ -165,95 +163,80 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                     tableLayout.addView(tableRowLte, currRow);
                     currRow++;
                 }
+            }
+                if (cellInfo instanceof CellInfoWcdma) {
+                    if (getContext() != null) {
+                        TableRow tableRowUMTS = new TableRow(this.getContext());
+                        tableRowUMTS.setLayoutParams(new TableLayout.LayoutParams(
+                                TableLayout.LayoutParams.MATCH_PARENT,
+                                TableLayout.LayoutParams.WRAP_CONTENT));
 
-                break;
-            case TelephonyManager.NETWORK_TYPE_UMTS:
-            case TelephonyManager.NETWORK_TYPE_HSDPA:
-            case TelephonyManager.NETWORK_TYPE_HSPA:
-            case TelephonyManager.NETWORK_TYPE_HSPAP:
-            case TelephonyManager.NETWORK_TYPE_EVDO_0:
-            case TelephonyManager.NETWORK_TYPE_EVDO_A:
-            case TelephonyManager.NETWORK_TYPE_EVDO_B:
-            case TelephonyManager.NETWORK_TYPE_HSUPA:
-                if (getContext() != null)
-                {
-                    TableRow tableRowUMTS = new TableRow(this.getContext());
-                    tableRowUMTS.setLayoutParams(new TableLayout.LayoutParams(
-                            TableLayout.LayoutParams.MATCH_PARENT,
-                            TableLayout.LayoutParams.WRAP_CONTENT));
+                        TextView tvPsc = new TextView(this.getContext());
+                        tvPsc.setTextSize(20);
 
-                    TextView tvPsc = new TextView(this.getContext());
-                    tvPsc.setTextSize(20);
+                        tvPsc.setText("PSC   ");
+                        tableRowUMTS.addView(tvPsc, 0);
 
-                    tvPsc.setText("PSC   ");
-                    tableRowUMTS.addView(tvPsc, 0);
+                        TextView tvUarfcn = new TextView(this.getContext());
+                        tvUarfcn.setTextSize(20);
 
-                    TextView tvUarfcn = new TextView(this.getContext());
-                    tvUarfcn.setTextSize(20);
+                        tvUarfcn.setText("Uarfcn   ");
+                        tableRowUMTS.addView(tvUarfcn, 1);
 
-                    tvUarfcn.setText("Uarfcn   ");
-                    tableRowUMTS.addView(tvUarfcn, 1);
+                        TextView tvDbm = new TextView(this.getContext());
+                        tvDbm.setTextSize(20);
 
-                    TextView tvDbm = new TextView(this.getContext());
-                    tvDbm.setTextSize(20);
+                        tvDbm.setText("dBm  ");
+                        tableRowUMTS.addView(tvDbm, 2);
 
-                    tvDbm.setText("dBm  ");
-                    tableRowUMTS.addView(tvDbm, 2);
-
-                    tableLayout.addView(tableRowUMTS, currRow);
-                    currRow++;
+                        tableLayout.addView(tableRowUMTS, currRow);
+                        currRow++;
+                    }
                 }
-                break;
-            case TelephonyManager.NETWORK_TYPE_EDGE:
-            case TelephonyManager.NETWORK_TYPE_GPRS:
-            case TelephonyManager.NETWORK_TYPE_GSM:
-                if (getContext() != null)
-                {
-                    TableRow tableRow = new TableRow(this.getContext());
-                    tableRow.setLayoutParams(new TableLayout.LayoutParams(
-                            TableLayout.LayoutParams.MATCH_PARENT,
-                            TableLayout.LayoutParams.WRAP_CONTENT));
+                    if (cellInfo instanceof CellInfoGsm) {
+                        if (getContext() != null) {
+                            TableRow tableRow = new TableRow(this.getContext());
+                            tableRow.setLayoutParams(new TableLayout.LayoutParams(
+                                    TableLayout.LayoutParams.MATCH_PARENT,
+                                    TableLayout.LayoutParams.WRAP_CONTENT));
 
-                    TextView tvLAC = new TextView(this.getContext());
-                    tvLAC.setTextSize(20);
+                            TextView tvLAC = new TextView(this.getContext());
+                            tvLAC.setTextSize(20);
 
-                    tvLAC.setText("LAC     ");
-                    tableRow.addView(tvLAC, 0);
+                            tvLAC.setText("LAC     ");
+                            tableRow.addView(tvLAC, 0);
 
-                    TextView tvCid = new TextView(this.getContext());
-                    tvCid.setTextSize(20);
+                            TextView tvCid = new TextView(this.getContext());
+                            tvCid.setTextSize(20);
 
-                    tvCid.setText("   CID   ");
-                    tableRow.addView(tvCid, 1);
+                            tvCid.setText("   CID   ");
+                            tableRow.addView(tvCid, 1);
 
-                    TextView tvArfcn = new TextView(this.getContext());
-                    tvArfcn.setTextSize(20);
+                            TextView tvArfcn = new TextView(this.getContext());
+                            tvArfcn.setTextSize(20);
 
-                    tvArfcn.setText("ARFCN    ");
-                    tableRow.addView(tvArfcn, 2);
+                            tvArfcn.setText("ARFCN    ");
+                            tableRow.addView(tvArfcn, 2);
 
-                    TextView tvBsic = new TextView(this.getContext());
-                    tvBsic.setTextSize(20);
+                            TextView tvBsic = new TextView(this.getContext());
+                            tvBsic.setTextSize(20);
 
-                    tvBsic.setText("BSIC    ");
-                    tableRow.addView( tvBsic, 3);
+                            tvBsic.setText("BSIC    ");
+                            tableRow.addView(tvBsic, 3);
 
-                    TextView tvRSSI = new TextView(this.getContext());
-                    tvRSSI.setTextSize(20);
+                            TextView tvRSSI = new TextView(this.getContext());
+                            tvRSSI.setTextSize(20);
 
-                    tvRSSI.setText("RSSI    ");
-                    tableRow.addView(tvRSSI, 4);
+                            tvRSSI.setText("RSSI    ");
+                            tableRow.addView(tvRSSI, 4);
 
-                    tableLayout.addView(tableRow, currRow);
-                    currRow++;
+                            tableLayout.addView(tableRow, currRow);
+                            currRow++;
+                        }
+                    }
                 }
-                break;
-            default:
 
-        }
         for (CellInfo cellInfo : cellInfoList) {
-            switch (tm.getDataNetworkType()) {
-                case TelephonyManager.NETWORK_TYPE_LTE:
                     if (cellInfo instanceof CellInfoLte) {
                         CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
                         if (cellInfoLte.isRegistered() == false) {
@@ -356,15 +339,6 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                             }
                         }
                     }
-                    break;
-                case TelephonyManager.NETWORK_TYPE_UMTS:
-                case TelephonyManager.NETWORK_TYPE_HSDPA:
-                case TelephonyManager.NETWORK_TYPE_HSPA:
-                case TelephonyManager.NETWORK_TYPE_HSPAP:
-                case TelephonyManager.NETWORK_TYPE_EVDO_0:
-                case TelephonyManager.NETWORK_TYPE_EVDO_A:
-                case TelephonyManager.NETWORK_TYPE_EVDO_B:
-                case TelephonyManager.NETWORK_TYPE_HSUPA:
                     if (cellInfo instanceof CellInfoWcdma) {
                         CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
                         if (cellInfoWcdma.isRegistered() == false) {
@@ -409,10 +383,6 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                             }
                         }
                     }
-                    break;
-                case TelephonyManager.NETWORK_TYPE_EDGE:
-                case TelephonyManager.NETWORK_TYPE_GPRS:
-                case TelephonyManager.NETWORK_TYPE_GSM:
                     if (cellInfo instanceof CellInfoGsm) {
                         CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
                         if (cellInfoGsm.isRegistered() == false) {
@@ -469,9 +439,6 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                             }
                         }
                     }
-                    break;
-                default:
-            }
         }
     }
     @Override
