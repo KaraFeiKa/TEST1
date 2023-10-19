@@ -1,73 +1,45 @@
 package es.neci_desarrollo.applicationtest.Fragments;
 
-import static android.content.Context.LOCATION_SERVICE;
 import static android.content.Context.TELEPHONY_SERVICE;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-
 import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoWcdma;
 import android.telephony.PhoneStateListener;
-import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import es.neci_desarrollo.applicationtest.R;
-import es.neci_desarrollo.applicationtest.Store;
-import es.neci_desarrollo.applicationtest.location.LocationListenerInterface;
-import es.neci_desarrollo.applicationtest.location.MyLocationListener;
 
 
-public class SecondFragment extends Fragment implements LocationListenerInterface {
+public class SecondFragment extends Fragment {
     private TelephonyManager tm;
     private TableLayout tableLayout;
     CellInfoIDListener cellInfoIDListener;
-    private LocationManager locationManager;
-    private MyLocationListener myLocationListener;
-    double latN, lotN = 0;
     int rssi, rsrq, rsrp, ta, band, EARFCN, CELLID, PCI, LAC,
             UARFCN, PSC, ARFCN, BSIC ,ss,TAa= 0;
 
     public SecondFragment(TelephonyManager tm) {
         this.tm = tm;
     }
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
-        }
-               super.onCreate(savedInstanceState);
-
-    }
-
     @Override
     @SuppressLint("MissingPermission")
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -81,10 +53,6 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_second, container, false);
 
-        getLocation();
-        myLocationListener = new MyLocationListener();
-        myLocationListener.setLocationListenerInterface(this);
-        locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
         tableLayout = (TableLayout) view.findViewById(R.id.tableLayout);
         cellInfoIDListener = new CellInfoIDListener();
         ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListener, CellInfoIDListener.LISTEN_CELL_INFO);
@@ -93,23 +61,18 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
         return view;
     }
 
-    @SuppressLint("MissingPermission")
-    private void getLocation() {
-        try {
-            locationManager = (LocationManager) getActivity().getApplicationContext().getSystemService(LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 1, myLocationListener);
 
-        } catch (Exception ignored) {
-
-        }
-    }
-
-
+enum Networks {
+        LTE,
+    UMTS,
+    GSM,
+}
     @SuppressLint({"ResourceAsColor", "MissingPermission", "SetTextI18n"})
 
     private void Neiborhood(List<CellInfo> cellInfoList) {
         tableLayout.removeAllViews();
         int currRow = 0;
+        Networks networkHeaders  = Networks.LTE;
         for (CellInfo cellInfo : cellInfoList) {
             if (cellInfo instanceof CellInfoLte) {
                 if (getContext() != null) {
@@ -162,6 +125,8 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
                     tableLayout.addView(tableRowLte, currRow);
                     currRow++;
+                    networkHeaders  = Networks.LTE;
+                    break;
                 }
             }
                 if (cellInfo instanceof CellInfoWcdma) {
@@ -191,7 +156,10 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
                         tableLayout.addView(tableRowUMTS, currRow);
                         currRow++;
+                        networkHeaders  = Networks.UMTS;
+                        break;
                     }
+
                 }
                     if (cellInfo instanceof CellInfoGsm) {
                         if (getContext() != null) {
@@ -232,14 +200,16 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
 
                             tableLayout.addView(tableRow, currRow);
                             currRow++;
+                            networkHeaders  = Networks.GSM;
+                            break;
                         }
                     }
                 }
 
         for (CellInfo cellInfo : cellInfoList) {
-                    if (cellInfo instanceof CellInfoLte) {
+                    if (cellInfo instanceof CellInfoLte && networkHeaders==Networks.LTE) {
                         CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
-                        if (cellInfoLte.isRegistered() == false) {
+                        if (!cellInfoLte.isRegistered()) {
                             if (getContext() != null)
                             {
                                 TableRow tableRowValues = new TableRow(this.getContext());
@@ -335,11 +305,10 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                                 tableRowValues.addView(tvTaVal, 6);
                                 tableLayout.addView(tableRowValues, currRow);
                                 currRow++;
-                                WriteLteInfo();
                             }
                         }
                     }
-                    if (cellInfo instanceof CellInfoWcdma) {
+                    if (cellInfo instanceof CellInfoWcdma && networkHeaders==Networks.UMTS) {
                         CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
                         if (cellInfoWcdma.isRegistered() == false) {
                             if (getContext() != null)
@@ -378,12 +347,10 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                                 tableRowValues.addView(tvdBmVal, 2);
                                 tableLayout.addView(tableRowValues, currRow);
                                 currRow++;
-
-                                WriteUMTSInfo();
                             }
                         }
                     }
-                    if (cellInfo instanceof CellInfoGsm) {
+                    if (cellInfo instanceof CellInfoGsm && networkHeaders==Networks.GSM) {
                         CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
                         if (cellInfoGsm.isRegistered() == false) {
                             if (getContext() != null)
@@ -434,17 +401,10 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
                                 tableRow.addView(tvRssiVal, 4);
                                 tableLayout.addView(tableRow, currRow);
                                 currRow++;
-
-                                WriteGSMInfo();
                             }
                         }
                     }
         }
-    }
-    @Override
-    public void onLocationChanged(Location location) {
-        latN = location.getLatitude();
-        lotN = location.getLongitude();
     }
 
     private class CellInfoIDListener extends PhoneStateListener {
@@ -453,62 +413,6 @@ public class SecondFragment extends Fragment implements LocationListenerInterfac
         public void onCellInfoChanged(List<CellInfo> cellInfoList) {
             Neiborhood(cellInfoList);
             super.onCellInfoChanged(cellInfoList);
-        }
-    }
-
-    public void WriteLteInfo (){
-        if (Store.isWriteWorking && Store.isWriteNeighbors) {
-            String[] str = new String[]{String.valueOf(latN),
-                    String.valueOf(lotN),
-                    "4G","","",String.valueOf(band),
-                    String.valueOf(EARFCN),
-                    "","",
-                    String.valueOf(PCI),"","",
-                    String.valueOf(rssi),
-                    String.valueOf(rsrp)
-                    ,String.valueOf(rsrq),
-                    String.valueOf(ta)};
-            Store.writerN.writeNext(str, false);
-        }
-    }
-
-    private void WriteUMTSInfo()
-    {
-        if (Store.isWriteWorking && Store.isWriteNeighbors) {
-            String[] str = new String[]{String.valueOf(latN),
-                    String.valueOf(lotN),
-                    "3G","","","","",
-                    String.valueOf(UARFCN),
-                    "","",
-                    String.valueOf(PSC),"",
-                    "",
-                    String.valueOf(ss)
-                    ,"",
-                    ""};
-            Store.writerN.writeNext(str, false);
-        }
-    }
-
-    private void WriteGSMInfo()
-    {
-        if (Store.isWriteWorking && Store.isWriteNeighbors) {
-            String[] str = new String[0];
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                str = new String[]{String.valueOf(latN),
-                        String.valueOf(lotN),
-                        "2G",
-                        String.valueOf(LAC),
-                        String.valueOf(CELLID),
-                        "",
-                        "",
-                        "",
-                        String.valueOf( ARFCN),
-                        "","",
-                        String.valueOf(BSIC),
-                        String.valueOf( rssi),
-                        "","",""};
-            }
-            Store.writerN.writeNext(str, false);
         }
     }
 }

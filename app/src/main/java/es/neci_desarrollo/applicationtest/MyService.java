@@ -1,16 +1,12 @@
 package es.neci_desarrollo.applicationtest;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
@@ -32,12 +28,8 @@ import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.widget.Button;
 
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
-import androidx.core.content.ContextCompat;
 
 import com.opencsv.CSVWriter;
 
@@ -48,13 +40,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.stream.Collectors;
 
-import es.neci_desarrollo.applicationtest.Fragments.HomeFragment;
-import es.neci_desarrollo.applicationtest.R;
-import es.neci_desarrollo.applicationtest.Store;
 import es.neci_desarrollo.applicationtest.location.LocationListenerInterface;
 import es.neci_desarrollo.applicationtest.location.MyLocationListener;
 import es.neci_desarrollo.applicationtest.speed.ITrafficSpeedListener;
@@ -67,21 +54,26 @@ public class MyService extends Service implements LocationListenerInterface {
     public static final String CHANNEL_ID = "AAAA";
     private static LocationManager locationManager;
     private MyLocationListener myLocationListener;
+
     private TelephonyManager tm;
     SignalStrengthListener signalStrengthListener;
     CellInfoIDListener cellInfoIDListener;
     BWListener bwListener;
     CallList callList;
     private CSVWriter writer;
+    private CSVWriter writerN;
     private Double lat,lot;
 
 
-    int rssi;    int rsrq;    int rsrp;    int snr;    int Cqi;    int dBm;    int Level;    int AsuLevel;    int ta;    int EcNo;
-    int ber;    int eNB;    int TAC;    int band;    int EARFCN;    int CELLID;    int PCI;    int LAC;
-    int UARFCN;    int PSC;    int RNCID;    int ARFCN;    int BSIC;    int CQi;    int TAa;
+    int rssi,rssi_N;    int rsrq,rsrq_N;    int rsrp,rsrp_N;    int snr;    int Cqi;    int dBm;    int Level;    int AsuLevel;
+    int ta,ta_N;    int EcNo;
+    int ber;    int eNB;    int TAC,LAC_N;    int band,band_N;    int EARFCN,EARFCN_N;    int CELLID,CELLID_N;
+    int PCI,PCI_N;    int LAC;
+    int UARFCN,UARFCN_N;    int PSC,PSC_N;    int RNCID;    int ARFCN,ARFCN_N;    int BSIC,BSIC_N;
+    int CQi;    int TAa;
     int BERT;    int BandPlus;
-    double FUL; int ss;
-    double FDL;
+    Double FUL; int ss,ss_N;
+    Double FDL;
     int [] convertedBands = new int[]{0};
     int [] bandwidnths = new int[]{0};
     String Tech = "";
@@ -93,9 +85,11 @@ public class MyService extends Service implements LocationListenerInterface {
     String Mode = "";
     String mnc = "";
     String Operator;
-
+    String LastFileName;
     String nocProjectDirInDownload = "noc-project";
     String csv = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + nocProjectDirInDownload;
+    private Networks currentNetwork = Networks.LTE;
+
     public MyService() {
     }
     @SuppressLint("MissingPermission")
@@ -120,19 +114,46 @@ public class MyService extends Service implements LocationListenerInterface {
             if (cellInfo instanceof CellInfoLte) {
                 CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
                 if (cellInfoLte.isRegistered()) {
+                    currentNetwork = Networks.LTE;
                     WriteLteInfo();
+//                    WriteLteInfoN();
                 }
             }
             if (cellInfo instanceof CellInfoWcdma) {
                 CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
                 if (cellInfoWcdma.isRegistered()) {
+                    currentNetwork = Networks.UMTS;
                     WriteUMTSInfo();
+//                    WriteUMTSInfoN();
                 }
             }
             if (cellInfo instanceof CellInfoGsm) {
                 CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
                 if (cellInfoGsm.isRegistered()) {
+                    currentNetwork = Networks.GSM;
                     WriteGSMInfo();
+//                    WriteGSMInfoN();
+                }
+            }
+        }
+
+        for (CellInfo cellInfo : cellInfoList) {
+            if (cellInfo instanceof CellInfoLte) {
+                CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
+                if (!cellInfoLte.isRegistered() && currentNetwork==Networks.LTE) {
+                    WriteLteInfoN();
+                }
+            }
+            if (cellInfo instanceof CellInfoWcdma) {
+                CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
+                if (!cellInfoWcdma.isRegistered() && currentNetwork==Networks.UMTS) {
+                    WriteUMTSInfoN();
+                }
+            }
+            if (cellInfo instanceof CellInfoGsm) {
+                CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
+                if (!cellInfoGsm.isRegistered() && currentNetwork==Networks.GSM) {
+                    WriteGSMInfoN();
                 }
             }
         }
@@ -166,17 +187,14 @@ public class MyService extends Service implements LocationListenerInterface {
         ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).listen(callList, PhoneStateListener.LISTEN_CALL_STATE);
         List<CellInfo> cellInfoList = tm.getAllCellInfo();
         startCell(cellInfoList);
+        Neiborhood(cellInfoList);
         getLocation();
-        calc();
-        calcUmts();
-        calcArfcn();
-
-
 
         try {
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
             LocalDateTime now = LocalDateTime.now();
-            writer = new CSVWriter(new FileWriter(csv + "/" + dtf.format(now) + "_Main"+Tech+".csv"));
+            this.LastFileName = csv + "/" + dtf.format(now) + "_Main_"+Tech+".csv";
+            writer = new CSVWriter(new FileWriter(this.LastFileName));
             List<String[]> data = new ArrayList<String[]>();
             data.add(new String[]{"lat", "log", "Operator", "Network", "mcc", "mnc","Mode",
                     "TAC/LAC", "CID", "eNB", "Band","Bandwidnths, MHz", "Earfcn",
@@ -187,6 +205,24 @@ public class MyService extends Service implements LocationListenerInterface {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        if (Store.isWriteNeighbors) {
+            try {
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+                LocalDateTime now = LocalDateTime.now();
+                this.LastFileName = csv + "/" + dtf.format(now) + "_Neighbors_"+Tech+".csv";
+                writerN = new CSVWriter(new FileWriter(this.LastFileName));
+//                Store.writerN = new CSVWriter(new FileWriter(csv + "/" + dtf.format(now) + "_Neighbors_"+Tech+".csv"));
+                List<String[]> dataN = new ArrayList<String[]>();
+                dataN.add(new String[]{"lat", "log", "Network",
+                        "TAC/LAC", "CID", "Band", "Earfcn",
+                        "Uarfcn", "Arfcn", "PCI", "PSC",
+                        "BSIC", "RSSI", "RSRP", "RSRQ", "Ta"});
+                writerN.writeAll(dataN);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -195,9 +231,13 @@ public class MyService extends Service implements LocationListenerInterface {
         mTrafficSpeedMeasurer.stopMeasuring();
         try {
             writer.close();
+            if(Store.isWriteNeighbors){
+                writerN.close();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        Store.setLastNameFile(this.LastFileName);
         Log.d("BackG","Destroy");
     }
 
@@ -274,6 +314,7 @@ public class MyService extends Service implements LocationListenerInterface {
         @SuppressLint({"SetTextI18n", "MissingPermission"})
         public void onCellInfoChanged(List<CellInfo> cellInfoList) {
             startCell(cellInfoList);
+            Neiborhood(cellInfoList);
             super.onCellInfoChanged(cellInfoList);
         }
     }
@@ -386,7 +427,6 @@ public class MyService extends Service implements LocationListenerInterface {
             }
         }
         public void onHandoverComplete(Connection connection) {
-
         }
         public void onHandoverFailed(Connection connection, int error) {
             // Handover failed, do something
@@ -394,7 +434,7 @@ public class MyService extends Service implements LocationListenerInterface {
     }
 
     private void calc() {
-        int FDL_low, NDL, NOffs_DL, FUL_low, NUL, NOffs_UL;
+        double FDL_low, NDL, NOffs_DL, FUL_low, NUL, NOffs_UL;
         if (0 <= EARFCN && EARFCN <= 599) {
             NameR = "2100";
             Mode = "FDD";
@@ -491,12 +531,12 @@ public class MyService extends Service implements LocationListenerInterface {
             NameR = "1800";
             Mode = "FDD";
             NDL = EARFCN;
-            FDL_low = (int) 1844.9;
+            FDL_low =  1844.9;
             NOffs_DL = 3800;
             BandPlus = 9;
             FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
-            FUL_low = (int) 1749.9;
+            FUL_low =  1749.9;
             NOffs_UL = 21800;
             FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
@@ -518,12 +558,12 @@ public class MyService extends Service implements LocationListenerInterface {
             NameR = "1500 Lower";
             Mode = "FDD";
             NDL = EARFCN;
-            FDL_low = (int) 1475.9;
+            FDL_low =  1475.9;
             NOffs_DL = 4750;
             BandPlus = 11;
             FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
-            FUL_low = (int) 1427.9;
+            FUL_low =  1427.9;
             NOffs_UL = 22750;
             FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
@@ -622,12 +662,12 @@ public class MyService extends Service implements LocationListenerInterface {
             NameR = "1500 Upper";
             Mode = "FDD";
             NDL = EARFCN;
-            FDL_low = (int) 1495.9;
+            FDL_low = 1495.9;
             NOffs_DL = 6450;
             BandPlus = 21;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
-            FUL_low = (int) 1447.9;
+            FUL_low = 1447.9;
             NOffs_UL = 24450;
             FUL =  (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
@@ -653,7 +693,7 @@ public class MyService extends Service implements LocationListenerInterface {
             BandPlus = 24;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
-            FUL_low = (int) 1626.5;
+            FUL_low = 1626.5;
             NOffs_UL = 25700;
             FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
@@ -736,12 +776,12 @@ public class MyService extends Service implements LocationListenerInterface {
             NameR = "450";
             Mode = "FDD";
             NDL = EARFCN;
-            FDL_low = (int) 462.5;
+            FDL_low = 462.5;
             NOffs_DL = 9870;
             BandPlus = 31;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
-            FUL_low = (int) 452.5;
+            FUL_low = 452.5;
             NOffs_UL = 27760;
             FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
@@ -753,7 +793,7 @@ public class MyService extends Service implements LocationListenerInterface {
             NOffs_DL = 9920;
             BandPlus = 32;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0;
+            FUL = 0.0;
         }
         if (36000 <= EARFCN && EARFCN <= 36199) {
             NameR = "TD 1900";
@@ -763,7 +803,7 @@ public class MyService extends Service implements LocationListenerInterface {
             NOffs_DL = 36000;
             BandPlus = 33;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0;
+            FUL = 0.0;
         }
         if (36200 <= EARFCN && EARFCN <= 36349) {
             NameR = "TD 2000";
@@ -773,7 +813,7 @@ public class MyService extends Service implements LocationListenerInterface {
             NOffs_DL = 36200;
             BandPlus = 34;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0;
+            FUL = 0.0;
         }
         if (36200 <= EARFCN && EARFCN <= 36349) {
             NameR = "TD PCS Lower";
@@ -783,7 +823,7 @@ public class MyService extends Service implements LocationListenerInterface {
             NOffs_DL = 36350;
             BandPlus = 35;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0;
+            FUL = 0.0;
         }
         if (36950 <= EARFCN && EARFCN <= 37549) {
             NameR = "TD PCS Upper";
@@ -793,7 +833,7 @@ public class MyService extends Service implements LocationListenerInterface {
             NOffs_DL = 36950;
             BandPlus = 36;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0;
+            FUL = 0.0;
         }
         if (37550 <= EARFCN && EARFCN <= 37749) {
             NameR = "TD PCS Center gap";
@@ -803,7 +843,7 @@ public class MyService extends Service implements LocationListenerInterface {
             NOffs_DL = 37550;
             BandPlus = 37;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0;
+            FUL = 0.0;
         }
         if (37750 <= EARFCN && EARFCN <= 38249) {
             NameR = "TD 2600";
@@ -813,11 +853,11 @@ public class MyService extends Service implements LocationListenerInterface {
             NOffs_DL = 37750;
             BandPlus = 38;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0;
+            FUL = 0.0;
         }
     }
     private void calcUmts() {
-        int  NDL, NOffs_DL, NUL, NOffs_UL;
+        double  NDL, NOffs_DL, NUL, NOffs_UL;
         if (10562 <= UARFCN && UARFCN <= 10838) {
             NameR = "2100";
             Mode = "FDD";
@@ -939,7 +979,7 @@ public class MyService extends Service implements LocationListenerInterface {
         if (512 <= ARFCN && ARFCN <= 885) {
             NameR = "DCS 1800";
             FUL = 1710.2+0.2*(ARFCN-512);
-            FDL = FUL + 95;
+            FDL = FUL + 95.0;
         }
     }
     public void WriteLteInfo (){
@@ -951,7 +991,7 @@ public class MyService extends Service implements LocationListenerInterface {
             String[] str = new String[]{String.valueOf(lat), String.valueOf(lot),
                     String.valueOf(Operator), "4G", String.valueOf(mcc), String.valueOf(mnc),String.valueOf(Mode),
                     String.valueOf(TAC), String.valueOf(CELLID), String.valueOf(eNB),
-                    (band+" ("+NameR+")"),bandwidth, String.valueOf(EARFCN), "", "",String.valueOf(FUL),String.valueOf(FDL), String.valueOf(PCI)
+                    (band+" ("+NameR+")"),bandwidth, String.valueOf(EARFCN), "", "", String.valueOf(FUL),String.valueOf(FDL), String.valueOf(PCI)
                     , "", "", "", String.valueOf(rssi), String.valueOf(rsrp),
                     String.valueOf(rsrq),
                     String.valueOf(snr), "", "", String.valueOf(CQi), String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(TAa),upStreamSpeed,downStreamSpeed};
@@ -965,7 +1005,8 @@ public class MyService extends Service implements LocationListenerInterface {
                     String.valueOf(lat), String.valueOf(lot), String.valueOf(Operator), "3G",
                     String.valueOf(mcc), String.valueOf(mnc),String.valueOf(Mode),
                     String.valueOf(LAC), String.valueOf(CELLID), "",(BandPlus+" ("+NameR+")"),"","",
-                    String.valueOf(UARFCN), "",String.valueOf(FUL),String.valueOf(FDL), "", String.valueOf(PSC), String.valueOf(RNCID),
+                    String.valueOf(UARFCN), "",
+                    String.valueOf(FUL),String.valueOf(FDL), "", String.valueOf(PSC), String.valueOf(RNCID),
                     "", String.valueOf(ss), "", "",
                     "", String.valueOf(EcNo), "", "",
                     String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), "",String.valueOf(upStreamSpeed),String.valueOf(downStreamSpeed)};
@@ -979,7 +1020,7 @@ public class MyService extends Service implements LocationListenerInterface {
                     String.valueOf(lat), String.valueOf(lot), String.valueOf(Operator), "2G",
                     String.valueOf(mcc), String.valueOf(mnc),"",
                     String.valueOf(LAC), String.valueOf(CELLID), "", NameR, "","",
-                    "", String.valueOf(ARFCN),String.valueOf(FUL),String.valueOf(FDL), "", "",
+                    "", String.valueOf(ARFCN), String.valueOf(FUL),String.valueOf(FDL), "", "",
                     String.valueOf(RNCID), String.valueOf(BSIC), String.valueOf(rssi), "",
                     "", "", "", String.valueOf(BERT), String.valueOf(Cqi), String.valueOf(dBm), String.valueOf(Level),
                     String.valueOf(AsuLevel), String.valueOf(TAa),String.valueOf(upStreamSpeed),String.valueOf(downStreamSpeed)};
@@ -1000,4 +1041,115 @@ public class MyService extends Service implements LocationListenerInterface {
             });
         }
     };
+
+    enum Networks {
+        LTE,
+        UMTS,
+        GSM,
+    }
+    @SuppressLint({"ResourceAsColor", "MissingPermission", "SetTextI18n"})
+    private void Neiborhood(List<CellInfo> cellInfoList) {
+
+        for (CellInfo cellInfo : cellInfoList) {
+            if (cellInfo instanceof CellInfoLte ) {
+                CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
+                if (!cellInfoLte.isRegistered() ) {
+                                                PCI_N = cellInfoLte.getCellIdentity().getPci();
+                        EARFCN_N = cellInfoLte.getCellIdentity().getEarfcn();
+                        band_N = 0;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            int[] bands = cellInfoLte.getCellIdentity().getBands();
+
+                            if (bands.length > 0) {
+                                band_N = bands[0];
+                            }
+                                                    }
+                        rssi_N = cellInfoLte.getCellSignalStrength().getRssi();
+                        rsrp_N = cellInfoLte.getCellSignalStrength().getRsrp();
+                        rsrq_N = cellInfoLte.getCellSignalStrength().getRsrq();
+                        ta_N = cellInfoLte.getCellSignalStrength().getTimingAdvance();
+                                    }
+            }
+            if (cellInfo instanceof CellInfoWcdma) {
+                CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
+                if (cellInfoWcdma.isRegistered() == false) {
+                        PSC_N =cellInfoWcdma.getCellIdentity().getPsc();
+                     UARFCN_N = cellInfoWcdma.getCellIdentity().getUarfcn();
+                   String[] CellSignalStrengthArr = cellInfoWcdma.getCellSignalStrength().toString().split(" ");
+                        ss_N = 0;
+                        if(CellSignalStrengthArr.length>1) {
+                            String[] elem = CellSignalStrengthArr[1].split("=");
+                            if (elem[0].contains("ss")) {
+                                ss_N = Integer.parseInt(elem[1]);
+                            }
+                        }
+                }
+            }
+            if (cellInfo instanceof CellInfoGsm ) {
+                CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
+                if (cellInfoGsm.isRegistered() == false) {
+                        LAC_N = cellInfoGsm.getCellIdentity().getLac();
+                        CELLID_N = (cellInfoGsm.getCellIdentity().getCid());
+                        ARFCN_N = cellInfoGsm.getCellIdentity().getArfcn();
+                        BSIC_N = cellInfoGsm.getCellIdentity().getBsic();
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            rssi_N = cellInfoGsm.getCellSignalStrength().getRssi();
+                        }
+                }
+            }
+        }
+    }
+
+
+    public void WriteLteInfoN () {
+        if (writerN != null) {
+            String[] str = new String[]{String.valueOf(lat),
+                    String.valueOf(lot),
+                    "4G", "", "", String.valueOf(band_N),
+                    String.valueOf(EARFCN_N),
+                    "", "",
+                    String.valueOf(PCI_N), "", "",
+                    String.valueOf(rssi_N),
+                    String.valueOf(rsrp_N)
+                    , String.valueOf(rsrq_N),
+                    String.valueOf(ta_N)};
+            writerN.writeNext(str, false);
+        }
+    }
+
+    private void WriteUMTSInfoN(){
+        if (writerN != null) {
+            String[] str = new String[]{String.valueOf(lat),
+                    String.valueOf(lot),
+                    "3G","","","","",
+                    String.valueOf(UARFCN_N),
+                    "","",
+                    String.valueOf(PSC_N),"",
+                    "",
+                    String.valueOf(ss_N)
+                    ,"",
+                    ""};
+            writerN.writeNext(str, false);
+        }
+    }
+    private void WriteGSMInfoN()
+    {
+        if (writerN != null) {
+            String[] str = new String[]{String.valueOf(lat),
+                    String.valueOf(lot),
+                    "2G",
+                    String.valueOf(LAC_N),
+                    String.valueOf(CELLID_N),
+                    "",
+                    "",
+                    "",
+                    String.valueOf( ARFCN_N),
+                    "","",
+                    String.valueOf(BSIC_N),
+                    String.valueOf( rssi_N),
+                    "","",""};
+            writerN.writeNext(str, false);
+        }
+
+    }
 }

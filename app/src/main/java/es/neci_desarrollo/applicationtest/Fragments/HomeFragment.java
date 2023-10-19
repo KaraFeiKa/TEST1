@@ -4,24 +4,13 @@ import static android.content.Context.CONNECTIVITY_SERVICE;
 import static android.content.Context.LOCATION_SERVICE;
 import static android.content.Context.TELEPHONY_SERVICE;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
-import android.net.NetworkCapabilities;
 import android.os.Build;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-
 import android.os.Environment;
 import android.telecom.Connection;
 import android.telephony.CellInfo;
@@ -43,6 +32,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
 import com.opencsv.CSVWriter;
 
 import java.io.File;
@@ -50,17 +43,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import es.neci_desarrollo.applicationtest.MyService;
 import es.neci_desarrollo.applicationtest.R;
+import es.neci_desarrollo.applicationtest.Store;
 import es.neci_desarrollo.applicationtest.location.LocationListenerInterface;
 import es.neci_desarrollo.applicationtest.location.MyLocationListener;
-import es.neci_desarrollo.applicationtest.Store;
-import es.neci_desarrollo.applicationtest.MyService;
 import es.neci_desarrollo.applicationtest.speed.ITrafficSpeedListener;
 import es.neci_desarrollo.applicationtest.speed.TrafficSpeedMeasurer;
 import es.neci_desarrollo.applicationtest.speed.Utils;
 
 
 public class HomeFragment extends Fragment implements LocationListenerInterface {
+
     private static LocationManager locationManager;
     private static final boolean SHOW_SPEED_IN_BITS = false;
 
@@ -78,6 +72,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
             lac_tac, cid, band_pci_psc, TA, OPerator, cqi_dBm, asulevel, level, enb_rnc_bsic, ul_dl, mode_name,speed;
 //    Button LogStart;
 Button backk;
+
 Boolean isWriteInBackground=Store.isWriteWorkingBackground;
 
     double lat, lot = 0;
@@ -85,8 +80,12 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
     int ber;    int eNB;    int TAC;    int band;    int EARFCN;    int CELLID;    int PCI;    int LAC;
     int UARFCN;    int PSC;    int RNCID;    int ARFCN;    int BSIC;    int CQi;    int TAa; double UpLinkSpeed; double DownLinkSpeed;
     int BERT;    int BandPlus;
-    double FUL; int ss;
-    double FDL;
+    Double FUL; int ss;
+    Double FDL;
+    String upStreamSpeed;
+    String downStreamSpeed;
+   double upStreamSpeedDouble;
+   double downStreamSpeedDouble;
     int [] convertedBands = new int[]{0};
     int [] bandwidnths = new int[]{0};
     String call = "";
@@ -107,14 +106,9 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
     }
 
     @Override
+    @SuppressLint({"SetTextI18n", "MissingPermission"})
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-
         super.onViewCreated(view, savedInstanceState);
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.MODIFY_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.MODIFY_PHONE_STATE}, 100);
-        }
         mTrafficSpeedMeasurer = new TrafficSpeedMeasurer(TrafficSpeedMeasurer.TrafficType.MOBILE);
         mTrafficSpeedMeasurer.startMeasuring();
         tm = (TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE);
@@ -132,10 +126,6 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
         ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(callList, PhoneStateListener.LISTEN_CALL_STATE);
           List<CellInfo> cellInfoList = tm.getAllCellInfo();
         startCell(cellInfoList);
-        calc();
-        calcUmts();
-        calcArfcn();
-
 
         try {
             Log.d("public directory", csv);
@@ -173,20 +163,8 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
 
             }
         });
+
     }
-
-
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(getContext(), Manifest.permission.MODIFY_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.MODIFY_PHONE_STATE}, 100);
-        }
-        super.onCreate(savedInstanceState);
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -211,13 +189,13 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
         text = view.findViewById(R.id.text);
         speed = view.findViewById(R.id.Speed);
         backk = view.findViewById(R.id.button2);
+
         String bname = "Начать запись";
         int color =(0xFF00FF00);
         if(Store.isWriteWorkingBackground || isWriteInBackground){
             bname ="Остановить запись";
             color = (0xFFFF0000);
             text.setText("Идет запись");
-
         }
         backk.setBackgroundColor(color);
         backk.setText(bname);
@@ -237,19 +215,15 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
     private String DecToHex(int dec) {
         return String.format("%x", dec);
     }
-
     public int HexToDec(String hex) {
         return Integer.parseInt(hex, 16);
     }
-
-
-
     @SuppressLint("MissingPermission")
     public static void updateRangeLocation() {
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, Store.range, myLocationListener);
     }
     private void calc() {
-        int FDL_low, NDL, NOffs_DL, FUL_low, NUL, NOffs_UL;
+        double FDL_low, NDL, NOffs_DL, FUL_low, NUL, NOffs_UL;
         if (0 <= EARFCN && EARFCN <= 599) {
             NameR = "2100";
             Mode = "FDD";
@@ -346,12 +320,12 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             NameR = "1800";
             Mode = "FDD";
             NDL = EARFCN;
-            FDL_low = (int) 1844.9;
+            FDL_low =  1844.9;
             NOffs_DL = 3800;
             BandPlus = 9;
             FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
-            FUL_low = (int) 1749.9;
+            FUL_low =  1749.9;
             NOffs_UL = 21800;
             FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
@@ -373,12 +347,12 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             NameR = "1500 Lower";
             Mode = "FDD";
             NDL = EARFCN;
-            FDL_low = (int) 1475.9;
+            FDL_low =  1475.9;
             NOffs_DL = 4750;
             BandPlus = 11;
             FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
-            FUL_low = (int) 1427.9;
+            FUL_low =  1427.9;
             NOffs_UL = 22750;
             FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
@@ -477,12 +451,12 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             NameR = "1500 Upper";
             Mode = "FDD";
             NDL = EARFCN;
-            FDL_low = (int) 1495.9;
+            FDL_low = 1495.9;
             NOffs_DL = 6450;
             BandPlus = 21;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
-            FUL_low = (int) 1447.9;
+            FUL_low = 1447.9;
             NOffs_UL = 24450;
             FUL =  (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
@@ -508,7 +482,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             BandPlus = 24;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
-            FUL_low = (int) 1626.5;
+            FUL_low = 1626.5;
             NOffs_UL = 25700;
             FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
@@ -591,12 +565,12 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             NameR = "450";
             Mode = "FDD";
             NDL = EARFCN;
-            FDL_low = (int) 462.5;
+            FDL_low = 462.5;
             NOffs_DL = 9870;
             BandPlus = 31;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
             NUL = EARFCN + 18000;
-            FUL_low = (int) 452.5;
+            FUL_low = 452.5;
             NOffs_UL = 27760;
             FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
@@ -608,7 +582,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             NOffs_DL = 9920;
             BandPlus = 32;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0;
+            FUL = 0.0;
         }
         if (36000 <= EARFCN && EARFCN <= 36199) {
             NameR = "TD 1900";
@@ -618,7 +592,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             NOffs_DL = 36000;
             BandPlus = 33;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0;
+            FUL = 0.0;
         }
         if (36200 <= EARFCN && EARFCN <= 36349) {
             NameR = "TD 2000";
@@ -628,7 +602,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             NOffs_DL = 36200;
             BandPlus = 34;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0;
+            FUL = 0.0;
         }
         if (36200 <= EARFCN && EARFCN <= 36349) {
             NameR = "TD PCS Lower";
@@ -638,7 +612,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             NOffs_DL = 36350;
             BandPlus = 35;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0;
+            FUL = 0.0;
         }
         if (36950 <= EARFCN && EARFCN <= 37549) {
             NameR = "TD PCS Upper";
@@ -648,7 +622,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             NOffs_DL = 36950;
             BandPlus = 36;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0;
+            FUL = 0.0;
         }
         if (37550 <= EARFCN && EARFCN <= 37749) {
             NameR = "TD PCS Center gap";
@@ -658,7 +632,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             NOffs_DL = 37550;
             BandPlus = 37;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0;
+            FUL = 0.0;
         }
         if (37750 <= EARFCN && EARFCN <= 38249) {
             NameR = "TD 2600";
@@ -668,11 +642,11 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             NOffs_DL = 37750;
             BandPlus = 38;
             FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0;
+            FUL = 0.0;
         }
     }
     private void calcUmts() {
-        int  NDL, NOffs_DL, NUL, NOffs_UL;
+        double  NDL, NOffs_DL, NUL, NOffs_UL;
         if (10562 <= UARFCN && UARFCN <= 10838) {
             NameR = "2100";
             Mode = "FDD";
@@ -807,8 +781,6 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
 
         }
     }
-
-
  private class CallList extends PhoneStateListener
  {
 
@@ -826,6 +798,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
                  call = "OFFHOOK";
                  break;
          }
+         TA.setText("TA:   " + (TAa) + "  RRC:  " + call);
      }
 
      public void onHandoverComplete(Connection connection) {
@@ -835,8 +808,6 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
          // Handover failed, do something
      }
  }
-
-
     @SuppressLint({"SetTextI18n", "MissingPermission"})
     private void startCell(List<CellInfo> cellInfoList) {
         for (CellInfo cellInfo : cellInfoList) {
@@ -957,6 +928,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             super.onCellInfoChanged(cellInfoList);
         }
     }
+
     private class SignalStrengthListener extends PhoneStateListener {
         @SuppressLint({"SetTextI18n", "MissingPermission"})
         @Override
@@ -1063,36 +1035,62 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
         latitude_res.setText("Широта:   " + lat);
         longitude_res.setText("Долгота:   " + lot);
     }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
         mTrafficSpeedMeasurer.stopMeasuring();
-    }
-
+        try{
+            if(signalStrengthListener != null){tm.listen(signalStrengthListener, SignalStrengthListener.LISTEN_NONE);}
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        try{
+            if(cellInfoIDListener != null){tm.listen(cellInfoIDListener, CellInfoIDListener.LISTEN_NONE);}
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        try{
+            if(callList != null){tm.listen(callList, CellInfoIDListener.LISTEN_NONE);}
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+            }
     @Override
     public void onPause() {
         super.onPause();
         mTrafficSpeedMeasurer.removeListener(mStreamSpeedListener);
+        try{
+            if(signalStrengthListener != null){tm.listen(signalStrengthListener, SignalStrengthListener.LISTEN_NONE);}
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        try{
+            if(cellInfoIDListener != null){tm.listen(cellInfoIDListener, CellInfoIDListener.LISTEN_NONE);}
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        try{
+            if(callList != null){tm.listen(callList, CellInfoIDListener.LISTEN_NONE);}
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
-
     @Override
     public void onResume() {
         super.onResume();
         mTrafficSpeedMeasurer.registerListener(mStreamSpeedListener);
+
     }
-
-
     private ITrafficSpeedListener mStreamSpeedListener = new ITrafficSpeedListener() {
-
         @Override
         public void onTrafficSpeedMeasured(final double upStream, final double downStream) {
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    String upStreamSpeed = Utils.parseSpeed(upStream, SHOW_SPEED_IN_BITS);
-                    String downStreamSpeed = Utils.parseSpeed(downStream, SHOW_SPEED_IN_BITS);
+                    upStreamSpeed = Utils.parseSpeed(upStream, SHOW_SPEED_IN_BITS);
+                    downStreamSpeed = Utils.parseSpeed(downStream, SHOW_SPEED_IN_BITS);
                     speed.setText("UL:  " + upStreamSpeed + "   DL:   " + downStreamSpeed);
+
                 }
             });
         }

@@ -18,7 +18,9 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        switch (position)
+//        Store.selectedTab = position;
+
+                switch (position)
         {
             case 0: return new HomeFragment(this.tm);
             case 1: return new SecondFragment(this.tm);

@@ -23,10 +23,16 @@
             tools:ignore="UseSwitchCompatOrMaterialXml" />
 
         <TextView
-            android:id="@+id/Name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Настройка точности:"
+            android:textColor="@color/white"
+            android:textSize="26sp" />
+
+
+        <TextView
+            android:id="@+id/seekBarValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:textColor="@color/white"
             android:textSize="20sp" />
 
@@ -38,13 +44,80 @@
             android:max="15"
             android:min="1"
             android:progress="7" />
+
         <TextView
-            android:id="@+id/seekBarValue"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/white"
             android:textSize="26sp" />
 
+
+        <TextView
+            android:id="@+id/Login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Логин:"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
+        <EditText
+            android:id="@+id/Login_write"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="26"
+            android:inputType="text" />
+        <TextView
+            android:id="@+id/Pass"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Пароль:"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
+                <EditText
+            android:id="@+id/Pass_Write"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="26"
+            android:inputType="textPassword" />
+
+        <Button
+            android:id="@+id/button3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Авторизация " />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textSize="26sp" />
+
+        <Button
+            android:id="@+id/openAlertDialogButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Выбор файлов"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Отправить на сервер" />
+        <TextView
+            android:id="@+id/text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="25sp" />
+
+        <TextView
+            android:id="@+id/selectedItemPreview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:textColor="@android:color/black"
+            android:textSize="18sp" />
 
 
     </LinearLayout>
