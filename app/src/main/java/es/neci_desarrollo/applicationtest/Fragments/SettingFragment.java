@@ -73,7 +73,7 @@ public class SettingFragment extends Fragment {
         Net.setVisibility(Store.isAuth ? View.VISIBLE: View.INVISIBLE);
         ch.setVisibility(Store.isAuth ? View.VISIBLE: View.INVISIBLE);
         textView = view.findViewById(R.id.seekBarValue);
-        textView.setText("Настройка точности: "+Store.range);
+        textView.setText("Настройка точности: "+Store.range+"  (м)");
         login.setText(String.valueOf(Store.LastName));
         pass.setText(String.valueOf(Store.Pass));
     button3.setText(Store.isAuth ? "Успешная авторизация": "Авторизация");
@@ -180,7 +180,7 @@ public class SettingFragment extends Fragment {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                textView.setText("Настройка точности: "+seekBar.getProgress());
+                textView.setText("Настройка точности: "+seekBar.getProgress()+"  (м)");
             }
 
             @Override

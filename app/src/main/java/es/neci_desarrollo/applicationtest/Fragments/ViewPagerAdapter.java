@@ -18,7 +18,6 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-//        Store.selectedTab = position;
 
                 switch (position)
         {
