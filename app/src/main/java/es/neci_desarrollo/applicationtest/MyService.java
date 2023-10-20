@@ -116,7 +116,6 @@ public class MyService extends Service implements LocationListenerInterface {
                 if (cellInfoLte.isRegistered()) {
                     currentNetwork = Networks.LTE;
                     WriteLteInfo();
-//                    WriteLteInfoN();
                 }
             }
             if (cellInfo instanceof CellInfoWcdma) {
@@ -124,7 +123,6 @@ public class MyService extends Service implements LocationListenerInterface {
                 if (cellInfoWcdma.isRegistered()) {
                     currentNetwork = Networks.UMTS;
                     WriteUMTSInfo();
-//                    WriteUMTSInfoN();
                 }
             }
             if (cellInfo instanceof CellInfoGsm) {
@@ -132,7 +130,6 @@ public class MyService extends Service implements LocationListenerInterface {
                 if (cellInfoGsm.isRegistered()) {
                     currentNetwork = Networks.GSM;
                     WriteGSMInfo();
-//                    WriteGSMInfoN();
                 }
             }
         }
@@ -1069,10 +1066,11 @@ public class MyService extends Service implements LocationListenerInterface {
                         rsrq_N = cellInfoLte.getCellSignalStrength().getRsrq();
                         ta_N = cellInfoLte.getCellSignalStrength().getTimingAdvance();
                                     }
+
             }
             if (cellInfo instanceof CellInfoWcdma) {
                 CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
-                if (cellInfoWcdma.isRegistered() == false) {
+                if (!cellInfoWcdma.isRegistered()) {
                         PSC_N =cellInfoWcdma.getCellIdentity().getPsc();
                      UARFCN_N = cellInfoWcdma.getCellIdentity().getUarfcn();
                    String[] CellSignalStrengthArr = cellInfoWcdma.getCellSignalStrength().toString().split(" ");
@@ -1084,10 +1082,11 @@ public class MyService extends Service implements LocationListenerInterface {
                             }
                         }
                 }
+
             }
             if (cellInfo instanceof CellInfoGsm ) {
                 CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
-                if (cellInfoGsm.isRegistered() == false) {
+                if (!cellInfoGsm.isRegistered()) {
                         LAC_N = cellInfoGsm.getCellIdentity().getLac();
                         CELLID_N = (cellInfoGsm.getCellIdentity().getCid());
                         ARFCN_N = cellInfoGsm.getCellIdentity().getArfcn();
@@ -1096,6 +1095,7 @@ public class MyService extends Service implements LocationListenerInterface {
                             rssi_N = cellInfoGsm.getCellSignalStrength().getRssi();
                         }
                 }
+
             }
         }
     }

@@ -100,13 +100,6 @@ public class SettingFragment extends Fragment {
 
                 AsyncHttpClient client = new AsyncHttpClient();
                 RequestParams params = new RequestParams();
-//                File file = new File(Store.LastNameFile);
-//                Log.d("Check File",file.toString());
-//                try {
-//                    params.put("main_cell", file);
-//                } catch (FileNotFoundException e) {
-//                    e.printStackTrace();
-//                }
                 client.setBasicAuth(Store.LastName, Store.Pass);
                 client.post(url, params, new AsyncHttpResponseHandler() {
                     @Override
@@ -151,6 +144,7 @@ public class SettingFragment extends Fragment {
                 AsyncHttpClient client = new AsyncHttpClient();
                 RequestParams params = new RequestParams();
                 File file = new File(Store.LastNameFile);
+                Log.d("Chekc file",file.toString());
                 try {
                     params.put("main_cell", file);
 //                    params.put("main_cell", file2);
@@ -212,25 +206,11 @@ public class SettingFragment extends Fragment {
         String model = Build.MODEL;
         Log.d("Man","Model"+manufacturer+"  "+model);
 
-        if (model.toLowerCase().startsWith(manufacturer.toLowerCase())) {
-            return capitalize(model);
-        } else {
-            return capitalize(manufacturer) + " " + model;
-        }
+        return manufacturer;
     }
 
 
-    private String capitalize(String s) {
-        if (s == null || s.length() == 0) {
-            return "";
-        }
-        char first = s.charAt(0);
-        if (Character.isUpperCase(first)) {
-            return s;
-        } else {
-            return Character.toUpperCase(first) + s.substring(1);
-        }
-    }
+
 
 
 
@@ -255,16 +235,19 @@ public class SettingFragment extends Fragment {
                     uri = data.getClipData().getItemAt(i).getUri();
                     tempstring = uri.getPath() + "\n";
                     fileGlob = new File(tempstring);
-                    Log.d("Check",uri.getPath().toString());
-
                 }
                 selectedItemPreview.setText(fileGlob.getName());
             }
             else {
                 Uri uri = data.getData();
                 selectedItemPreview.setText(uri.getPath());
+                fileGlob = new File(uri.getPath());
+
             }
         }
+        Log.d("Check",fileGlob.toString());
     }
+
+
 
 }

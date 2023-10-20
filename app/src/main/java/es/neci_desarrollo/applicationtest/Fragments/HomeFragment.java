@@ -36,8 +36,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.opencsv.CSVWriter;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -84,8 +82,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
     Double FDL;
     String upStreamSpeed;
     String downStreamSpeed;
-   double upStreamSpeedDouble;
-   double downStreamSpeedDouble;
+
     int [] convertedBands = new int[]{0};
     int [] bandwidnths = new int[]{0};
     String call = "";
@@ -94,11 +91,6 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
     String Mode = "";
     String mnc = "";
     String Operator;
-    CSVWriter writer = null;
-
-
-    private boolean isNeedWrite = false;
-
 
 
     public HomeFragment(TelephonyManager tm) {
@@ -814,6 +806,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
                     if (cellInfo instanceof CellInfoLte) {
                         CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
                         if (cellInfoLte.isRegistered()) {
+                            Log.d("Check LTE Cell",((CellInfoLte) cellInfo).getCellSignalStrength().toString());
                             calc();
                             mcc = cellInfoLte.getCellIdentity().getMccString();
                             mnc = cellInfoLte.getCellIdentity().getMncString();
@@ -937,6 +930,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             List<CellSignalStrength> strengthAmplitude = signalStrength.getCellSignalStrengths();
             for (CellSignalStrength cellSignalStrength : strengthAmplitude) {
                         if (cellSignalStrength instanceof CellSignalStrengthLte) {
+                            Log.d("Check LTE SIGN",((CellSignalStrengthLte) cellSignalStrength).toString() );
                             snr = ((CellSignalStrengthLte) cellSignalStrength).getRssnr();
                             rssi = ((CellSignalStrengthLte) cellSignalStrength).getRssi();
                             rsrp = ((CellSignalStrengthLte) cellSignalStrength).getRsrp();
@@ -1039,41 +1033,11 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
     public void onDestroy() {
         super.onDestroy();
         mTrafficSpeedMeasurer.stopMeasuring();
-        try{
-            if(signalStrengthListener != null){tm.listen(signalStrengthListener, SignalStrengthListener.LISTEN_NONE);}
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        try{
-            if(cellInfoIDListener != null){tm.listen(cellInfoIDListener, CellInfoIDListener.LISTEN_NONE);}
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        try{
-            if(callList != null){tm.listen(callList, CellInfoIDListener.LISTEN_NONE);}
-        }catch(Exception e){
-            e.printStackTrace();
-        }
             }
     @Override
     public void onPause() {
         super.onPause();
         mTrafficSpeedMeasurer.removeListener(mStreamSpeedListener);
-        try{
-            if(signalStrengthListener != null){tm.listen(signalStrengthListener, SignalStrengthListener.LISTEN_NONE);}
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        try{
-            if(cellInfoIDListener != null){tm.listen(cellInfoIDListener, CellInfoIDListener.LISTEN_NONE);}
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        try{
-            if(callList != null){tm.listen(callList, CellInfoIDListener.LISTEN_NONE);}
-        }catch(Exception e){
-            e.printStackTrace();
-        }
     }
     @Override
     public void onResume() {
