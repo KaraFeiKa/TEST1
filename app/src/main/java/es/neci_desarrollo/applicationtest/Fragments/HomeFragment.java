@@ -60,10 +60,10 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     String nocProjectDirInDownload = "noc-project";
     String csv = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + nocProjectDirInDownload;
     private TelephonyManager tm;
-    SignalStrengthListener signalStrengthListener;
-    CellInfoIDListener cellInfoIDListener;
-    BWListener bwListener;
-    CallList callList;
+    SignalStrengthListenerHome signalStrengthListenerHome;
+    CellInfoIDListenerHome cellInfoIDListenerHome;
+    BWListenerHome bwListenerHome;
+    CallListHome callListHome;
 
     private static MyLocationListener myLocationListener;
     TextView latitude_res, longitude_res, Mnc_Mcc, RSSI_RSRP, RSRQ_SNR_ECNO, text, earfcn_uarfcn_aerfcn,
@@ -74,12 +74,12 @@ Button backk;
 Boolean isWriteInBackground=Store.isWriteWorkingBackground;
 
     double lat, lot = 0;
-    int rssi;    int rsrq;    int rsrp;    int snr;    int Cqi;    int dBm;    int Level;    int AsuLevel;    int ta;    int EcNo;
-    int ber;    int eNB;    int TAC;    int band;    int EARFCN;    int CELLID;    int PCI;    int LAC;
-    int UARFCN;    int PSC;    int RNCID;    int ARFCN;    int BSIC;    int CQi;    int TAa; double UpLinkSpeed; double DownLinkSpeed;
-    int BERT;    int BandPlus;
-    Double FUL; int ss;
-    Double FDL;
+    int rssiHome;    int rsrqHome;    int rsrpHome;    int snrHome;    int CqiHome;    int dBmHome;    int LevelHome;    int AsuLevelHome;    int taHome;    int EcNoHome;
+    int berHome;    int eNBHome;    int TACHome;    int bandHome;    int EARFCNHome;    int CELLIDHome;    int PCIHome;    int LACHome;
+    int UARFCNHome;    int PSCHome;    int RNCIDHome;    int ARFCNHome;    int BSICHome;    int CQiHome;    int TAaHome;
+    int BERTHome;    int BandPlusHome;
+    Double FULHome; int ssHome;
+    Double FDLHome;
     String upStreamSpeed;
     String downStreamSpeed;
 
@@ -108,14 +108,14 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
         myLocationListener.setLocationListenerInterface(this);
         locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
         getLocation();
-        cellInfoIDListener = new CellInfoIDListener();
-        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListener, CellInfoIDListener.LISTEN_CELL_INFO);
-        signalStrengthListener = new SignalStrengthListener();
-        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(signalStrengthListener, SignalStrengthListener.LISTEN_SIGNAL_STRENGTHS);
-        bwListener = new BWListener();
-        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(bwListener, PhoneStateListener.LISTEN_SERVICE_STATE);
-        callList = new CallList();
-        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(callList, PhoneStateListener.LISTEN_CALL_STATE);
+        cellInfoIDListenerHome = new CellInfoIDListenerHome();
+        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListenerHome, CellInfoIDListenerHome.LISTEN_CELL_INFO);
+        signalStrengthListenerHome = new SignalStrengthListenerHome();
+        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(signalStrengthListenerHome, SignalStrengthListenerHome.LISTEN_SIGNAL_STRENGTHS);
+        bwListenerHome = new BWListenerHome();
+        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(bwListenerHome, PhoneStateListener.LISTEN_SERVICE_STATE);
+        callListHome = new CallListHome();
+        ((TelephonyManager) getActivity().getSystemService(TELEPHONY_SERVICE)).listen(callListHome, PhoneStateListener.LISTEN_CALL_STATE);
           List<CellInfo> cellInfoList = tm.getAllCellInfo();
         startCell(cellInfoList);
 
@@ -216,551 +216,550 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
     }
     private void calc() {
         double FDL_low, NDL, NOffs_DL, FUL_low, NUL, NOffs_UL;
-        if (0 <= EARFCN && EARFCN <= 599) {
+        if (0 <= EARFCNHome && EARFCNHome <= 599) {
             NameR = "2100";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 2110;
             NOffs_DL = 0;
-            BandPlus = 1;
-            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 1;
+            FDLHome = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 1920;
             NOffs_UL = 18000;
-            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
 
         }
-        if (600 <= EARFCN && EARFCN <= 1199) {
+        if (600 <= EARFCNHome && EARFCNHome <= 1199) {
             NameR = "1900 PCS";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 1930;
             NOffs_DL = 600;
-            BandPlus = 2;
-            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 2;
+            FDLHome = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 1850;
             NOffs_UL = 18600;
-            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (1200 <= EARFCN && EARFCN <= 1949) {
+        if (1200 <= EARFCNHome && EARFCNHome <= 1949) {
             NameR = "1800+";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 1805;
             NOffs_DL = 1200;
-            BandPlus = 3;
-            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 3;
+            FDLHome = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 1710;
             NOffs_UL = 19200;
-            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (1950 <= EARFCN && EARFCN <= 2399) {
+        if (1950 <= EARFCNHome && EARFCNHome <= 2399) {
             NameR = "AWS-1";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 2110;
             NOffs_DL = 1950;
-            BandPlus = 4;
-            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 4;
+            FDLHome = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 1710;
             NOffs_UL = 19950;
-            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (2400 <= EARFCN && EARFCN <= 2649) {
+        if (2400 <= EARFCNHome && EARFCNHome <= 2649) {
             NameR = "850";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 869;
             NOffs_DL = 2400;
-            BandPlus = 5;
-            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 5;
+            FDLHome = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 824;
             NOffs_UL = 20400;
-            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (2750 <= EARFCN && EARFCN <= 3449) {
+        if (2750 <= EARFCNHome && EARFCNHome <= 3449) {
             NameR = "2600";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 2620;
             NOffs_DL = 2750;
-            BandPlus = 7;
-            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 7;
+            FDLHome = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 2500;
             NOffs_UL = 20750;
-            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (3450 <= EARFCN && EARFCN <= 3799) {
+        if (3450 <= EARFCNHome && EARFCNHome <= 3799) {
             NameR = "900 GSM";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 925;
             NOffs_DL = 3450;
-            BandPlus = 8;
-            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 8;
+            FDLHome = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 880;
             NOffs_UL = 21450;
-            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (3800 <= EARFCN && EARFCN <= 4149) {
+        if (3800 <= EARFCNHome && EARFCNHome <= 4149) {
             NameR = "1800";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low =  1844.9;
             NOffs_DL = 3800;
-            BandPlus = 9;
-            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 9;
+            FDLHome = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low =  1749.9;
             NOffs_UL = 21800;
-            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-
-        if (4150 <= EARFCN && EARFCN <= 4749) {
+        if (4150 <= EARFCNHome && EARFCNHome <= 4749) {
             NameR = "AWS-3";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 2110;
             NOffs_DL = 4150;
-            BandPlus = 10;
-            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 10;
+            FDLHome = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 1710;
             NOffs_UL = 22150;
-            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (4750 <= EARFCN && EARFCN <= 4949) {
+        if (4750 <= EARFCNHome && EARFCNHome <= 4949) {
             NameR = "1500 Lower";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low =  1475.9;
             NOffs_DL = 4750;
-            BandPlus = 11;
-            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 11;
+            FDLHome = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low =  1427.9;
             NOffs_UL = 22750;
-            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (5010 <= EARFCN && EARFCN <= 5179) {
+        if (5010 <= EARFCNHome && EARFCNHome <= 5179) {
             NameR = "700 a";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 729;
             NOffs_DL = 5010;
-            BandPlus = 12;
-            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 12;
+            FDLHome = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 699;
             NOffs_UL = 23010;
-            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (5180 <= EARFCN && EARFCN <= 5279) {
+        if (5180 <= EARFCNHome && EARFCNHome <= 5279) {
             NameR = "700 c";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 746;
             NOffs_DL = 5180;
-            BandPlus = 13;
-            FDL = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 13;
+            FDLHome = (double) (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low =  777;
             NOffs_UL = 23180;
-            FUL = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (double) (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (5280 <= EARFCN && EARFCN <= 5379) {
+        if (5280 <= EARFCNHome && EARFCNHome <= 5379) {
             NameR = "700 PS";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 758;
             NOffs_DL = 5280;
-            BandPlus = 14;
-            FDL =  (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 14;
+            FDLHome =  (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 788;
             NOffs_UL = 23280;
-            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (5730 <= EARFCN && EARFCN <= 5849) {
+        if (5730 <= EARFCNHome && EARFCNHome <= 5849) {
             NameR = "700 b";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 734;
             NOffs_DL = 5730;
-            BandPlus = 17;
-            FDL =  (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 17;
+            FDLHome =  (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 704;
             NOffs_UL = 23730;
-            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (5850 <= EARFCN && EARFCN <= 5999) {
+        if (5850 <= EARFCNHome && EARFCNHome <= 5999) {
             NameR = "800 Lower";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 860;
             NOffs_DL = 5850;
-            BandPlus = 18;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 18;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 815;
             NOffs_UL = 23850;
-            FUL =  (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome =  (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (6000 <= EARFCN && EARFCN <= 6149) {
+        if (6000 <= EARFCNHome && EARFCNHome <= 6149) {
             NameR = "800 Upper";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 875;
             NOffs_DL = 6000;
-            BandPlus = 19;
-            FDL =  (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 19;
+            FDLHome =  (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 830;
             NOffs_UL = 24000;
-            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (6150 <= EARFCN && EARFCN <= 6449) {
+        if (6150 <= EARFCNHome && EARFCNHome <= 6449) {
             NameR = "800 DD";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 791;
             NOffs_DL = 6150;
-            BandPlus = 20;
-            FDL =  (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 20;
+            FDLHome =  (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 832;
             NOffs_UL = 24150;
-            FUL =  (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome =  (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (6450 <= EARFCN && EARFCN <= 6599) {
+        if (6450 <= EARFCNHome && EARFCNHome <= 6599) {
             NameR = "1500 Upper";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 1495.9;
             NOffs_DL = 6450;
-            BandPlus = 21;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 21;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome+ 18000;
             FUL_low = 1447.9;
             NOffs_UL = 24450;
-            FUL =  (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome =  (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (6600 <= EARFCN && EARFCN <= 7399) {
+        if (6600 <= EARFCNHome && EARFCNHome <= 7399) {
             NameR = "3500";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 3510;
             NOffs_DL = 6600;
-            BandPlus = 22;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 22;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 3410;
             NOffs_UL = 24600;
-            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (7700 <= EARFCN && EARFCN <= 8039) {
+        if (7700 <= EARFCNHome && EARFCNHome <= 8039) {
             NameR = "1600 L-band";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 1525;
             NOffs_DL = 7700;
-            BandPlus = 24;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 24;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 1626.5;
             NOffs_UL = 25700;
-            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (8040 <= EARFCN && EARFCN <= 8689) {
+        if (8040 <= EARFCNHome && EARFCNHome <= 8689) {
             NameR = "1900+";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 1930;
             NOffs_DL = 8040;
-            BandPlus = 25;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 25;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 1850;
             NOffs_UL = 26040;
-            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (8690 <= EARFCN && EARFCN <= 9039) {
+        if (8690 <= EARFCNHome && EARFCNHome <= 9039) {
             NameR = "850+";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 859;
             NOffs_DL = 8690;
-            BandPlus = 26;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 26;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 814;
             NOffs_UL = 26690;
-            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (9040 <= EARFCN && EARFCN <= 9209) {
+        if (9040 <= EARFCNHome && EARFCNHome <= 9209) {
             NameR = "800 SMR";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 852;
             NOffs_DL = 8690;
-            BandPlus = 27;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 27;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 814;
             NOffs_UL = 26690;
-            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (9210 <= EARFCN && EARFCN <= 9659) {
+        if (9210 <= EARFCNHome && EARFCNHome <= 9659) {
             NameR = "700 APT";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 758;
             NOffs_DL = 9210;
-            BandPlus = 28;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 28;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 703;
             NOffs_UL = 27210;
-            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (9660 <= EARFCN && EARFCN <= 9769) {
+        if (9660 <= EARFCNHome && EARFCNHome <= 9769) {
             NameR = "700 d";
             Mode = "SDL";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 717;
             NOffs_DL = 9660;
-            BandPlus = 29;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            BandPlusHome = 29;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
 
         }
-        if (9770 <= EARFCN && EARFCN <= 9869) {
+        if (9770 <= EARFCNHome && EARFCNHome <= 9869) {
             NameR = "2300 WCS";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 2350;
             NOffs_DL = 9770;
-            BandPlus = 30;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 30;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 2305;
             NOffs_UL = 27660;
-            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (9870 <= EARFCN && EARFCN <= 9919) {
+        if (9870 <= EARFCNHome && EARFCNHome <= 9919) {
             NameR = "450";
             Mode = "FDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 462.5;
             NOffs_DL = 9870;
-            BandPlus = 31;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            NUL = EARFCN + 18000;
+            BandPlusHome = 31;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            NUL = EARFCNHome + 18000;
             FUL_low = 452.5;
             NOffs_UL = 27760;
-            FUL = (FUL_low + 0.1 * (NUL - NOffs_UL));
+            FULHome = (FUL_low + 0.1 * (NUL - NOffs_UL));
         }
-        if (9920 <= EARFCN && EARFCN <= 10359) {
+        if (9920 <= EARFCNHome && EARFCNHome <= 10359) {
             NameR = "1500 L-band";
             Mode = "SDL";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 1452;
             NOffs_DL = 9920;
-            BandPlus = 32;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0.0;
+            BandPlusHome = 32;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FULHome = 0.0;
         }
-        if (36000 <= EARFCN && EARFCN <= 36199) {
+        if (36000 <= EARFCNHome && EARFCNHome <= 36199) {
             NameR = "TD 1900";
             Mode = "TDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 1900;
             NOffs_DL = 36000;
-            BandPlus = 33;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0.0;
+            BandPlusHome = 33;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FULHome = 0.0;
         }
-        if (36200 <= EARFCN && EARFCN <= 36349) {
+        if (36200 <= EARFCNHome && EARFCNHome <= 36349) {
             NameR = "TD 2000";
             Mode = "TDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 2010;
             NOffs_DL = 36200;
-            BandPlus = 34;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0.0;
+            BandPlusHome = 34;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FULHome = 0.0;
         }
-        if (36200 <= EARFCN && EARFCN <= 36349) {
+        if (36200 <= EARFCNHome && EARFCNHome <= 36349) {
             NameR = "TD PCS Lower";
             Mode = "TDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 1850;
             NOffs_DL = 36350;
-            BandPlus = 35;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0.0;
+            BandPlusHome = 35;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FULHome = 0.0;
         }
-        if (36950 <= EARFCN && EARFCN <= 37549) {
+        if (36950 <= EARFCNHome && EARFCNHome <= 37549) {
             NameR = "TD PCS Upper";
             Mode = "TDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 1930;
             NOffs_DL = 36950;
-            BandPlus = 36;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0.0;
+            BandPlusHome = 36;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FULHome = 0.0;
         }
-        if (37550 <= EARFCN && EARFCN <= 37749) {
+        if (37550 <= EARFCNHome && EARFCNHome <= 37749) {
             NameR = "TD PCS Center gap";
             Mode = "TDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 1910;
             NOffs_DL = 37550;
-            BandPlus = 37;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0.0;
+            BandPlusHome = 37;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FULHome = 0.0;
         }
-        if (37750 <= EARFCN && EARFCN <= 38249) {
+        if (37750 <= EARFCNHome && EARFCNHome <= 38249) {
             NameR = "TD 2600";
             Mode = "TDD";
-            NDL = EARFCN;
+            NDL = EARFCNHome;
             FDL_low = 2570;
             NOffs_DL = 37750;
-            BandPlus = 38;
-            FDL = (FDL_low + 0.1 * (NDL - NOffs_DL));
-            FUL = 0.0;
+            BandPlusHome = 38;
+            FDLHome = (FDL_low + 0.1 * (NDL - NOffs_DL));
+            FULHome = 0.0;
         }
     }
     private void calcUmts() {
         double  NDL, NOffs_DL, NUL, NOffs_UL;
-        if (10562 <= UARFCN && UARFCN <= 10838) {
+        if (10562 <= UARFCNHome && UARFCNHome <= 10838) {
             NameR = "2100";
             Mode = "FDD";
-            NDL = UARFCN;
+            NDL = UARFCNHome;
             NOffs_DL = 0;
-            BandPlus = 1;
-            FDL = NOffs_DL+NDL/5;
-            NUL = UARFCN - 950;
+            BandPlusHome = 1;
+            FDLHome = NOffs_DL+NDL/5;
+            NUL = UARFCNHome - 950;
             NOffs_UL = 0;
-            FUL = NOffs_UL+NUL/5;
+            FULHome = NOffs_UL+NUL/5;
 
         }
-        if (9662 <= UARFCN && UARFCN <= 9938) {
+        if (9662 <= UARFCNHome && UARFCNHome <= 9938) {
             NameR = "1900 PCS";
             Mode = "FDD";
-            NDL = UARFCN;
+            NDL = UARFCNHome;
             NOffs_DL = 0;
-            BandPlus = 2;
-            FDL = NOffs_DL+NDL/5;
-            NUL = UARFCN - 400;
+            BandPlusHome = 2;
+            FDLHome = NOffs_DL+NDL/5;
+            NUL = UARFCNHome - 400;
             NOffs_UL = 0;
-            FUL = NOffs_UL+NUL/5;
+            FULHome = NOffs_UL+NUL/5;
         }
-        if (1162 <= UARFCN && UARFCN <= 1513) {
+        if (1162 <= UARFCNHome && UARFCNHome <= 1513) {
             NameR = "1800 DCS";
             Mode = "FDD";
-            NDL = UARFCN;
+            NDL = UARFCNHome;
             NOffs_DL = 1575;
-            BandPlus = 3;
-            FDL = NOffs_DL+NDL/5;
-            NUL = UARFCN - 225;
+            BandPlusHome = 3;
+            FDLHome = NOffs_DL+NDL/5;
+            NUL = UARFCNHome - 225;
             NOffs_UL = 1525;
-            FUL = NOffs_UL+NUL/5;
+            FULHome = NOffs_UL+NUL/5;
         }
-        if (1537 <= UARFCN && UARFCN <= 1738) {
+        if (1537 <= UARFCNHome && UARFCNHome <= 1738) {
             NameR = "AWS-1";
             Mode = "FDD";
-            NDL = UARFCN;
+            NDL = UARFCNHome;
             NOffs_DL = 1805;
-            BandPlus = 4;
-            FDL = NOffs_DL+NDL/5;
-            NUL = UARFCN - 225;
+            BandPlusHome = 4;
+            FDLHome = NOffs_DL+NDL/5;
+            NUL = UARFCNHome - 225;
             NOffs_UL = 1450;
-            FUL = NOffs_UL+NUL/5;
+            FULHome = NOffs_UL+NUL/5;
         }
-        if (4357 <= UARFCN && UARFCN <= 4458) {
+        if (4357 <= UARFCNHome && UARFCNHome <= 4458) {
             NameR = "850";
             Mode = "FDD";
-            NDL = UARFCN;
+            NDL = UARFCNHome;
             NOffs_DL = 0;
-            BandPlus = 5;
-            FDL = NOffs_DL+NDL/5;
-            NUL = UARFCN - 225;
+            BandPlusHome = 5;
+            FDLHome = NOffs_DL+NDL/5;
+            NUL = UARFCNHome - 225;
             NOffs_UL = 0;
-            FUL = NOffs_UL+NUL/5;
+            FULHome = NOffs_UL+NUL/5;
         }
-        if (2237 <= UARFCN && UARFCN <= 2563) {
+        if (2237 <= UARFCNHome && UARFCNHome <= 2563) {
             NameR = "2600";
             Mode = "FDD";
-            NDL = UARFCN;
+            NDL = UARFCNHome;
             NOffs_DL = 2175;
-            BandPlus = 7;
-            FDL = NOffs_DL+NDL/5;
-            NUL = UARFCN - 225;
+            BandPlusHome = 7;
+            FDLHome = NOffs_DL+NDL/5;
+            NUL = UARFCNHome - 225;
             NOffs_UL = 2100;
-            FUL = NOffs_UL+NUL/5;
+            FULHome = NOffs_UL+NUL/5;
         }
-        if (2237 <= UARFCN && UARFCN <= 2563) {
+        if (2237 <= UARFCNHome && UARFCNHome <= 2563) {
             NameR = "900 GSM";
             Mode = "FDD";
-            NDL = UARFCN;
+            NDL = UARFCNHome;
             NOffs_DL = 340;
-            BandPlus = 8;
-            FDL = NOffs_DL+NDL/5;
-            NUL = UARFCN - 225;
+            BandPlusHome = 8;
+            FDLHome = NOffs_DL+NDL/5;
+            NUL = UARFCNHome - 225;
             NOffs_UL = 340;
-            FUL = NOffs_UL+NUL/5;
+            FULHome = NOffs_UL+NUL/5;
         }
-        if (3112 <= UARFCN && UARFCN <= 3388) {
+        if (3112 <= UARFCNHome && UARFCNHome <= 3388) {
             NameR = "AWS-1+";
             Mode = "FDD";
-            NDL = UARFCN;
+            NDL = UARFCNHome;
             NOffs_DL = 1490;
-            BandPlus = 10;
-            FDL = NOffs_DL+NDL/5;
-            NUL = UARFCN - 225;
+            BandPlusHome = 10;
+            FDLHome = NOffs_DL+NDL/5;
+            NUL = UARFCNHome - 225;
             NOffs_UL = 1135;
-            FUL = NOffs_UL+NUL/5;
+            FULHome = NOffs_UL+NUL/5;
         }
-        if (3712 <= UARFCN && UARFCN <= 3787) {
+        if (3712 <= UARFCNHome && UARFCNHome <= 3787) {
             NameR = "1500 Lower";
             Mode = "FDD";
-            NDL = UARFCN;
+            NDL = UARFCNHome;
             NOffs_DL = 736;
-            BandPlus = 11;
-            FDL = NOffs_DL+NDL/5;
-            NUL = UARFCN - 225;
+            BandPlusHome = 11;
+            FDLHome = NOffs_DL+NDL/5;
+            NUL = UARFCNHome - 225;
             NOffs_UL = 733;
-            FUL = NOffs_UL+NUL/5;
+            FULHome = NOffs_UL+NUL/5;
         }
-        if (3842 <= UARFCN && UARFCN <= 3903) {
+        if (3842 <= UARFCNHome && UARFCNHome <= 3903) {
             NameR = "700 a";
             Mode = "FDD";
-            NDL = UARFCN;
+            NDL = UARFCNHome;
             NOffs_DL = -37;
-            BandPlus = 12;
-            FDL = NOffs_DL+NDL/5;
-            NUL = UARFCN - 225;
+            BandPlusHome = 12;
+            FDLHome = NOffs_DL+NDL/5;
+            NUL = UARFCNHome - 225;
             NOffs_UL = -22;
-            FUL = NOffs_UL+NUL/5;
+            FULHome = NOffs_UL+NUL/5;
         }
     }
     private void calcArfcn() {
-        if (0 <= ARFCN && ARFCN <= 124) {
+        if (0 <= ARFCNHome && ARFCNHome <= 124) {
             NameR = "E-GSM";
-            FUL = 890+0.2*ARFCN;
-            FDL = FUL + 45;
+            FULHome = 890+0.2*ARFCNHome;
+            FDLHome = FULHome + 45;
         }
-        if (512 <= ARFCN && ARFCN <= 885) {
+        if (512 <= ARFCNHome && ARFCNHome <= 885) {
             NameR = "DCS 1800";
-            FUL = 1710.2+0.2*(ARFCN-512);
-            FDL = FUL + 95;
+            FULHome = 1710.2+0.2*(ARFCNHome-512);
+            FDLHome = FULHome + 95;
         }
     }
     @SuppressLint("MissingPermission")
@@ -773,7 +772,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
 
         }
     }
- private class CallList extends PhoneStateListener
+ private class CallListHome extends PhoneStateListener
  {
 
      @Override
@@ -790,7 +789,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
                  call = "OFFHOOK";
                  break;
          }
-         TA.setText("TA:   " + (TAa) + "  RRC:  " + call);
+         TA.setText("TA:   " + (TAaHome) + "  RRC:  " + call);
      }
 
      public void onHandoverComplete(Connection connection) {
@@ -806,41 +805,41 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
                     if (cellInfo instanceof CellInfoLte) {
                         CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
                         if (cellInfoLte.isRegistered()) {
-                            Log.d("Check LTE Cell",((CellInfoLte) cellInfo).getCellSignalStrength().toString());
+                            Log.d("Check",cellInfoLte.getCellIdentity().toString());
                             calc();
                             mcc = cellInfoLte.getCellIdentity().getMccString();
                             mnc = cellInfoLte.getCellIdentity().getMncString();
-                            ul_dl.setText("DL:  "+FDL+" МГц    " +"UL:  "+FUL+" МГц");
+                            ul_dl.setText("DL:  "+FDLHome+" МГц    " +"UL:  "+FULHome+" МГц");
                             Mnc_Mcc.setText("MCC: " + mcc + "  MNC: " + mnc);
                             Operator = (String) cellInfoLte.getCellIdentity().getOperatorAlphaLong();
                             OPerator.setText("Оператор:  " + Operator + "  4G");
                             lac_tac.setText("TAC:   " + cellInfoLte.getCellIdentity().getTac());
-                            CELLID = cellInfoLte.getCellIdentity().getCi();
-                            cid.setText("Cell ID:  " + CELLID + "  PCI:  "+PCI);
+                            CELLIDHome = cellInfoLte.getCellIdentity().getCi();
+                            cid.setText("Cell ID:  " + CELLIDHome + "  PCI:  "+PCIHome);
                             earfcn_uarfcn_aerfcn.setText("Earfcn:   " + (cellInfoLte.getCellIdentity().getEarfcn()));
-                            String cellidHex = DecToHex(CELLID);
+                            String cellidHex = DecToHex(CELLIDHome);
                             String eNBHex = cellidHex.substring(0, cellidHex.length() - 2);
-                            eNB = HexToDec(eNBHex);
-                            enb_rnc_bsic.setText("eNB:   " + eNB);
-                            PCI = cellInfoLte.getCellIdentity().getPci();
+                            eNBHome = HexToDec(eNBHex);
+                            enb_rnc_bsic.setText("eNB:   " + eNBHome);
+                            PCIHome = cellInfoLte.getCellIdentity().getPci();
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                 int[] bands = cellInfoLte.getCellIdentity().getBands();
                                 if (bands.length > 0) {
-                                    band = bands[0];
-                                    band_pci_psc.setText("Band:  " + band+ (" ("+NameR+") ")+ "  Режим:  "+Mode);
+                                    bandHome = bands[0];
+                                    band_pci_psc.setText("Band:  " + bandHome+ (" ("+NameR+") ")+ "  Режим:  "+Mode);
                                 }
                                 else
                                 {
-                                    band_pci_psc.setText("Band:  " + BandPlus+(" ("+NameR+") ")+ "  Режим:  "+Mode );
+                                    band_pci_psc.setText("Band:  " + BandPlusHome+(" ("+NameR+") ")+ "  Режим:  "+Mode );
                                 }
                             }
                             else
                             {
-                                band_pci_psc.setText("Band:  " + BandPlus +(" ("+NameR+") ")+ "  Режим:  "+Mode);
+                                band_pci_psc.setText("Band:  " + BandPlusHome +(" ("+NameR+") ")+ "  Режим:  "+Mode);
                             }
 
-                            TAC = cellInfoLte.getCellIdentity().getTac();
-                            EARFCN = cellInfoLte.getCellIdentity().getEarfcn();
+                            TACHome = cellInfoLte.getCellIdentity().getTac();
+                            EARFCNHome = cellInfoLte.getCellIdentity().getEarfcn();
                         }
 
                     }
@@ -854,45 +853,45 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
                             Operator = (String) cellInfoWcdma.getCellIdentity().getOperatorAlphaLong();
                             OPerator.setText("Оператор:  " + Operator + " 3G");
                             lac_tac.setText("LAC:   " + cellInfoWcdma.getCellIdentity().getLac());
-                            CELLID = cellInfoWcdma.getCellIdentity().getCid();
-                            cid.setText("Cell ID:  " + CELLID);
+                            CELLIDHome = cellInfoWcdma.getCellIdentity().getCid();
+                            cid.setText("Cell ID:  " + CELLIDHome);
                             earfcn_uarfcn_aerfcn.setText("Uarfcn:   " + (cellInfoWcdma.getCellIdentity().getUarfcn()));
-                            RNCID = CELLID / 65536;
-                            enb_rnc_bsic.setText("Rnc:   " + RNCID);
-                            PSC = cellInfoWcdma.getCellIdentity().getPsc();
-                            band_pci_psc.setText("Psc:   " + PSC);
-                            mode_name.setText("Band:  " + BandPlus +(" ("+NameR+") ")+ "  Режим:  "+Mode);
-                            ul_dl.setText("DL:  "+FDL+" МГц    " +"UL:  "+FUL+" МГц");
-                            LAC = cellInfoWcdma.getCellIdentity().getLac();
-                            UARFCN = cellInfoWcdma.getCellIdentity().getUarfcn();
+                            RNCIDHome = CELLIDHome / 65536;
+                            enb_rnc_bsic.setText("Rnc:   " + RNCIDHome);
+                            PSCHome = cellInfoWcdma.getCellIdentity().getPsc();
+                            band_pci_psc.setText("Psc:   " + PSCHome);
+                            mode_name.setText("Band:  " + BandPlusHome +(" ("+NameR+") ")+ "  Режим:  "+Mode);
+                            ul_dl.setText("DL:  "+FDLHome+" МГц    " +"UL:  "+FULHome+" МГц");
+                            LACHome = cellInfoWcdma.getCellIdentity().getLac();
+                            UARFCNHome = cellInfoWcdma.getCellIdentity().getUarfcn();
                         }
                     }
                     if (cellInfo instanceof CellInfoGsm) {
                         CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
                         if (cellInfoGsm.isRegistered()) {
                             calcArfcn();
-                            ul_dl.setText("DL:  "+FDL+" МГц    " +"UL:  "+FUL+" МГц");
+                            ul_dl.setText("DL:  "+FDLHome+" МГц    " +"UL:  "+FULHome+" МГц");
                             mcc = cellInfoGsm.getCellIdentity().getMccString();
                             mnc = cellInfoGsm.getCellIdentity().getMncString();
                             Mnc_Mcc.setText("MCC: " + mcc + "  MNC: " + mnc);
                             Operator = (String) cellInfoGsm.getCellIdentity().getOperatorAlphaLong();
                             OPerator.setText("Оператор:  " + Operator + " 2G");
                             lac_tac.setText("LAC:   " + cellInfoGsm.getCellIdentity().getLac());
-                            CELLID = cellInfoGsm.getCellIdentity().getCid();
-                            cid.setText("Cell ID:  " + CELLID);
+                            CELLIDHome = cellInfoGsm.getCellIdentity().getCid();
+                            cid.setText("Cell ID:  " + CELLIDHome);
                             earfcn_uarfcn_aerfcn.setText("Arfcn:   " + (cellInfoGsm.getCellIdentity().getArfcn()));
-                            mode_name.setText("Band:  " + BandPlus +(" ("+NameR+") ")+ "  Режим:  "+Mode);
+                            mode_name.setText("Band:  " + BandPlusHome +(" ("+NameR+") ")+ "  Режим:  "+Mode);
 //                            RNCID = CELLID / 65536;
                             enb_rnc_bsic.setText("Bcis:  " + cellInfoGsm.getCellIdentity().getBsic() + "   Rnc: ");
-                            LAC = cellInfoGsm.getCellIdentity().getLac();
-                            ARFCN = cellInfoGsm.getCellIdentity().getArfcn();
-                            BSIC = cellInfoGsm.getCellIdentity().getBsic();
+                            LACHome = cellInfoGsm.getCellIdentity().getLac();
+                            ARFCNHome = cellInfoGsm.getCellIdentity().getArfcn();
+                            BSICHome = cellInfoGsm.getCellIdentity().getBsic();
                         }
                     }
             }
         }
 
-    private class BWListener extends PhoneStateListener
+    private class BWListenerHome extends PhoneStateListener
     {
         public void onServiceStateChanged(ServiceState serviceState) {
 
@@ -913,7 +912,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             }
         }
     }
-    private class CellInfoIDListener extends PhoneStateListener {
+    private class CellInfoIDListenerHome extends PhoneStateListener {
         @Override
         @SuppressLint({"SetTextI18n", "MissingPermission"})
         public void onCellInfoChanged(List<CellInfo> cellInfoList) {
@@ -922,7 +921,7 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
         }
     }
 
-    private class SignalStrengthListener extends PhoneStateListener {
+    private class SignalStrengthListenerHome extends PhoneStateListener {
         @SuppressLint({"SetTextI18n", "MissingPermission"})
         @Override
         public void onSignalStrengthsChanged(SignalStrength signalStrength) {
@@ -930,93 +929,93 @@ Boolean isWriteInBackground=Store.isWriteWorkingBackground;
             List<CellSignalStrength> strengthAmplitude = signalStrength.getCellSignalStrengths();
             for (CellSignalStrength cellSignalStrength : strengthAmplitude) {
                         if (cellSignalStrength instanceof CellSignalStrengthLte) {
-                            Log.d("Check LTE SIGN",((CellSignalStrengthLte) cellSignalStrength).toString() );
-                            snr = ((CellSignalStrengthLte) cellSignalStrength).getRssnr();
-                            rssi = ((CellSignalStrengthLte) cellSignalStrength).getRssi();
-                            rsrp = ((CellSignalStrengthLte) cellSignalStrength).getRsrp();
-                            rsrq = ((CellSignalStrengthLte) cellSignalStrength).getRsrq();
-                            Cqi = ((CellSignalStrengthLte) cellSignalStrength).getCqi();
-                            dBm = cellSignalStrength.getDbm();
-                            if (Cqi != Integer.MAX_VALUE) {
-                                CQi = Cqi;
-                                cqi_dBm.setText("dBm: " + dBm + "  Cqi: " + CQi);
+                            Log.d("Check SIGN",((CellSignalStrengthLte) cellSignalStrength).toString() );
+                            snrHome = ((CellSignalStrengthLte) cellSignalStrength).getRssnr();
+                            rssiHome = ((CellSignalStrengthLte) cellSignalStrength).getRssi();
+                            rsrpHome = ((CellSignalStrengthLte) cellSignalStrength).getRsrp();
+                            rsrqHome = ((CellSignalStrengthLte) cellSignalStrength).getRsrq();
+                            CqiHome = ((CellSignalStrengthLte) cellSignalStrength).getCqi();
+                            dBmHome = cellSignalStrength.getDbm();
+                            if (CqiHome != Integer.MAX_VALUE) {
+                                CQiHome = CqiHome;
+                                cqi_dBm.setText("dBm: " + dBmHome + "  Cqi: " + CQiHome);
                             } else {
 
-                                cqi_dBm.setText("dBm: " + dBm + "  Cqi:  N/A");
+                                cqi_dBm.setText("dBm: " + dBmHome + "  Cqi:  N/A");
                             }
-                            AsuLevel = cellSignalStrength.getAsuLevel();
-                            Level = cellSignalStrength.getLevel();
-                            ta = ((CellSignalStrengthLte) cellSignalStrength).getTimingAdvance();
-                            if (ta != Integer.MAX_VALUE) {
-                                TAa = ta;
-                                TA.setText("TA:   " + (TAa) + "  RRC:  " + call);
+                            AsuLevelHome = cellSignalStrength.getAsuLevel();
+                            LevelHome = cellSignalStrength.getLevel();
+                            taHome = ((CellSignalStrengthLte) cellSignalStrength).getTimingAdvance();
+                            if (taHome != Integer.MAX_VALUE) {
+                                TAaHome = taHome;
+                                TA.setText("TA:   " + (TAaHome) + "  RRC:  " + call);
                             } else {
                                 TA.setText("TA:   N/A"+ "  RRC:  " + call);
                             }
-                            RSRQ_SNR_ECNO.setText("RSRQ: " + rsrq + "  дБ" + "  SNR: " + snr + "  дБ");
-                            if (rssi != Integer.MAX_VALUE)
+                            RSRQ_SNR_ECNO.setText("RSRQ: " + rsrqHome + "  дБ" + "  SNR: " + snrHome + "  дБ");
+                            if (rssiHome != Integer.MAX_VALUE)
                             {
-                                RSSI_RSRP.setText("RSSI: " + rssi + "  дБм" + "   RSRP: " + rsrp + "  дБм");
+                                RSSI_RSRP.setText("RSSI: " + rssiHome + "  дБм" + "   RSRP: " + rsrpHome + "  дБм");
                             }
                             else {
-                                RSSI_RSRP.setText("RSSI: " +  " N/A " + "   RSRP: " + rsrp + "  дБм");
+                                RSSI_RSRP.setText("RSSI: " +  " N/A " + "   RSRP: " + rsrpHome + "  дБм");
                             }
-                            level.setText("Level:  " + Level);
-                            asulevel.setText("Asulevel:  " + AsuLevel + "  дБм");
+                            level.setText("Level:  " + LevelHome);
+                            asulevel.setText("Asulevel:  " + AsuLevelHome + "  дБм");
                         }
                         if (cellSignalStrength instanceof CellSignalStrengthWcdma) {
                             Log.d("Check",cellSignalStrength.toString());
-                            AsuLevel = cellSignalStrength.getAsuLevel();
-                            Level = cellSignalStrength.getLevel();
-                            level.setText("Level:  " + Level);
-                            asulevel.setText("Asulevel:  " + AsuLevel + "  дБм");
-                            dBm = cellSignalStrength.getDbm();
-                            cqi_dBm.setText("RSCP: " + dBm );
+                            AsuLevelHome = cellSignalStrength.getAsuLevel();
+                            LevelHome = cellSignalStrength.getLevel();
+                            level.setText("Level:  " + LevelHome);
+                            asulevel.setText("Asulevel:  " + AsuLevelHome + "  дБм");
+                            dBmHome = cellSignalStrength.getDbm();
+                            cqi_dBm.setText("RSCP: " + dBmHome );
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                EcNo = ((CellSignalStrengthWcdma) cellSignalStrength).getEcNo();
+                                EcNoHome = ((CellSignalStrengthWcdma) cellSignalStrength).getEcNo();
                             }
-                            RSRQ_SNR_ECNO.setText("EcNo:   " + EcNo + "  дБ");
+                            RSRQ_SNR_ECNO.setText("EcNo:   " + EcNoHome + "  дБ");
 
                             String[] CellSignalStrengthArr = cellSignalStrength.toString().split(" ");
-                            ss = 0;
+                            ssHome = 0;
                             if(CellSignalStrengthArr.length>1) {
                                 String[] elem = CellSignalStrengthArr[1].split("=");
                                 if (elem[0].contains("ss")) {
-                                    ss = Integer.parseInt(elem[1]);
+                                    ssHome = Integer.parseInt(elem[1]);
                                 }
                             }
                             TA.setText("RRC:  " + call);
-                            RSSI_RSRP.setText("RSSI: " + ss + "  дБм");
+                            RSSI_RSRP.setText("RSSI: " + ssHome + "  дБм");
 
                         }
                         if (cellSignalStrength instanceof CellSignalStrengthGsm) {
                             cqi_dBm.setText("dBm:   " + cellSignalStrength.getDbm());
-                            AsuLevel = cellSignalStrength.getAsuLevel();
-                            Level = cellSignalStrength.getLevel();
+                            AsuLevelHome = cellSignalStrength.getAsuLevel();
+                            LevelHome = cellSignalStrength.getLevel();
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                rssi = ((CellSignalStrengthGsm) cellSignalStrength).getRssi();
+                                rssiHome = ((CellSignalStrengthGsm) cellSignalStrength).getRssi();
                             }
-                            ber = ((CellSignalStrengthGsm) cellSignalStrength).getBitErrorRate();
-                            if (ber != Integer.MAX_VALUE)
+                            berHome = ((CellSignalStrengthGsm) cellSignalStrength).getBitErrorRate();
+                            if (berHome != Integer.MAX_VALUE)
                             {
-                                BERT = ber;
-                                RSRQ_SNR_ECNO.setText("Bit Error Rate:  " + BERT);
+                                BERTHome = berHome;
+                                RSRQ_SNR_ECNO.setText("Bit Error Rate:  " + BERTHome);
                             } else
                             {
                                 RSRQ_SNR_ECNO.setText("Bit Error Rate:  " +"   N/A");
                             }
-                            dBm = cellSignalStrength.getDbm();
-                            ta = ((CellSignalStrengthGsm) cellSignalStrength).getTimingAdvance();
-                            if (ta != Integer.MAX_VALUE) {
-                                TAa = ta;
-                                TA.setText("TA:   " + (TAa) + "  RRC:  " + call);
+                            dBmHome = cellSignalStrength.getDbm();
+                            taHome = ((CellSignalStrengthGsm) cellSignalStrength).getTimingAdvance();
+                            if (taHome != Integer.MAX_VALUE) {
+                                TAaHome = taHome;
+                                TA.setText("TA:   " + (TAaHome) + "  RRC:  " + call);
                             } else {
                                 TA.setText("TA:   N/A"+ "  RRC:  " + call);
                             }
-                            RSSI_RSRP.setText("RSSI:   " + rssi + "  дБм");
-                            level.setText("Level:  " + Level);
-                            asulevel.setText("Asulevel:  " + AsuLevel + "  дБм");
-                            cqi_dBm.setText("dBm: " + dBm);
+                            RSSI_RSRP.setText("RSSI:   " + rssiHome + "  дБм");
+                            level.setText("Level:  " + LevelHome);
+                            asulevel.setText("Asulevel:  " + AsuLevelHome + "  дБм");
+                            cqi_dBm.setText("dBm: " + dBmHome);
                         }
             }
         }

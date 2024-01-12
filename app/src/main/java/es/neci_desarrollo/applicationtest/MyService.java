@@ -56,10 +56,10 @@ public class MyService extends Service implements LocationListenerInterface {
     private MyLocationListener myLocationListener;
 
     private TelephonyManager tm;
-    SignalStrengthListener signalStrengthListener;
-    CellInfoIDListener cellInfoIDListener;
-    BWListener bwListener;
-    CallList callList;
+    private SignalStrengthListener signalStrengthListener;
+    private CellInfoIDListener cellInfoIDListener;
+    private BWListener bwListener;
+    private CallList callList;
     private CSVWriter writer;
     private CSVWriter writerN;
     private Double lat,lot;
@@ -107,6 +107,7 @@ public class MyService extends Service implements LocationListenerInterface {
     @SuppressLint({"SetTextI18n", "MissingPermission"})
     @Override
     public void onLocationChanged(Location location) {
+        Log.d("Proverka",lat+" "+lot+" "+rssi+" "+rsrp+" "+rsrq+" "+snr);
         lat = location.getLatitude();
         lot = location.getLongitude();
         List<CellInfo> cellInfoList = tm.getAllCellInfo();
@@ -134,24 +135,78 @@ public class MyService extends Service implements LocationListenerInterface {
             }
         }
 
-        for (CellInfo cellInfo : cellInfoList) {
-            if (cellInfo instanceof CellInfoLte) {
+//        for (CellInfo cellInfo : cellInfoList) {
+//            if (cellInfo instanceof CellInfoLte) {
+//                CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
+//                if (!cellInfoLte.isRegistered() && currentNetwork==Networks.LTE) {
+//                    WriteLteInfoN();
+//                }
+//            }
+//            if (cellInfo instanceof CellInfoWcdma) {
+//                CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
+//                if (!cellInfoWcdma.isRegistered() && currentNetwork==Networks.UMTS) {
+//                    WriteUMTSInfoN();
+//                }
+//            }
+//            if (cellInfo instanceof CellInfoGsm) {
+//                CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
+//                if (!cellInfoGsm.isRegistered() && currentNetwork==Networks.GSM) {
+//                    WriteGSMInfoN();
+//                }
+//            }
+//        }
+        for (CellInfo cellInfo : this.neighbours) {
+            if (cellInfo instanceof CellInfoLte ) {
                 CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
-                if (!cellInfoLte.isRegistered() && currentNetwork==Networks.LTE) {
+                if (!cellInfoLte.isRegistered()  ) {
+                    PCI_N = cellInfoLte.getCellIdentity().getPci();
+                    EARFCN_N = cellInfoLte.getCellIdentity().getEarfcn();
+                    band_N = 0;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        int[] bands = cellInfoLte.getCellIdentity().getBands();
+
+                        if (bands.length > 0) {
+                            band_N = bands[0];
+                        }
+                    }
+                    rssi_N = cellInfoLte.getCellSignalStrength().getRssi();
+                    rsrp_N = cellInfoLte.getCellSignalStrength().getRsrp();
+                    rsrq_N = cellInfoLte.getCellSignalStrength().getRsrq();
+                    ta_N = cellInfoLte.getCellSignalStrength().getTimingAdvance();
                     WriteLteInfoN();
                 }
+
             }
             if (cellInfo instanceof CellInfoWcdma) {
                 CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
-                if (!cellInfoWcdma.isRegistered() && currentNetwork==Networks.UMTS) {
+                if (!cellInfoWcdma.isRegistered()) {
+                    PSC_N =cellInfoWcdma.getCellIdentity().getPsc();
+                    UARFCN_N = cellInfoWcdma.getCellIdentity().getUarfcn();
+                    String[] CellSignalStrengthArr = cellInfoWcdma.getCellSignalStrength().toString().split(" ");
+                    ss_N = 0;
+                    if(CellSignalStrengthArr.length>1) {
+                        String[] elem = CellSignalStrengthArr[1].split("=");
+                        if (elem[0].contains("ss")) {
+                            ss_N = Integer.parseInt(elem[1]);
+                        }
+                    }
                     WriteUMTSInfoN();
                 }
+
             }
-            if (cellInfo instanceof CellInfoGsm) {
+            if (cellInfo instanceof CellInfoGsm ) {
                 CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
-                if (!cellInfoGsm.isRegistered() && currentNetwork==Networks.GSM) {
+                if (!cellInfoGsm.isRegistered()) {
+                    LAC_N = cellInfoGsm.getCellIdentity().getLac();
+                    CELLID_N = (cellInfoGsm.getCellIdentity().getCid());
+                    ARFCN_N = cellInfoGsm.getCellIdentity().getArfcn();
+                    BSIC_N = cellInfoGsm.getCellIdentity().getBsic();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        rssi_N = cellInfoGsm.getCellSignalStrength().getRssi();
+                    }
                     WriteGSMInfoN();
                 }
+
             }
         }
     }
@@ -168,9 +223,10 @@ public class MyService extends Service implements LocationListenerInterface {
                 .setContentTitle("")
                 .setContentText("").build();
         startForeground(1, notification);
+
         mTrafficSpeedMeasurer = new TrafficSpeedMeasurer(TrafficSpeedMeasurer.TrafficType.ALL);
         mTrafficSpeedMeasurer.startMeasuring();
-        tm = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+        tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         myLocationListener = new MyLocationListener();
         myLocationListener.setLocationListenerInterface(this);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -236,6 +292,7 @@ public class MyService extends Service implements LocationListenerInterface {
         }
         Store.setLastNameFile(this.LastFileName);
         Log.d("BackG","Destroy");
+
     }
 
     private String DecToHex(int dec) {
@@ -245,6 +302,8 @@ public class MyService extends Service implements LocationListenerInterface {
     public int HexToDec(String hex) {
         return Integer.parseInt(hex, 16);
     }
+
+
 
     @SuppressLint({"SetTextI18n", "MissingPermission"})
     private void startCell(List<CellInfo> cellInfoList) {
@@ -306,6 +365,7 @@ public class MyService extends Service implements LocationListenerInterface {
                     }
         }
     }
+
     private class CellInfoIDListener extends PhoneStateListener {
         @Override
         @SuppressLint({"SetTextI18n", "MissingPermission"})
@@ -319,7 +379,7 @@ public class MyService extends Service implements LocationListenerInterface {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         mTrafficSpeedMeasurer.registerListener(mStreamSpeedListener);
-        return super.onStartCommand(intent, flags, startId);
+       return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
@@ -330,13 +390,17 @@ public class MyService extends Service implements LocationListenerInterface {
         return null;
     }
 
-    private class SignalStrengthListener extends PhoneStateListener {
+
+
+    class SignalStrengthListener extends PhoneStateListener {
         @SuppressLint({"SetTextI18n", "MissingPermission"})
         @Override
         public void onSignalStrengthsChanged(SignalStrength signalStrength) {
+            super.onSignalStrengthsChanged(signalStrength);
             List<CellSignalStrength> strengthAmplitude = signalStrength.getCellSignalStrengths();
             for (CellSignalStrength cellSignalStrength : strengthAmplitude) {
                         if (cellSignalStrength instanceof CellSignalStrengthLte) {
+                            Log.d("Check LTE BACKGRAUND",cellSignalStrength.toString());
                             snr = ((CellSignalStrengthLte) cellSignalStrength).getRssnr();
                             rssi = ((CellSignalStrengthLte) cellSignalStrength).getRssi();
                             rsrp = ((CellSignalStrengthLte) cellSignalStrength).getRsrp();
@@ -354,7 +418,7 @@ public class MyService extends Service implements LocationListenerInterface {
                             }
                         }
                         if (cellSignalStrength instanceof CellSignalStrengthWcdma) {
-                            Log.d("Check",cellSignalStrength.toString());
+
                             AsuLevel = cellSignalStrength.getAsuLevel();
                             Level = cellSignalStrength.getLevel();
                             dBm = cellSignalStrength.getDbm();
@@ -1044,60 +1108,61 @@ public class MyService extends Service implements LocationListenerInterface {
         UMTS,
         GSM,
     }
+    private List<CellInfo> neighbours;
     @SuppressLint({"ResourceAsColor", "MissingPermission", "SetTextI18n"})
     private void Neiborhood(List<CellInfo> cellInfoList) {
-
-        for (CellInfo cellInfo : cellInfoList) {
-            if (cellInfo instanceof CellInfoLte ) {
-                CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
-                if (!cellInfoLte.isRegistered() ) {
-                                                PCI_N = cellInfoLte.getCellIdentity().getPci();
-                        EARFCN_N = cellInfoLte.getCellIdentity().getEarfcn();
-                        band_N = 0;
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            int[] bands = cellInfoLte.getCellIdentity().getBands();
-
-                            if (bands.length > 0) {
-                                band_N = bands[0];
-                            }
-                                                    }
-                        rssi_N = cellInfoLte.getCellSignalStrength().getRssi();
-                        rsrp_N = cellInfoLte.getCellSignalStrength().getRsrp();
-                        rsrq_N = cellInfoLte.getCellSignalStrength().getRsrq();
-                        ta_N = cellInfoLte.getCellSignalStrength().getTimingAdvance();
-                                    }
-
-            }
-            if (cellInfo instanceof CellInfoWcdma) {
-                CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
-                if (!cellInfoWcdma.isRegistered()) {
-                        PSC_N =cellInfoWcdma.getCellIdentity().getPsc();
-                     UARFCN_N = cellInfoWcdma.getCellIdentity().getUarfcn();
-                   String[] CellSignalStrengthArr = cellInfoWcdma.getCellSignalStrength().toString().split(" ");
-                        ss_N = 0;
-                        if(CellSignalStrengthArr.length>1) {
-                            String[] elem = CellSignalStrengthArr[1].split("=");
-                            if (elem[0].contains("ss")) {
-                                ss_N = Integer.parseInt(elem[1]);
-                            }
-                        }
-                }
-
-            }
-            if (cellInfo instanceof CellInfoGsm ) {
-                CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
-                if (!cellInfoGsm.isRegistered()) {
-                        LAC_N = cellInfoGsm.getCellIdentity().getLac();
-                        CELLID_N = (cellInfoGsm.getCellIdentity().getCid());
-                        ARFCN_N = cellInfoGsm.getCellIdentity().getArfcn();
-                        BSIC_N = cellInfoGsm.getCellIdentity().getBsic();
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            rssi_N = cellInfoGsm.getCellSignalStrength().getRssi();
-                        }
-                }
-
-            }
-        }
+        this.neighbours = cellInfoList;
+//        for (CellInfo cellInfo : cellInfoList) {
+//            if (cellInfo instanceof CellInfoLte ) {
+//                CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
+//                if (!cellInfoLte.isRegistered() ) {
+//                                                PCI_N = cellInfoLte.getCellIdentity().getPci();
+//                        EARFCN_N = cellInfoLte.getCellIdentity().getEarfcn();
+//                        band_N = 0;
+//                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+//                            int[] bands = cellInfoLte.getCellIdentity().getBands();
+//
+//                            if (bands.length > 0) {
+//                                band_N = bands[0];
+//                            }
+//                                                    }
+//                        rssi_N = cellInfoLte.getCellSignalStrength().getRssi();
+//                        rsrp_N = cellInfoLte.getCellSignalStrength().getRsrp();
+//                        rsrq_N = cellInfoLte.getCellSignalStrength().getRsrq();
+//                        ta_N = cellInfoLte.getCellSignalStrength().getTimingAdvance();
+//                                    }
+//
+//            }
+//            if (cellInfo instanceof CellInfoWcdma) {
+//                CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
+//                if (!cellInfoWcdma.isRegistered()) {
+//                        PSC_N =cellInfoWcdma.getCellIdentity().getPsc();
+//                     UARFCN_N = cellInfoWcdma.getCellIdentity().getUarfcn();
+//                   String[] CellSignalStrengthArr = cellInfoWcdma.getCellSignalStrength().toString().split(" ");
+//                        ss_N = 0;
+//                        if(CellSignalStrengthArr.length>1) {
+//                            String[] elem = CellSignalStrengthArr[1].split("=");
+//                            if (elem[0].contains("ss")) {
+//                                ss_N = Integer.parseInt(elem[1]);
+//                            }
+//                        }
+//                }
+//
+//            }
+//            if (cellInfo instanceof CellInfoGsm ) {
+//                CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
+//                if (!cellInfoGsm.isRegistered()) {
+//                        LAC_N = cellInfoGsm.getCellIdentity().getLac();
+//                        CELLID_N = (cellInfoGsm.getCellIdentity().getCid());
+//                        ARFCN_N = cellInfoGsm.getCellIdentity().getArfcn();
+//                        BSIC_N = cellInfoGsm.getCellIdentity().getBsic();
+//                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+//                            rssi_N = cellInfoGsm.getCellSignalStrength().getRssi();
+//                        }
+//                }
+//
+//            }
+//        }
     }
 
 

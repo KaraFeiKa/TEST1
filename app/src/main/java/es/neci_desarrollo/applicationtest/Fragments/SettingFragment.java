@@ -146,6 +146,9 @@ public class SettingFragment extends Fragment {
                 File file = new File(Store.LastNameFile);
                 Log.d("Chekc file",file.toString());
                 try {
+//                    for(file:selctedFiles){
+//                        params.put("main_cell", file);
+//                    }
                     params.put("main_cell", file);
 //                    params.put("main_cell", file2);
 //                    params.put("model", model);
@@ -242,7 +245,7 @@ public class SettingFragment extends Fragment {
                 Uri uri = data.getData();
                 selectedItemPreview.setText(uri.getPath());
                 fileGlob = new File(uri.getPath());
-
+                selectedItemPreview.setText(fileGlob.getName());
             }
         }
         Log.d("Check",fileGlob.toString());
