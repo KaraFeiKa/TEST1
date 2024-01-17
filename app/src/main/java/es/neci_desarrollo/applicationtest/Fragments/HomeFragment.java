@@ -60,7 +60,7 @@ public class HomeFragment extends Fragment implements LocationListenerInterface 
     String nocProjectDirInDownload = "noc-project";
     String csv = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + nocProjectDirInDownload;
     private TelephonyManager tm;
-    SignalStrengthListenerHome signalStrengthListenerHome;
+    private SignalStrengthListenerHome signalStrengthListenerHome;
     CellInfoIDListenerHome cellInfoIDListenerHome;
     BWListenerHome bwListenerHome;
     CallListHome callListHome;

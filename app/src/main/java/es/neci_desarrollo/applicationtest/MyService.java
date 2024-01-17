@@ -96,7 +96,7 @@ public class MyService extends Service implements LocationListenerInterface {
     private void getLocation() {
         try {
             locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0,
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2,
                     Store.range,
                     myLocationListener);
 
@@ -135,26 +135,6 @@ public class MyService extends Service implements LocationListenerInterface {
             }
         }
 
-//        for (CellInfo cellInfo : cellInfoList) {
-//            if (cellInfo instanceof CellInfoLte) {
-//                CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
-//                if (!cellInfoLte.isRegistered() && currentNetwork==Networks.LTE) {
-//                    WriteLteInfoN();
-//                }
-//            }
-//            if (cellInfo instanceof CellInfoWcdma) {
-//                CellInfoWcdma cellInfoWcdma = ((CellInfoWcdma) cellInfo);
-//                if (!cellInfoWcdma.isRegistered() && currentNetwork==Networks.UMTS) {
-//                    WriteUMTSInfoN();
-//                }
-//            }
-//            if (cellInfo instanceof CellInfoGsm) {
-//                CellInfoGsm cellInfoGsm = ((CellInfoGsm) cellInfo);
-//                if (!cellInfoGsm.isRegistered() && currentNetwork==Networks.GSM) {
-//                    WriteGSMInfoN();
-//                }
-//            }
-//        }
         for (CellInfo cellInfo : this.neighbours) {
             if (cellInfo instanceof CellInfoLte ) {
                 CellInfoLte cellInfoLte = ((CellInfoLte) cellInfo);
@@ -224,17 +204,19 @@ public class MyService extends Service implements LocationListenerInterface {
                 .setContentText("").build();
         startForeground(1, notification);
 
-        mTrafficSpeedMeasurer = new TrafficSpeedMeasurer(TrafficSpeedMeasurer.TrafficType.ALL);
+
+
+        mTrafficSpeedMeasurer = new TrafficSpeedMeasurer(TrafficSpeedMeasurer.TrafficType.MOBILE);
         mTrafficSpeedMeasurer.startMeasuring();
         tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         myLocationListener = new MyLocationListener();
         myLocationListener.setLocationListenerInterface(this);
+        signalStrengthListener = new SignalStrengthListener();
+        ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).listen(signalStrengthListener, SignalStrengthListener.LISTEN_SIGNAL_STRENGTHS);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         cellInfoIDListener = new CellInfoIDListener();
         ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).listen(cellInfoIDListener, CellInfoIDListener.LISTEN_CELL_INFO);
-        signalStrengthListener = new SignalStrengthListener();
-        ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).listen(signalStrengthListener, SignalStrengthListener.LISTEN_SIGNAL_STRENGTHS);
-        bwListener = new BWListener();
+       bwListener = new BWListener();
         ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).listen(bwListener, PhoneStateListener.LISTEN_SERVICE_STATE);
         callList = new CallList();
         ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).listen(callList, PhoneStateListener.LISTEN_CALL_STATE);
@@ -292,6 +274,7 @@ public class MyService extends Service implements LocationListenerInterface {
         }
         Store.setLastNameFile(this.LastFileName);
         Log.d("BackG","Destroy");
+
 
     }
 
@@ -379,7 +362,7 @@ public class MyService extends Service implements LocationListenerInterface {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         mTrafficSpeedMeasurer.registerListener(mStreamSpeedListener);
-       return super.onStartCommand(intent, flags, startId);
+        return Service.START_STICKY;
     }
 
     @Override
@@ -391,9 +374,8 @@ public class MyService extends Service implements LocationListenerInterface {
     }
 
 
-
     class SignalStrengthListener extends PhoneStateListener {
-        @SuppressLint({"SetTextI18n", "MissingPermission"})
+
         @Override
         public void onSignalStrengthsChanged(SignalStrength signalStrength) {
             super.onSignalStrengthsChanged(signalStrength);
@@ -1057,6 +1039,7 @@ public class MyService extends Service implements LocationListenerInterface {
                     String.valueOf(rsrq),
                     String.valueOf(snr), "", "", String.valueOf(CQi), String.valueOf(dBm), String.valueOf(Level), String.valueOf(AsuLevel), String.valueOf(TAa),upStreamSpeed,downStreamSpeed};
             writer.writeNext(str, false);
+
         }
     }
     private void WriteUMTSInfo()
@@ -1088,6 +1071,8 @@ public class MyService extends Service implements LocationListenerInterface {
             writer.writeNext(str, false);
         }
     }
+
+
 
 
     private ITrafficSpeedListener mStreamSpeedListener = new ITrafficSpeedListener() {

@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
             }
             else
             {
+
                 tabLayout = findViewById(R.id.TabLayout);
                 viewPager2 = findViewById(R.id.viewPager);
                 viewPagerAdapter = new ViewPagerAdapter(this, telephonyManager);
@@ -79,10 +80,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-
         Log.d("store", "try to select from store"+String.valueOf(Store.selectedTab));
         TabLayout.Tab tab = tabLayout.getTabAt(Store.selectedTab);
         tab.select();
 
     }
+
+
 }
